@@ -1,0 +1,7 @@
+{
+  "date": "2026-08-12",
+  "latest_hash_jsonl": "2ff3ca7e65d3572aea5620544c79f3ae43f2eb517b4e2346acb87a86fe03a7b5",
+  "latest_hash_sqlite": "2ff3ca7e65d3572aea5620544c79f3ae43f2eb517b4e2346acb87a86fe03a7b5",
+  "source": "Tagesspiegel - international",
+  "storage_name": "tagesspiegel_international"
+}
