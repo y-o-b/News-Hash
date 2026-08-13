@@ -96,5 +96,5 @@ Die Kette selbst hängt an `previous_hash` an:
 ## Struktur
 
 - `app/src/newshash/`: Anwendungscode
-- `docs/`: Projekt- und Produktdokumentation
-- `docs/webui.md`: Bedienung und Endpunkte der WebUI
+- `project-docu/`: Projekt- und Produktdokumentation
+- `project-docu/webui.md`: Bedienung und Endpunkte der WebUI

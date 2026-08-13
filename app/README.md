@@ -7,6 +7,10 @@ Projekt für Nachrichten-Import, Hash-Kette und Storage-Modi.
 `uv run newshash`
 `uv run newshash --daemon`
 
+## Entwicklung
+
+Bei jeder Code-Änderung wird das Patchlevel der App erhöht. Die Versionsnummer in `pyproject.toml` und `src/newshash/__init__.py` muss dabei synchron bleiben.
+
 ## Konfiguration
 
 - `--settings <pfad>`: alternative Settings-Datei laden, Standard ist `data/settings.toml`
@@ -23,7 +27,7 @@ Projekt für Nachrichten-Import, Hash-Kette und Storage-Modi.
 - Prometheus-Metriken sind unter `/metrics` verfügbar
 - Der Button `Daemon beenden` im Dashboard beendet Import und Webserver kontrolliert
 - Quellenfehler und die letzten Fehlermeldungen gelten nur für die aktuelle Laufzeit, werden nach `stderr` geloggt und nicht gespeichert
-- Eine vollständige Beschreibung der WebUI steht in `docs/webui.md`
+- Eine vollständige Beschreibung der WebUI steht in `project-docu/webui.md`
 - Meldungen können im Dashboard quellengefiltert, seitenweise und als Detailansicht mit gespeicherten Bildern angezeigt werden
 - Das Dashboard bietet die Themes `Comic`, `DarkMode`, `LightMode`, `Papier` und `News`
 - Pro Quelle wird täglich ein OpenTimestamps-Manifest unter `data/anchors/<UTC-Datum>/` erzeugt und mit `ots stamp` an die Kalender übergeben

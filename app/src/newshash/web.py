@@ -238,7 +238,7 @@ def render_help(theme: str = "lite", language: str = "de") -> str:
 
     language = language if language in {"de", "en"} else "de"
     documentation_name = "description_for_enduser_en.md" if language == "en" else "description_for_enduser.md"
-    documentation_path = Path(__file__).resolve().parents[3] / "docs" / documentation_name
+    documentation_path = Path(__file__).resolve().parents[3] / "project-docu" / documentation_name
     documentation = markdown.markdown(documentation_path.read_text(encoding="utf-8"), extensions=["extra"])
     other_language = "en" if language == "de" else "de"
     language_label = "English" if language == "de" else "Deutsch"

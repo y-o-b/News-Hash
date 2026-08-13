@@ -32,8 +32,8 @@
 
 - Doku bei relevanten Entscheidungen aktualisieren.
 - In deutschsprachiger Dokumentation immer echte Umlaute und `ß` verwenden, niemals `ae`, `oe`, `ue` oder `ss` als Ersatz.
-- Änderungen an Architekturentscheidungen, Anforderungen oder Zielbild in `docs/decisions.md`, `docs/requirements.md` und `docs/vision.md` nachführen.
-- Diese drei Dokumente sind gemeinsam mit `docs/architecture.md` die verbindliche Projektdokumentation.
-- `docs/description_for_enduser.md` ist die führende deutsche Hilfe. `docs/description_for_enduser_en.md` ist die englische Übersetzung und muss bei Abweichungen an die deutsche Version angepasst werden.
+- Änderungen an Architekturentscheidungen, Anforderungen oder Zielbild in `project-docu/decisions.md`, `project-docu/requirements.md` und `project-docu/vision.md` nachführen.
+- Diese drei Dokumente sind gemeinsam mit `project-docu/architecture.md` die verbindliche Projektdokumentation.
+- `project-docu/description_for_enduser.md` ist die führende deutsche Hilfe. `project-docu/description_for_enduser_en.md` ist die englische Übersetzung und muss bei Abweichungen an die deutsche Version angepasst werden.
 - Die englische Hilfe übersetzt nur die Erklärungstexte; die Dashboard-Oberfläche bleibt deutsch.
 - Storage-Logik liegt in `app/src/newshash/storage.py`.

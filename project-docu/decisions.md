@@ -61,3 +61,11 @@
 - Datum: 2026-08-11
   Entscheidung: Die Dashboard-Meldungsliste liest nur den neuesten SQLite-Shard, während Kennzahlen und Detailzugriffe shardübergreifend arbeiten.
   Begründung: Die WebUI soll bei großen Archiven speicherschonend bleiben und aktuelle Meldungen schnell anzeigen.
+
+- Datum: 2026-08-13
+  Entscheidung: Bei jeder Code-Änderung wird das Patchlevel der App erhöht und in `app/pyproject.toml` sowie `app/src/newshash/__init__.py` synchron aktualisiert.
+  Begründung: Die ausgelieferte Anwendung soll jede Code-Änderung eindeutig über ihre Versionsnummer erkennen lassen.
+
+- Datum: 2026-08-13
+  Entscheidung: Die statische GitHub-Pages-Homepage liegt unter `docs/`; die verbindliche Projekt- und Produktdokumentation liegt unter `project-docu/`.
+  Begründung: GitHub Pages kann die Homepage direkt aus dem vorgesehenen `docs/`-Ordner veröffentlichen, ohne die Projektdokumentation mit dem Veröffentlichungsinhalt zu vermischen.
