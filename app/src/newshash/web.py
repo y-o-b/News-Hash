@@ -238,7 +238,16 @@ def render_help(theme: str = "lite", language: str = "de") -> str:
 
     language = language if language in {"de", "en"} else "de"
     documentation_name = "description_for_enduser_en.md" if language == "en" else "description_for_enduser.md"
-    documentation_path = Path(__file__).resolve().parents[3] / "project-docu" / documentation_name
+    documentation_path = next(
+        (
+            parent / "project-docu" / documentation_name
+            for parent in Path(__file__).resolve().parents
+            if (parent / "project-docu" / documentation_name).is_file()
+        ),
+        None,
+    )
+    if documentation_path is None:
+        raise FileNotFoundError(f"Could not find project documentation: project-docu/{documentation_name}")
     documentation = markdown.markdown(documentation_path.read_text(encoding="utf-8"), extensions=["extra"])
     other_language = "en" if language == "de" else "de"
     language_label = "English" if language == "de" else "Deutsch"

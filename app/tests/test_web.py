@@ -148,6 +148,21 @@ def test_render_help_supports_english() -> None:
     assert "Deutsch" in page
 
 
+def test_render_help_finds_documentation_in_container_layout(tmp_path, monkeypatch) -> None:
+    from newshash import web
+
+    package_path = tmp_path / "app" / "src" / "newshash"
+    documentation_path = tmp_path / "app" / "project-docu"
+    package_path.mkdir(parents=True)
+    documentation_path.mkdir(parents=True)
+    (documentation_path / "description_for_enduser.md").write_text("# Container help", encoding="utf-8")
+    monkeypatch.setattr(web, "__file__", str(package_path / "web.py"))
+
+    page = web.render_help("lite")
+
+    assert "Container help" in page
+
+
 def test_dashboard_sorts_published_at_by_instant(tmp_path, monkeypatch) -> None:
     from newshash import web
 

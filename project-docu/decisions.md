@@ -81,3 +81,7 @@
 - Datum: 2026-08-13
   Entscheidung: Der GitHub-Upload von Anchor-Dateien vergleicht den bestehenden Dateiinhalt vor dem Upload und überspringt unveränderte Dateien.
   Begründung: Wiederholte Synchronisierungsläufe sollen keine unnötigen oder leeren Git-Commits erzeugen.
+
+- Datum: 2026-08-13
+  Entscheidung: Die WebUI sucht die Endnutzer-Dokumentation in den vorhandenen Projektverzeichnissen statt einen festen Repository-Pfad vorauszusetzen.
+  Begründung: Die lokale Quellstruktur und das Docker-Image haben unterschiedliche Basispfade, müssen aber dieselbe Hilfe-Seite ausliefern.
