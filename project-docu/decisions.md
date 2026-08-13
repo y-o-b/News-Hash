@@ -73,3 +73,7 @@
 - Datum: 2026-08-13
   Entscheidung: Abgeschlossene Änderungen werden jeweils in einem eigenen Commit festgehalten.
   Begründung: Die Änderungshistorie bleibt nachvollziehbar und einzelne Arbeitsschritte sind klar getrennt.
+
+- Datum: 2026-08-13
+  Entscheidung: Reine Änderungen an der statischen Website unter `docs/` erhöhen das Patchlevel der App nicht.
+  Begründung: Die Website wird unabhängig von der ausführbaren Anwendung veröffentlicht und benötigt dafür keine neue App-Version.
