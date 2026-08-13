@@ -77,3 +77,7 @@
 - Datum: 2026-08-13
   Entscheidung: Reine Änderungen an der statischen Website unter `docs/` erhöhen das Patchlevel der App nicht.
   Begründung: Die Website wird unabhängig von der ausführbaren Anwendung veröffentlicht und benötigt dafür keine neue App-Version.
+
+- Datum: 2026-08-13
+  Entscheidung: Der GitHub-Upload von Anchor-Dateien vergleicht den bestehenden Dateiinhalt vor dem Upload und überspringt unveränderte Dateien.
+  Begründung: Wiederholte Synchronisierungsläufe sollen keine unnötigen oder leeren Git-Commits erzeugen.

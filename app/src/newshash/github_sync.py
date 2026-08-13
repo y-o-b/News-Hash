@@ -57,12 +57,20 @@ class GitHubAnchorPublisher:
             repository_path = f"anchors/{day.isoformat()}/{local_path.name}"
             endpoint = f"{api_url}/{repository_path}"
             existing = requests.get(endpoint, headers=headers, params={"ref": "main"}, timeout=GITHUB_TIMEOUT_SECONDS)
-            sha: str | None = existing.json().get("sha") if existing.status_code == 200 else None
+            existing_data = existing.json() if existing.status_code == 200 else {}
+            sha: str | None = existing_data.get("sha")
             if existing.status_code not in {200, 404}:
                 existing.raise_for_status()
+            local_bytes = local_path.read_bytes()
+            existing_content = existing_data.get("content")
+            if isinstance(existing_content, str):
+                remote_bytes = base64.b64decode("".join(existing_content.split()))
+                if remote_bytes == local_bytes:
+                    urls.append(existing_data.get("html_url", endpoint))
+                    continue
             payload: dict[str, Any] = {
                 "message": f"Add News-Hash anchor {day.isoformat()} {source.storage_name}",
-                "content": base64.b64encode(local_path.read_bytes()).decode("ascii"),
+                "content": base64.b64encode(local_bytes).decode("ascii"),
                 "branch": "main",
             }
             if sha:
