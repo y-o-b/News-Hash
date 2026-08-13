@@ -4,6 +4,8 @@ News-Hash ist ein lokales Nachrichtenarchiv mit überprüfbarer Historie. Die An
 
 Die Python-Anwendung liegt unter `app/`. Die statische GitHub-Pages-Website liegt unter `docs/`. Die verbindliche Projekt- und Produktdokumentation befindet sich unter `project-docu/`.
 
+Besonders wichtig sind die externen Nachweise und die Betriebsüberwachung: Hash-Manifeste werden über OpenTimestamps in der Bitcoin-Blockchain verankert und zusätzlich mit ihren `.ots`-Proofs per Git in einem GitHub-Repository veröffentlicht. Der laufende Betrieb kann über einen optionalen Heartbeat und über Prometheus-Metriken überwacht werden.
+
 ## Inhaltsverzeichnis
 
 - [Architektur](#architektur)
@@ -16,6 +18,7 @@ Die Python-Anwendung liegt unter `app/`. Die statische GitHub-Pages-Website lieg
 - [Hash-Ketten](#hash-ketten)
 - [Codecs](#codecs)
 - [Daemon und WebUI](#daemon-und-webui)
+- [Integritätsnachweise und Monitoring](#integritätsnachweise-und-monitoring)
 - [Anchoring und GitHub-Synchronisierung](#anchoring-und-github-synchronisierung)
 - [Docker](#docker)
 - [Tests und Qualitätssicherung](#tests-und-qualitätssicherung)
@@ -201,9 +204,31 @@ Wichtige Endpunkte sind `/`, `/hilfe`, `/metrics`, `/meldung/<storage>/<source_i
 
 Die WebUI besitzt keine Benutzerverwaltung und keine Authentifizierung. Sie sollte deshalb nicht ungeschützt in ein öffentliches Netz exponiert werden.
 
+## Integritätsnachweise und Monitoring
+
+News-Hash bietet zwei voneinander unabhängige Wege, die Existenz und den Betriebszustand des Archivs nachzuvollziehen:
+
+1. OpenTimestamps verankert die Hash-Manifeste über Bitcoin. Das Manifest enthält die aktuellen Hashes der JSONL- und SQLite-Ketten, aber keine Nachrichteninhalte. Der OpenTimestamps-Proof kann später prüfen, dass diese Hashes spätestens zum bestätigten Zeitpunkt existiert haben.
+2. GitHub veröffentlicht die zugehörigen Manifest- und `.ots`-Dateien versioniert in einem Repository. Damit bleiben die Nachweise öffentlich auffindbar und über die Git-Historie nachvollziehbar. Unveränderte Dateien werden nicht erneut hochgeladen.
+
+Die beiden Wege erfüllen unterschiedliche Aufgaben: Bitcoin liefert die externe Zeitverankerung, während GitHub die Nachweisdateien zugänglich und historisch sichtbar macht. Keine der beiden Ablagen veröffentlicht die archivierten Nachrichteninhalte.
+
+Für den laufenden Betrieb stehen zwei Monitoringmöglichkeiten zur Verfügung:
+
+- Der optionale `heartbeat_url` wird im Daemon nach den Polling-Schritten aufgerufen und meldet den Prozessbetrieb an einen konfigurierten Monitoringdienst. Ohne Eintrag wird kein Heartbeat gesendet.
+- `/metrics` stellt Prometheus-Metriken für konfigurierte Quellen, gespeicherte Meldungen, Bilder und Quellenfehler bereit. Die Metriken können von Prometheus oder einem kompatiblen Monitoringdienst regelmäßig abgefragt werden.
+
+Beispiel für den Heartbeat in `app/data/settings.toml`:
+
+```toml
+heartbeat_url = "https://example.org/heartbeat"
+```
+
+Der Heartbeat ersetzt keine fachliche Integritätsprüfung. Er zeigt, dass der Daemon läuft; die Hash-Ketten, OpenTimestamps-Proofs und GitHub-Dateien ermöglichen dagegen die spätere Prüfung der archivierten Historie.
+
 ## Anchoring und GitHub-Synchronisierung
 
-Nach einem erfolgreichen Quellenlauf kann für den UTC-Tag ein Manifest unter `data/anchors/<datum>/` erzeugt werden. Das Manifest enthält die jeweils letzten JSONL- und SQLite-Hashes, aber keine Nachrichteninhalte. `ots stamp` erzeugt daraus die zugehörige `.ots`-Datei.
+Nach einem erfolgreichen Quellenlauf kann für den UTC-Tag ein Manifest unter `data/anchors/<datum>/` erzeugt werden. Das Manifest enthält die jeweils letzten JSONL- und SQLite-Hashes, aber keine Nachrichteninhalte. `ots stamp` übergibt das Manifest an OpenTimestamps und erzeugt daraus die zugehörige `.ots`-Datei für die Bitcoin-basierte Zeitverankerung.
 
 Der Status unterscheidet zwischen keinem Anchor, fehlender `.ots`-Datei, ausstehender Attestation und vollständiger Bestätigung. Bestehende Anchor-Dateien werden vor dem GitHub-Upload inhaltlich verglichen. Unveränderte Dateien werden nicht erneut per `PUT` hochgeladen, damit keine unnötigen Git-Commits entstehen.
 
