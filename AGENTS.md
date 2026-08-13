@@ -34,6 +34,7 @@
 - In deutschsprachiger Dokumentation immer echte Umlaute und `ß` verwenden, niemals `ae`, `oe`, `ue` oder `ss` als Ersatz.
 - GitHub-Actions in `.github/workflows/` müssen immer mit vollständigen Commit-SHAs statt beweglichen Versions-Tags referenziert werden.
 - Neue dauerhafte Projektanweisungen werden in der passenden Datei unter `project-docu/` dokumentiert.
+- Änderungen am Design werden immer mit einem echten Browser-Screenshot geprüft.
 - Änderungen an Architekturentscheidungen, Anforderungen oder Zielbild in `project-docu/decisions.md`, `project-docu/requirements.md` und `project-docu/vision.md` nachführen.
 - Diese drei Dokumente sind gemeinsam mit `project-docu/architecture.md` die verbindliche Projektdokumentation.
 - `project-docu/description_for_enduser.md` ist die führende deutsche Hilfe. `project-docu/description_for_enduser_en.md` ist die englische Übersetzung und muss bei Abweichungen an die deutsche Version angepasst werden.

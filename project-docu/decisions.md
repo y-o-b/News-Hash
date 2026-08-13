@@ -97,3 +97,7 @@
 - Datum: 2026-08-14
   Entscheidung: Neue dauerhafte Projektanweisungen werden in der passenden Datei unter `project-docu/` dokumentiert.
   Begründung: Verbindliche Arbeits- und Architekturregeln sollen gemeinsam mit der übrigen Projektdokumentation auffindbar und nachvollziehbar sein.
+
+- Datum: 2026-08-14
+  Entscheidung: Änderungen am Design werden immer mit einem echten Browser-Screenshot geprüft.
+  Begründung: Die visuelle Darstellung soll nicht nur anhand des Quelltexts, sondern im tatsächlich gerenderten Browser überprüft werden.
