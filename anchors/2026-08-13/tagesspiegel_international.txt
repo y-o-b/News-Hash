@@ -1,7 +1,7 @@
 {
   "date": "2026-08-13",
-  "latest_hash_jsonl": "cd2c0c200df2eb929c17022a464d7908164d807b24fba8ffc557e687f9e24ea5",
-  "latest_hash_sqlite": "cd2c0c200df2eb929c17022a464d7908164d807b24fba8ffc557e687f9e24ea5",
+  "latest_hash_jsonl": "4aab55b0a3d333c75e0bdc8c85bc2547042b32968043b41e7e3ad1ba889ea827",
+  "latest_hash_sqlite": "4aab55b0a3d333c75e0bdc8c85bc2547042b32968043b41e7e3ad1ba889ea827",
   "source": "Tagesspiegel - international",
   "storage_name": "tagesspiegel_international"
 }
