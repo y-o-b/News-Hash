@@ -85,3 +85,7 @@
 - Datum: 2026-08-13
   Entscheidung: Die WebUI sucht die Endnutzer-Dokumentation in den vorhandenen Projektverzeichnissen statt einen festen Repository-Pfad vorauszusetzen.
   Begründung: Die lokale Quellstruktur und das Docker-Image haben unterschiedliche Basispfade, müssen aber dieselbe Hilfe-Seite ausliefern.
+
+- Datum: 2026-08-13
+  Entscheidung: Die Heartbeat-Adresse wird optional über den Top-Level-Wert `heartbeat_url` in `data/settings.toml` konfiguriert; ohne Wert wird kein Heartbeat gesendet.
+  Begründung: Der externe Betriebsaufruf soll vollständig deaktivierbar und an die jeweilige Umgebung anpassbar sein.

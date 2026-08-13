@@ -9,6 +9,7 @@
 - Es wird zunächst lokal und ohne externe Knoten gearbeitet.
 - Speicherung erfolgt gleichzeitig als JSONL und SQLite unter `data/`.
 - Die Quellen werden in `data/settings.toml` konfiguriert.
+- Ein optionaler Top-Level-Wert `heartbeat_url` in `data/settings.toml` steuert den Daemon-Heartbeat; ohne Wert wird kein Ping gesendet.
 - Pro Quelle kann ein `codec_name` gewählt werden.
 - `RSSv0` verarbeitet allgemeine JSON- und XML-RSS-Feeds; `TAZv0` lädt zusätzlich den vollständigen TAZ-Artikel über dessen Link.
 - `SCREENv0` folgt jedem Feed-Link mit Chromium und speichert einen vollständigen PNG-Seiten-Screenshot als Bild-Record.

@@ -30,6 +30,26 @@ def test_loads_source_with_default_codec(tmp_path) -> None:
     assert source.name == "alpha"
     assert source.codec_name == "RSSv0"
     assert source.poll_interval_seconds == 300
+    assert settings.heartbeat_url is None
+
+
+def test_loads_optional_heartbeat_url(tmp_path) -> None:
+    settings_path = write_settings(
+        tmp_path,
+        """
+        heartbeat_url = " https://example.invalid/heartbeat "
+
+        [[sources]]
+        name = "alpha"
+        feed_url = "https://example.invalid/a"
+        storage_name = "alpha"
+        poll_interval_seconds = 300
+        """,
+    )
+
+    settings = SettingsManager().load_settings(settings_path)
+
+    assert settings.heartbeat_url == "https://example.invalid/heartbeat"
 
 
 def test_parses_poll_intervals_and_codec(tmp_path) -> None:

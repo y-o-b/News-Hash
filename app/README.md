@@ -16,6 +16,7 @@ Abgeschlossene Änderungen werden jeweils in einem eigenen Commit festgehalten.
 ## Konfiguration
 
 - `--settings <pfad>`: alternative Settings-Datei laden, Standard ist `data/settings.toml`
+- `heartbeat_url` kann optional auf oberster Ebene in `data/settings.toml` konfiguriert werden; ohne Eintrag wird kein Heartbeat gesendet
 - `--daemon`: läuft dauerhaft und fragt jede Quelle nach ihrem eigenen `poll_interval_seconds` erneut ab
 - In `data/settings.toml` werden die Quellen mit `name`, `feed_url`, `storage_name`, `poll_interval_seconds` und optional `codec_name` definiert
 - JSONL und SQLite werden beide unter `data/` geschrieben und bei 1 GB in nummerierte Shards ab `0` geteilt

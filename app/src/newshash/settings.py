@@ -29,6 +29,7 @@ class Settings:
     """Gesamte geladene Settings-Datei."""
 
     sources: tuple[SourceConfig, ...]
+    heartbeat_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -62,11 +63,16 @@ class SettingsManager:
         if not isinstance(raw_sources, list) or not raw_sources:
             raise ValueError("settings.toml must define at least one [[sources]] entry")
 
+        raw_heartbeat_url = data.get("heartbeat_url")
+        if raw_heartbeat_url is not None and not isinstance(raw_heartbeat_url, str):
+            raise ValueError("heartbeat_url must be a string")
+        heartbeat_url = raw_heartbeat_url.strip() or None if raw_heartbeat_url is not None else None
+
         sources: list[SourceConfig] = []
         for index, raw_source in enumerate(raw_sources, start=1):
             sources.append(self._parse_source(raw_source, index))
 
-        return Settings(sources=tuple(sources))
+        return Settings(sources=tuple(sources), heartbeat_url=heartbeat_url)
 
     def _parse_source(self, raw_source: object, index: int) -> SourceConfig:
         """Validiere und parse einen einzelnen Quellen-Eintrag."""

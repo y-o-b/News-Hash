@@ -209,7 +209,8 @@ def run_daemon(
 
             sleep_seconds = max(0.0, (next_deadline or now) - monotonic_fn())
 
-            post("https://hb.y-o-b.de/tsblock", json={"status": "ok"})
+            if config.settings.heartbeat_url:
+                post(config.settings.heartbeat_url, json={"status": "ok"})
 
             if stop_event is not None:
                 stop_event.wait(sleep_seconds)
