@@ -627,7 +627,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
       <option value="comic" {'selected' if theme == 'comic' else ''}>Comic</option>
     </select></label></div>
   <footer class="site-footer"><span class="spark">✦</span> Mit KI gebaut, mit Liebe verfeinert, für neugierige Menschen <span class="spark">♥</span><br>
-    Entwickelt mit OpenCode<br>
+    Entwickelt mit <a href="https://opencode.ai/" target="_blank" rel="noreferrer">OpenCode</a><br>
     <a class="verification-link" href="https://opentimestamps.org/" target="_blank" rel="noreferrer">OpenTimestamps-Proof online verifizieren</a></footer>
   <script>
     if (document.body.classList.contains("theme-comic")) {{

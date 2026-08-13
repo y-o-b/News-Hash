@@ -87,4 +87,4 @@ Technical Prometheus metrics are available at [`/metrics`](/metrics).
 
 ## Transparency note
 
-News-Hash was created and further developed with the AI tool OpenCode.
+News-Hash was created and further developed with the AI tool [OpenCode](https://opencode.ai/).
