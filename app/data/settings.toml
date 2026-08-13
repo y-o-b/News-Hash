@@ -1,3 +1,5 @@
+heartbeat_url = "https://hb.y-o-b.de/tsblock"
+
 [[sources]]
 name = "Tagesschau"
 feed_url = "https://rssbridge.y-o-b.de/?action=display&bridge=TagesschauBridge&feed=alle_meldungen&format=Json"
