@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="News-Hash">
+  <rect width="128" height="128" rx="24" fill="#4b8ed8"/>
+  <path d="M25 91 43 29h18L43 91H25Zm42 0 18-62h18L85 91H67Z" fill="#171717"/>
+  <path d="M20 57h88v14H20V57Zm-5 25h88v14H15V82Z" fill="#ef4b3f" stroke="#171717" stroke-width="4"/>
+</svg>
