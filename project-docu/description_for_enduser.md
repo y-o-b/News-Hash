@@ -107,3 +107,7 @@ Ja. Klicke auf der Quellenkarte auf `Jetzt abrufen`. Bereits bekannte Meldungen 
 ## Weitere Informationen
 
 Die technischen Prometheus-Metriken sind unter [`/metrics`](/metrics) verfügbar.
+
+## Transparenzhinweis
+
+News-Hash wurde bei der Entwicklung mit dem KI-Tool OpenCode erstellt und weiterentwickelt.

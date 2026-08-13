@@ -84,3 +84,7 @@ For screenshot sources, `SCREENv0` opens the first feed link with Chromium, remo
 ## Further information
 
 Technical Prometheus metrics are available at [`/metrics`](/metrics).
+
+## Transparency note
+
+News-Hash was created and further developed with the AI tool OpenCode.
