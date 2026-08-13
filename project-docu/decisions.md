@@ -89,3 +89,11 @@
 - Datum: 2026-08-13
   Entscheidung: Die Heartbeat-Adresse wird optional über den Top-Level-Wert `heartbeat_url` in `data/settings.toml` konfiguriert; ohne Wert wird kein Heartbeat gesendet.
   Begründung: Der externe Betriebsaufruf soll vollständig deaktivierbar und an die jeweilige Umgebung anpassbar sein.
+
+- Datum: 2026-08-14
+  Entscheidung: GitHub-Actions in `.github/workflows/` werden immer mit vollständigen Commit-SHAs statt beweglichen Versions-Tags referenziert.
+  Begründung: Die CI-Abhängigkeiten sollen unveränderlich und reproduzierbar bleiben.
+
+- Datum: 2026-08-14
+  Entscheidung: Neue dauerhafte Projektanweisungen werden in der passenden Datei unter `project-docu/` dokumentiert.
+  Begründung: Verbindliche Arbeits- und Architekturregeln sollen gemeinsam mit der übrigen Projektdokumentation auffindbar und nachvollziehbar sein.
