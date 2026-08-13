@@ -1,0 +1,68 @@
+name: Web Smoke Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web-smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: app/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Install Chromium
+        run: uv run playwright install --with-deps chromium
+
+      - name: Start app and capture dashboard
+        run: |
+          set -euo pipefail
+          uv run newshash --daemon --host 127.0.0.1 --port 8000 > /tmp/newshash-web.log 2>&1 &
+          daemon_pid=$!
+
+          cleanup() {
+            curl --silent --show-error --request POST http://127.0.0.1:8000/shutdown > /dev/null || true
+            kill "$daemon_pid" 2>/dev/null || true
+            wait "$daemon_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            if curl --silent --fail http://127.0.0.1:8000/ > /dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 12 ]; then
+              cat /tmp/newshash-web.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          uv run python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(); page=b.new_page(viewport={"width":1440,"height":900}); page.goto("http://127.0.0.1:8000/", wait_until="domcontentloaded"); page.screenshot(path="/tmp/newshash-dashboard.png", full_page=True, type="png"); b.close(); p.stop()'
+
+      - name: Upload dashboard screenshot
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: newshash-dashboard-screenshot
+          path: /tmp/newshash-dashboard.png
+          if-no-files-found: error
