@@ -1,0 +1,31 @@
+[project]
+name = "newshash"
+version = "0.1.41"
+description = "Projektgrundstruktur für ein Python-uv-Projekt"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = ["markdown>=3.7", "opentimestamps-client>=0.7.2", "playwright>=1.50", "requests>=2.31"]
+
+[project.scripts]
+newshash = "newshash.main:main"
+
+[build-system]
+requires = ["uv_build>=0.8.0,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+package = true
+
+[dependency-groups]
+dev = ["pytest>=8.0.0", "ruff>=0.12.0"]
+
+[tool.ruff]
+line-length = 160
+target-version = "py314"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

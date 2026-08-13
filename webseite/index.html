@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>News-Hash</title>
+  <style>
+    :root { color-scheme: light; --ink:#171717; --paper:#fffdf5; --blue:#4b8ed8; --red:#ef4b3f; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--blue); color:var(--ink); font:18px/1.6 system-ui,sans-serif; }
+    main { max-width:960px; margin:auto; padding:72px 24px; }
+    .card { background:var(--paper); border:5px solid var(--ink); box-shadow:10px 10px 0 var(--ink); padding:clamp(28px,6vw,72px); }
+    h1 { font:900 clamp(48px,10vw,108px)/.9 Impact,"Arial Black",sans-serif; margin:0 0 24px; text-shadow:5px 5px 0 var(--red); }
+    p { max-width:650px; }
+    a { color:var(--ink); font-weight:800; }
+    .links { display:flex; flex-wrap:wrap; gap:12px; margin-top:32px; }
+    .links a { border:3px solid var(--ink); padding:8px 14px; text-decoration:none; }
+    .links a:hover { background:var(--red); color:white; }
+  </style>
+</head>
+<body>
+  <main><section class="card">
+    <div>Nachrichten · Hash-Ketten</div>
+    <h1>News-Hash</h1>
+    <p>Ein nachvollziehbares Nachrichtenarchiv: Quellen werden regelmäßig gelesen, Inhalte lokal bewahrt und mit Hash-Ketten sowie OpenTimestamps zeitlich verankert.</p>
+    <div class="links">
+      <a href="../app/docs/description_for_enduser.md">Hilfe</a>
+      <a href="../app/">Anwendung</a>
+      <a href="https://github.com/y-o-b/News-Hash">GitHub</a>
+    </div>
+  </section></main>
+</body>
+</html>

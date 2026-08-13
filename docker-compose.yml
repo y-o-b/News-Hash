@@ -1,0 +1,36 @@
+services:
+  newshash:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM python:3.14-slim
+
+        ENV PYTHONDONTWRITEBYTECODE=1
+        ENV PYTHONUNBUFFERED=1
+        ENV PATH="/app/.venv/bin:$PATH"
+
+        WORKDIR /app
+
+        COPY app/pyproject.toml app/uv.lock app/README.md ./
+        RUN python -m pip install --no-cache-dir --upgrade pip uv \
+            && uv sync --frozen --no-install-project --no-dev \
+            && .venv/bin/playwright install --with-deps chromium
+
+        COPY docs ./docs
+        COPY app/src ./src
+        RUN uv sync --frozen --no-dev
+
+        CMD ["/app/.venv/bin/python", "-m", "newshash", "--daemon"]
+    container_name: ${NAME}
+    hostname: ${NAME}
+    image: $IMAGE
+    # restart: unless-stopped
+    volumes:
+      -  ${MY_DATA}:/app/data
+    networks:
+      vlan3:
+        ipv4_address: ${DNSIP}
+
+networks:
+  vlan3:
+    external: True
