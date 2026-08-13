@@ -279,3 +279,7 @@ Die Tests decken unter anderem Settings-Validierung, Feed-Normalisierung, Hash-K
 - `project-docu/webui.md` beschreibt Bedienung und Endpunkte der WebUI.
 - `project-docu/description_for_enduser.md` ist die ausführliche deutschsprachige Hilfe für Anwender.
 - `docs/` enthält ausschließlich die statische GitHub-Pages-Website.
+
+## Lizenz
+
+News-Hash steht unter der [MIT-Lizenz](LICENSE).
