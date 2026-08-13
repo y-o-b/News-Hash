@@ -46,6 +46,7 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert "/meldung//" in page
     assert "Daemon beenden" in page
     assert "OpenCode" in page
+    assert "https://www.y-o-b.de/" in page
     assert 'fetch("/shutdown"' in page
     assert 'class="local-time"' in page
     assert 'Intl.DateTimeFormat("de-DE"' in page
