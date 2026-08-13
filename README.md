@@ -18,7 +18,8 @@ Besonders wichtig sind die externen Nachweise und die Betriebsüberwachung: Hash
 - [Hash-Ketten](#hash-ketten)
 - [Codecs](#codecs)
 - [Daemon und WebUI](#daemon-und-webui)
-- [Integritätsnachweise und Monitoring](#integritätsnachweise-und-monitoring)
+- [Integritätsnachweise](#integritätsnachweise)
+- [Monitoring](#monitoring)
 - [Anchoring und GitHub-Synchronisierung](#anchoring-und-github-synchronisierung)
 - [Docker](#docker)
 - [Tests und Qualitätssicherung](#tests-und-qualitätssicherung)
@@ -204,14 +205,16 @@ Wichtige Endpunkte sind `/`, `/hilfe`, `/metrics`, `/meldung/<storage>/<source_i
 
 Die WebUI besitzt keine Benutzerverwaltung und keine Authentifizierung. Sie sollte deshalb nicht ungeschützt in ein öffentliches Netz exponiert werden.
 
-## Integritätsnachweise und Monitoring
+## Integritätsnachweise
 
-News-Hash bietet zwei voneinander unabhängige Wege, die Existenz und den Betriebszustand des Archivs nachzuvollziehen:
+News-Hash bietet zwei voneinander unabhängige Wege, die Existenz und Herkunft der Archivnachweise nachzuvollziehen:
 
 1. OpenTimestamps verankert die Hash-Manifeste über Bitcoin. Das Manifest enthält die aktuellen Hashes der JSONL- und SQLite-Ketten, aber keine Nachrichteninhalte. Der OpenTimestamps-Proof kann später prüfen, dass diese Hashes spätestens zum bestätigten Zeitpunkt existiert haben.
 2. GitHub veröffentlicht die zugehörigen Manifest- und `.ots`-Dateien versioniert in einem Repository. Damit bleiben die Nachweise öffentlich auffindbar und über die Git-Historie nachvollziehbar. Unveränderte Dateien werden nicht erneut hochgeladen.
 
 Die beiden Wege erfüllen unterschiedliche Aufgaben: Bitcoin liefert die externe Zeitverankerung, während GitHub die Nachweisdateien zugänglich und historisch sichtbar macht. Keine der beiden Ablagen veröffentlicht die archivierten Nachrichteninhalte.
+
+## Monitoring
 
 Für den laufenden Betrieb stehen zwei Monitoringmöglichkeiten zur Verfügung:
 
