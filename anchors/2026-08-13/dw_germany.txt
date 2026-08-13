@@ -1,7 +1,7 @@
 {
   "date": "2026-08-13",
-  "latest_hash_jsonl": "aacde526f3a72fb2ad04bdc831f987cfca0f9b99d323038c20e16ea9cfccf796",
-  "latest_hash_sqlite": "aacde526f3a72fb2ad04bdc831f987cfca0f9b99d323038c20e16ea9cfccf796",
+  "latest_hash_jsonl": "2c3c48319fb97039bd9cff64bcba906b8d9714162002bfb8efb2ce61e7126198",
+  "latest_hash_sqlite": "2c3c48319fb97039bd9cff64bcba906b8d9714162002bfb8efb2ce61e7126198",
   "source": "Deutsche Welle",
   "storage_name": "dw_germany"
 }
