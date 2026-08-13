@@ -6,6 +6,8 @@ Die Python-Anwendung liegt unter `app/`. Die statische GitHub-Pages-Website lieg
 
 Besonders wichtig sind die externen Nachweise und die Betriebsüberwachung: Hash-Manifeste werden über OpenTimestamps in der Bitcoin-Blockchain verankert und zusätzlich mit ihren `.ots`-Proofs per Git in einem GitHub-Repository veröffentlicht. Der laufende Betrieb kann über einen optionalen Heartbeat und über Prometheus-Metriken überwacht werden.
 
+> ✦ Mit KI gebaut, mit Liebe verfeinert, für neugierige Menschen ♥
+
 ## Inhaltsverzeichnis
 
 - [Architektur](#architektur)
