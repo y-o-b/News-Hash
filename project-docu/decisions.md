@@ -69,3 +69,7 @@
 - Datum: 2026-08-13
   Entscheidung: Die statische GitHub-Pages-Homepage liegt unter `docs/`; die verbindliche Projekt- und Produktdokumentation liegt unter `project-docu/`.
   Begründung: GitHub Pages kann die Homepage direkt aus dem vorgesehenen `docs/`-Ordner veröffentlichen, ohne die Projektdokumentation mit dem Veröffentlichungsinhalt zu vermischen.
+
+- Datum: 2026-08-13
+  Entscheidung: Abgeschlossene Änderungen werden jeweils in einem eigenen Commit festgehalten.
+  Begründung: Die Änderungshistorie bleibt nachvollziehbar und einzelne Arbeitsschritte sind klar getrennt.

@@ -10,6 +10,7 @@ Projekt für Nachrichten-Import, Hash-Kette und Storage-Modi.
 ## Entwicklung
 
 Bei jeder Code-Änderung wird das Patchlevel der App erhöht. Die Versionsnummer in `pyproject.toml` und `src/newshash/__init__.py` muss dabei synchron bleiben.
+Abgeschlossene Änderungen werden jeweils in einem eigenen Commit festgehalten.
 
 ## Konfiguration
 
