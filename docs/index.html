@@ -12,8 +12,9 @@
     main { display:grid; gap:36px; grid-template-columns:repeat(2,minmax(0,1fr)); max-width:1200px; margin:auto; padding:72px 24px; }
     .card { background:var(--paper); border:5px solid var(--ink); box-shadow:10px 10px 0 var(--ink); padding:clamp(28px,6vw,72px); }
     .heading-card { grid-column:1/-1; }
-    .heading-labels { display:flex; justify-content:space-between; gap:20px; }
-    .brand { align-items:center; display:flex; gap:20px; margin:28px 0; }
+    .heading-content { align-items:center; display:flex; gap:24px; justify-content:space-between; }
+    .heading-labels { align-items:flex-end; display:flex; flex-direction:column; flex-shrink:0; gap:4px; text-align:right; }
+    .brand { align-items:center; display:flex; gap:20px; margin:0; }
     .logo { display:block; height:76px; width:76px; }
     h1 { font:900 clamp(48px,10vw,108px)/.9 Impact,"Arial Black",sans-serif; margin:0; text-shadow:5px 5px 0 var(--red); }
     p { max-width:650px; }
@@ -25,14 +26,18 @@
     @media (max-width:700px) {
       main { display:block; }
       .card + .card { margin-top:36px; }
+      .heading-content { align-items:flex-start; display:block; }
+      .heading-labels { align-items:flex-start; margin-top:20px; text-align:left; }
     }
   </style>
 </head>
 <body>
   <main>
     <section class="card heading-card" aria-label="News-Hash">
-      <div class="heading-labels"><span>Nachrichten · Hash-Ketten</span><span lang="en">News · Hash Chains</span></div>
-      <div class="brand"><img class="logo" src="logo.svg" alt="News-Hash Logo"><h1>News-Hash</h1></div>
+      <div class="heading-content">
+        <div class="brand"><img class="logo" src="logo.svg" alt="News-Hash Logo"><h1>News-Hash</h1></div>
+        <div class="heading-labels"><span>Nachrichten · Hash-Ketten</span><span lang="en">News · Hash Chains</span></div>
+      </div>
     </section>
 
     <section class="card" lang="de">
