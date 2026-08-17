@@ -12,6 +12,7 @@
     h1 { font-size:21pt; line-height:1.08; margin:0 0 5pt; }
     .subtitle { font-size:11pt; margin:0; }
     .metadata { color:#555; font-family:Arial,sans-serif; font-size:8.5pt; margin-top:7pt; }
+    .ai-notice { background:#fff3cd; border:1pt solid #8a6d3b; font-family:Arial,sans-serif; font-size:9.5pt; margin:8pt 0 10pt; padding:7pt 9pt; }
     h2 { font-size:13pt; line-height:1.15; margin:13pt 0 4pt; }
     h3 { font-size:11pt; margin:9pt 0 3pt; }
     p { margin:0 0 7pt; text-align:justify; }
@@ -32,6 +33,8 @@
     <p class="subtitle">Ein wissenschaftlicher Projektbericht zu Datenmodell, Integritätsprüfung, Quellenverarbeitung und öffentlicher Zeitverankerung</p>
     <div class="metadata">News-Hash-Projekt · Technischer Bericht · 17. August 2026</div>
   </header>
+
+  <div class="ai-notice"><strong>Transparenzhinweis zur Entstehung:</strong> Sowohl die News-Hash-App als auch dieser wissenschaftliche Artikel wurden fast vollständig KI-generiert. Die menschliche Mitwirkung bestand insbesondere in Zielsetzung, Anweisungen, Prüfung, Auswahl und Freigabe der Ergebnisse.</div>
 
   <div class="abstract">
     <strong>Zusammenfassung.</strong> Die digitale Nachrichtenüberlieferung ist durch nachträgliche Redaktion, wechselnde URLs und das Verschwinden einzelner Veröffentlichungen geprägt. Der vorliegende Beitrag beschreibt News-Hash als ein lokal betriebenes Nachrichtenarchiv, das konfigurierte JSON- und XML-Quellen regelmäßig abruft, normalisiert und in zwei append-only Speicherformaten ablegt. JSONL und SQLite führen unabhängige Hash-Ketten, sodass Änderungen am Inhalt oder an der Reihenfolge nachträglich erkennbar werden. Ein tägliches Manifest verdichtet die jeweiligen Kettenenden und kann mit OpenTimestamps öffentlich zeitverankert werden, ohne Nachrichtentexte an einen externen Dienst zu übertragen. Untersucht werden die Architektur, das Datenmodell, die Codec-Schnittstelle, die Fehlersemantik, die WebUI sowie das Vertrauens- und Bedrohungsmodell. Der Beitrag argumentiert, dass die Kombination etablierter Verfahren eine belastbare technische Herkunftsspur erzeugt, ohne den Anspruch zu erheben, journalistische Wahrheit, Quellenvollständigkeit oder politische Neutralität zu beweisen.
