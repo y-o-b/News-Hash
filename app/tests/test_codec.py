@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 import requests
 
-from newshash.codec import GENESIS_HASH, RSSv0, RSSv1, SCREENv0
+from newshash.codec import GENESIS_HASH, RSSv0, RSSv1, RSSv2, SCREENv0
 
 
 def make_item(item_id: str = "example-1", content_html: str = "<p>Text</p>") -> dict:
@@ -168,6 +169,17 @@ def test_v1_record_contains_metadata_hashes_and_uses_them_in_hash(tmp_path) -> N
     assert len(record["hash_function_hash"]) == 64
     changed = dict(record, schema_hash="f" * 64)
     assert codec.digest_record(codec.record_hash_material(changed, GENESIS_HASH)) != record["hash"]
+
+
+def test_v2_record_uses_normalized_individual_codec_json(tmp_path) -> None:
+    codec = RSSv2()
+    record, _ = codec.build_record(make_item(), "2026-07-29T10:05:00Z", GENESIS_HASH, tmp_path, tmp_path / "images")
+
+    codec_path = tmp_path / "Codec" / "RSSv2.json"
+    assert codec_path.exists()
+    assert set(json.loads(codec_path.read_text(encoding="utf-8"))) == {"codec", "schema", "hash_function"}
+    assert record["codec_version"] == "2"
+    assert len(record["codec_hash"]) == 64
 
 
 def test_build_record_ignores_retrieved_at_in_hash(tmp_path) -> None:

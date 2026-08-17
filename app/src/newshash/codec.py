@@ -350,7 +350,7 @@ class _VersionedCodecMixin:
         storage_name: str | None = None,
     ) -> tuple[dict[str, Any], dict[str, bytes]]:
         prepared_item, image_bytes_by_hash = super().prepare_item(item, retrieved_at, storage_root, image_root, storage_name)
-        prepared_item.update(metadata_hashes(storage_root))
+        prepared_item.update(metadata_hashes(storage_root, self.codec_name))
         return prepared_item, image_bytes_by_hash
 
     def record_hash_material(self, record: dict[str, Any], previous_hash: str) -> dict[str, Any]:
@@ -524,6 +524,24 @@ class SCREENv1(_VersionedCodecMixin, SCREENv0):
     codec_name = "SCREENv1"
 
 
+class RSSv2(_VersionedCodecMixin, RSSv0):
+    """RSSv2 mit einem individuellen normalisierten Codecvertrag."""
+
+    codec_name = "RSSv2"
+
+
+class TAZv2(_VersionedCodecMixin, TAZv0):
+    """TAZv2 mit einem individuellen normalisierten Codecvertrag."""
+
+    codec_name = "TAZv2"
+
+
+class SCREENv2(_VersionedCodecMixin, SCREENv0):
+    """SCREENv2 mit einem individuellen normalisierten Codecvertrag."""
+
+    codec_name = "SCREENv2"
+
+
 DEFAULT_CODEC = RSSv0()
 CODEC_REGISTRY: dict[str, RSSv0] = {
     "RSSv0": DEFAULT_CODEC,
@@ -532,6 +550,9 @@ CODEC_REGISTRY: dict[str, RSSv0] = {
     "RSSv1": RSSv1(),
     "TAZv1": TAZv1(),
     "SCREENv1": SCREENv1(),
+    "RSSv2": RSSv2(),
+    "TAZv2": TAZv2(),
+    "SCREENv2": SCREENv2(),
 }
 
 

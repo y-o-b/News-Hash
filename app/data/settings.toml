@@ -4,68 +4,68 @@ heartbeat_url = "https://hb.y-o-b.de/heartbeat"
 name = "Tagesschau"
 feed_url = "https://rssbridge.y-o-b.de/?action=display&bridge=TagesschauBridge&feed=alle_meldungen&format=Json"
 storage_name = "tagesschau_alle_meldungen"
-codec_name = "RSSv1"
+codec_name = "RSSv2"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "Deutsche Welle"
 feed_url = "https://rssbridge.y-o-b.de/?action=display&bridge=DeutscheWelleBridge&feed=http%3A%2F%2Frss.dw.com%2Fatom%2Frss-en-ger&format=Json"
 storage_name = "dw_germany"
-codec_name = "RSSv1"
+codec_name = "RSSv2"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "ZDF - Heute"
 feed_url = "https://www.zdfheute.de/rss/zdf/nachrichten"
 storage_name = "zdfheute_nachrichten"
-codec_name = "SCREENv1"
+codec_name = "SCREENv2"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "Tagesspiegel - international"
 feed_url = "https://rssbridge.y-o-b.de/?action=display&bridge=TagesspiegelBridge&category=https%3A%2F%2Ftagesspiegel.de%2Fcontentexport%2Ffeed%2Finternationales%2F&limit=20&format=Json"
 storage_name = "tagesspiegel_international"
-codec_name = "RSSv1"
+codec_name = "RSSv2"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "TAZ"
 feed_url = "https://taz.de/!p4608;rss/"
 storage_name = "taz"
-codec_name = "TAZv1"
+codec_name = "TAZv2"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "Tagesschau - Screenshot"
 feed_url = "https://www.tagesschau.de/infoservices/alle-meldungen-100~rss2.xml"
 storage_name = "tagesschau_screenshot"
-codec_name = "SCREENv1"
+codec_name = "SCREENv2"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "Tagesschau - Schleswig-Holstein"
 feed_url = "https://www.tagesschau.de/inland/regional/schleswigholstein/index~rss2.xml"
 storage_name = "tagesschau_sh"
-codec_name = "SCREENv1"
+codec_name = "SCREENv2"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "FAZ"
 feed_url = "https://www.faz.net/rss/aktuell"
 storage_name = "faz"
-codec_name = "SCREENv1"
+codec_name = "SCREENv2"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "Deutscher Bundestag"
 feed_url = "https://www.bundestag.de/static/appdata/includes/rss/aktuellethemen.rss"
 storage_name = "deutscher_bundestag_aktuelle_themen"
-codec_name = "RSSv1"
+codec_name = "RSSv2"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "n-tv"
 feed_url = "https://www.n-tv.de/politik/rss"
 storage_name = "ntv"
-codec_name = "SCREENv1"
+codec_name = "SCREENv2"
 poll_interval_seconds = 300
