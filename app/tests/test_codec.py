@@ -167,6 +167,9 @@ def test_v1_record_contains_metadata_hashes_and_uses_them_in_hash(tmp_path) -> N
     assert len(record["schema_hash"]) == 64
     assert len(record["codec_hash"]) == 64
     assert len(record["hash_function_hash"]) == 64
+    assert not list(tmp_path.glob("schema-*.json"))
+    assert not list(tmp_path.glob("codecs-*.json"))
+    assert not list(tmp_path.glob("hash-functions-*.json"))
     changed = dict(record, schema_hash="f" * 64)
     assert codec.digest_record(codec.record_hash_material(changed, GENESIS_HASH)) != record["hash"]
 

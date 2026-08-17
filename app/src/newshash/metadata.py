@@ -39,23 +39,10 @@ CODEC_V2: dict[str, dict[str, Any]] = {
     "TAZv2": {"version": 2, "description": "RSS normalization with full TAZ article retrieval"},
     "SCREENv2": {"version": 2, "description": "RSS normalization with Chromium page screenshots"},
 }
-LEGACY_DEFINITIONS = {
-    "schema-v1.json": {"version": 1, "record_fields": SCHEMA_V2["record_fields"]},
-    "codecs-v1.json": {
-        "version": 1,
-        "codecs": {
-            "RSSv1": "v1 normalization with versioned metadata hashes",
-            "TAZv1": "v1 TAZ normalization with versioned metadata hashes",
-            "SCREENv1": "v1 screenshot normalization with versioned metadata hashes",
-        },
-    },
-    "hash-functions-v1.json": {
-        "version": 1,
-        "algorithm": "SHA-256",
-        "canonical_json": {"ensure_ascii": False, "sort_keys": True, "separators": [",", ":"]},
-        "chain": {"genesis": "64 zeroes", "previous_field": "previous_hash"},
-        "metadata_fields_in_hash": ["schema_hash", "codec_hash", "hash_function_hash"],
-    },
+LEGACY_METADATA_HASHES = {
+    "schema_hash": "a457229b9a9b826381a6e9c43be1652bf4680ee0c7fbbe87b8b40e8bee699466",
+    "codec_hash": "3f6334a10d750a07b45b384ca53efaf63402fb752762c09fabce4633b8a454eb",
+    "hash_function_hash": "3821ac446a3b05bb1050ee4a3dcd2611aaede05a0238f32a9e1bb0b472b08c07",
 }
 
 
@@ -101,21 +88,13 @@ def metadata_hashes(storage_root: Path, codec_name: str) -> dict[str, str]:
 
 
 def _legacy_metadata_hashes(storage_root: Path) -> dict[str, str]:
-    """Bewahre den bisherigen v1-Metadatenvertrag fuer alte Records."""
+    """Bewahre den bisherigen v1-Metadatenvertrag ohne alte JSON-Dateien."""
 
-    storage_root.mkdir(parents=True, exist_ok=True)
-    for name, definition in LEGACY_DEFINITIONS.items():
-        path = storage_root / name
-        if not path.exists():
-            path.write_text(json.dumps(definition, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-    schema = storage_root / "schema-v1.json"
-    codecs = storage_root / "codecs-v1.json"
-    functions = storage_root / "hash-functions-v1.json"
     return {
         "schema_version": "1",
-        "schema_hash": hashlib.sha256(schema.read_bytes()).hexdigest(),
+        "schema_hash": LEGACY_METADATA_HASHES["schema_hash"],
         "codec_version": "1",
-        "codec_hash": hashlib.sha256(codecs.read_bytes()).hexdigest(),
+        "codec_hash": LEGACY_METADATA_HASHES["codec_hash"],
         "hash_function_version": "1",
-        "hash_function_hash": hashlib.sha256(functions.read_bytes()).hexdigest(),
+        "hash_function_hash": LEGACY_METADATA_HASHES["hash_function_hash"],
     }
