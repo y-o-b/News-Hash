@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <title>The project · News-Hash</title>
+  <style>
+    :root { color-scheme: light; --ink:#171717; --paper:#fffdf5; --blue:#4b8ed8; --red:#ef4b3f; --soft:#e9f2ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--blue); color:var(--ink); font:18px/1.65 system-ui,sans-serif; }
+    main { max-width:1040px; margin:auto; padding:36px 24px 72px; }
+    .back { color:var(--ink); font-size:14px; font-weight:800; }
+    .language { float:right; color:var(--ink); font-size:14px; font-weight:800; }
+    .hero, section { background:var(--paper); border:5px solid var(--ink); box-shadow:9px 9px 0 var(--ink); }
+    .hero { margin-top:28px; padding:clamp(30px,7vw,78px); }
+    .brand { align-items:center; display:flex; gap:20px; margin:28px 0; }
+    .logo { display:block; height:82px; width:82px; }
+    .kicker { color:var(--red); font-size:14px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
+    h1 { font:900 clamp(52px,11vw,116px)/.9 Impact,"Arial Black",sans-serif; margin:0; text-shadow:5px 5px 0 var(--red); }
+    .lead { font-size:clamp(21px,3vw,31px); line-height:1.3; max-width:790px; }
+    .hero p:last-child { margin-bottom:0; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; margin-top:28px; }
+    section { padding:30px clamp(24px,4vw,44px); }
+    section.wide { margin-top:28px; }
+    h2 { font:700 clamp(27px,4vw,42px)/1.05 Georgia,serif; margin:0 0 18px; }
+    h3 { font-size:22px; margin:28px 0 8px; }
+    p { max-width:800px; }
+    .highlight { background:var(--soft); border-left:8px solid var(--red); padding:18px 22px; font-weight:700; }
+    ul { padding-left:24px; }
+    li { margin:8px 0; }
+    .closing { text-align:center; }
+    .closing p { margin-left:auto; margin-right:auto; }
+    .button { display:inline-block; background:var(--red); border:3px solid var(--ink); box-shadow:4px 4px 0 var(--ink); color:white; font-weight:900; padding:9px 16px; text-decoration:none; }
+    .button:hover { transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
+    footer { color:var(--ink); font-size:14px; margin-top:34px; text-align:center; }
+    @media (max-width:700px) {
+      body { font-size:16px; }
+      main { padding:24px 16px 52px; }
+      .hero, section { border-width:3px; box-shadow:5px 5px 0 var(--ink); }
+      .hero { padding:28px 22px; }
+      .grid { grid-template-columns:1fr; gap:20px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="index.html">← Back to News-Hash</a>
+    <a class="language" href="projekt.html" lang="de">Deutsch</a>
+
+    <header class="hero">
+      <div class="kicker">News · Trust · Curiosity</div>
+      <div class="brand"><img class="logo" src="logo.svg" alt="News-Hash logo"><h1>News-Hash</h1></div>
+      <p class="lead">A news archive for people who want to know what happened and what they can still rely on later.</p>
+      <p>News shapes how we see the world. It helps us make decisions, have conversations, and understand connections. News-Hash gives this information a stable place and preserves it so that its history remains traceable.</p>
+    </header>
+
+    <div class="grid">
+      <section>
+        <h2>Why this project exists</h2>
+        <p>The news world moves quickly. Reports appear, change, get expanded, or disappear again. What was easy to find yesterday can be difficult to locate tomorrow.</p>
+        <p>News-Hash offers a calm, reliable archive in response to this volatility. It collects news from different sources and shows which information was available at a particular point in time.</p>
+      </section>
+
+      <section>
+        <h2>For curious people</h2>
+        <p>News-Hash is for anyone who wants to look more closely: people interested in politics and society, observers of current events, and anyone who wants to form their own opinion.</p>
+        <p>The project encourages following developments over longer periods instead of chasing only the latest outrage.</p>
+      </section>
+    </div>
+
+    <section class="wide">
+      <h2>What makes News-Hash special</h2>
+      <p class="highlight">It is not the loudest report that should matter, but the opportunity to form your own view later.</p>
+      <div class="grid">
+        <div>
+          <h3>News with a history</h3>
+          <p>Every archived report belongs to a timeline. This makes it easier to understand changes, new developments, and recurring topics.</p>
+        </div>
+        <div>
+          <h3>Sources in view</h3>
+          <p>Different news sources become visible together. This provides orientation and helps reveal different perspectives.</p>
+        </div>
+        <div>
+          <h3>Traceable, not fleeting</h3>
+          <p>News-Hash stands for careful handling of what was published. The archive is meant to show what was there, not rewrite a story afterwards.</p>
+        </div>
+        <div>
+          <h3>Open to discovery</h3>
+          <p>The project grows with the news and with its users' questions. Every source can offer a new way of looking at the world.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wide">
+      <h2>An archive that invites reflection</h2>
+      <p>News-Hash does not aim to provide ready-made opinions. It wants to create a basis on which people can compare, contextualize, and ask questions for themselves. Good orientation emerges where information does not have to move on immediately.</p>
+      <p>Those who look at news with some distance often see more: What has changed? Which topics keep returning? Which perspectives might be missing? And which questions remain open?</p>
+    </section>
+
+    <section class="wide closing">
+      <h2>Stay curious</h2>
+      <p>News-Hash is an invitation to look more closely, discover connections, and give the flow of news a little more permanence.</p>
+      <a class="button" href="index.html">Back to the homepage</a>
+    </section>
+
+    <footer>✦ Built with AI, refined with care, for curious people ♥<br>Developed with <a href="https://opencode.ai/" target="_blank" rel="noreferrer">OpenCode</a></footer>
+  </main>
+</body>
+</html>
