@@ -12,6 +12,8 @@ Data is stored in JSONL and SQLite in parallel. JSONL is easy to archive and rea
 
 Special sources use dedicated codecs. The regular RSS processing handles structured JSON and XML feeds. The TAZ codec additionally downloads the complete article. The screenshot codec opens the first link of a source with Chromium, removes known cookie banners, and preserves a full visual snapshot.
 
+RSS feeds often contain only a short teaser instead of the complete news text. For this reason, source-specific codecs retrieve either the full article or a visual snapshot of the linked page, depending on the source.
+
 Once a day, the current hashes of both storage chains are combined in a small manifest. The manifest contains no news content. It is anchored publicly with OpenTimestamps and connected to the Bitcoin timeline. This makes it possible to prove that these hashes existed no later than that point in time.
 
 The project combines three layers: a local archive for content, hash chains for internal traceability, and a public timestamp anchor for independent proof of existence. The blockchain does not store the news, only the cryptographic fingerprint of the local archive.

@@ -4,6 +4,7 @@
 
 - Python mit `uv`
 - Externe Nachrichtenquelle wird per HTTP abgefragt.
+- RSS-Feeds enthalten häufig nur Anreißer oder unvollständige Nachrichtentexte; vollständige Inhalte werden je nach Quelle über einen Codec als Artikeltext oder Screenshot nachgeladen.
 - Interne Blockchain bedeutet eine append-only Kette von Datensätzen.
 - Jeder Datensatz referenziert den vorherigen, um Manipulationen erkennbar zu machen.
 - Es wird zunächst lokal und ohne externe Knoten gearbeitet.

@@ -12,6 +12,8 @@ Die Daten werden parallel in JSONL und SQLite gespeichert. JSONL ist einfach zu 
 
 Für besondere Quellen gibt es eigene Codecs. Die normale RSS-Verarbeitung übernimmt strukturierte JSON- und XML-Feeds. Der TAZ-Codec lädt zusätzlich den vollständigen Artikel. Der Screenshot-Codec öffnet den ersten Link einer Quelle mit Chromium, entfernt bekannte Cookie-Banner und bewahrt eine vollständige visuelle Momentaufnahme auf.
 
+RSS-Feeds enthalten häufig nur einen Anreißer und nicht den vollständigen Nachrichtentext. Deshalb laden die quellspezifischen Codecs je nach Quelle den vollständigen Artikel oder eine visuelle Momentaufnahme der verlinkten Seite nach.
+
 Einmal täglich werden die aktuellen Hashes beider Speicherketten in einem kleinen Manifest zusammengefasst. Dieses Manifest enthält keine Nachrichtentexte. Es wird mit OpenTimestamps öffentlich verankert und damit mit der Bitcoin-Zeitachse verbunden. So kann später nachgewiesen werden, dass diese Hashes spätestens zu diesem Zeitpunkt existiert haben.
 
 Das Projekt verbindet damit drei Ebenen: ein lokales Archiv für die Inhalte, Hash-Ketten für die interne Nachvollziehbarkeit und eine öffentliche Zeitverankerung für den unabhängigen Existenznachweis. Die Blockchain speichert dabei nicht die Nachrichten, sondern nur den kryptografischen Fingerabdruck des lokalen Archivs.
