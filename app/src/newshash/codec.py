@@ -16,6 +16,8 @@ from xml.etree import ElementTree
 
 import requests
 
+from newshash.metadata import metadata_hashes
+
 GENESIS_HASH = "0" * 64
 REQUEST_TIMEOUT_SECONDS = 30
 USER_AGENT = "newshash/0.1"
@@ -336,6 +338,33 @@ class RSSv0:
         return True
 
 
+class _VersionedCodecMixin:
+    """Ergaenze Records um versionierte JSON-Metadaten und deren Hashes."""
+
+    def prepare_item(
+        self,
+        item: dict[str, Any],
+        retrieved_at: str,
+        storage_root: Path,
+        image_root: Path,
+        storage_name: str | None = None,
+    ) -> tuple[dict[str, Any], dict[str, bytes]]:
+        prepared_item, image_bytes_by_hash = super().prepare_item(item, retrieved_at, storage_root, image_root, storage_name)
+        prepared_item.update(metadata_hashes(storage_root))
+        return prepared_item, image_bytes_by_hash
+
+    def record_hash_material(self, record: dict[str, Any], previous_hash: str) -> dict[str, Any]:
+        material = super().record_hash_material(record, previous_hash)
+        material.update(
+            {
+                "schema_hash": record.get("schema_hash"),
+                "codec_hash": record.get("codec_hash"),
+                "hash_function_hash": record.get("hash_function_hash"),
+            }
+        )
+        return material
+
+
 class TAZv0(RSSv0):
     """RSSv0-Codec, der TAZ-Links durch vollständige Artikelinhalte ersetzt."""
 
@@ -399,6 +428,18 @@ class TAZv0(RSSv0):
         enriched_item = dict(item)
         enriched_item["content_html"] = self.fetch_taz_article(str(item.get("url") or ""))
         return super().prepare_item(enriched_item, retrieved_at, storage_root, image_root, storage_name)
+
+
+class RSSv1(_VersionedCodecMixin, RSSv0):
+    """RSSv1 mit versionierten Schema-, Codec- und Hashmetadaten."""
+
+    codec_name = "RSSv1"
+
+
+class TAZv1(_VersionedCodecMixin, TAZv0):
+    """TAZv1 mit versionierten Schema-, Codec- und Hashmetadaten."""
+
+    codec_name = "TAZv1"
 
 
 class SCREENv0(RSSv0):
@@ -476,11 +517,20 @@ class SCREENv0(RSSv0):
         return prepared_item, image_bytes_by_hash
 
 
+class SCREENv1(_VersionedCodecMixin, SCREENv0):
+    """SCREENv1 mit versionierten Schema-, Codec- und Hashmetadaten."""
+
+    codec_name = "SCREENv1"
+
+
 DEFAULT_CODEC = RSSv0()
 CODEC_REGISTRY: dict[str, RSSv0] = {
     "RSSv0": DEFAULT_CODEC,
     "TAZv0": TAZv0(),
     "SCREENv0": SCREENv0(),
+    "RSSv1": RSSv1(),
+    "TAZv1": TAZv1(),
+    "SCREENv1": SCREENv1(),
 }
 
 

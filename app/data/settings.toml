@@ -4,40 +4,40 @@ heartbeat_url = "https://hb.y-o-b.de/heartbeat"
 name = "Tagesschau"
 feed_url = "https://rssbridge.y-o-b.de/?action=display&bridge=TagesschauBridge&feed=alle_meldungen&format=Json"
 storage_name = "tagesschau_alle_meldungen"
-codec_name = "RSSv0"
+codec_name = "RSSv1"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "Deutsche Welle"
 feed_url = "https://rssbridge.y-o-b.de/?action=display&bridge=DeutscheWelleBridge&feed=http%3A%2F%2Frss.dw.com%2Fatom%2Frss-en-ger&format=Json"
 storage_name = "dw_germany"
-codec_name = "RSSv0"
+codec_name = "RSSv1"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "ZDF - Heute"
 feed_url = "https://www.zdfheute.de/rss/zdf/nachrichten"
 storage_name = "zdfheute_nachrichten"
-codec_name = "SCREENv0"
+codec_name = "SCREENv1"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "Tagesspiegel - international"
 feed_url = "https://rssbridge.y-o-b.de/?action=display&bridge=TagesspiegelBridge&category=https%3A%2F%2Ftagesspiegel.de%2Fcontentexport%2Ffeed%2Finternationales%2F&limit=20&format=Json"
 storage_name = "tagesspiegel_international"
-codec_name = "RSSv0"
+codec_name = "RSSv1"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "TAZ"
 feed_url = "https://taz.de/!p4608;rss/"
 storage_name = "taz"
-codec_name = "TAZv0"
+codec_name = "TAZv1"
 poll_interval_seconds = 300
 
 [[sources]]
 name = "Tagesschau - Screenshot"
 feed_url = "https://www.tagesschau.de/infoservices/alle-meldungen-100~rss2.xml"
 storage_name = "tagesschau_screenshot"
-codec_name = "SCREENv0"
+codec_name = "SCREENv1"
 poll_interval_seconds = 300

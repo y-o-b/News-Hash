@@ -5,7 +5,7 @@ from pathlib import Path
 
 import requests
 
-from newshash.codec import GENESIS_HASH, RSSv0, SCREENv0
+from newshash.codec import GENESIS_HASH, RSSv0, RSSv1, SCREENv0
 
 
 def make_item(item_id: str = "example-1", content_html: str = "<p>Text</p>") -> dict:
@@ -154,6 +154,20 @@ def test_build_record_without_images(tmp_path) -> None:
     assert record["images"] == {}
     assert image_bytes_by_hash == {}
     assert len(record["hash"]) == 64
+
+
+def test_v1_record_contains_metadata_hashes_and_uses_them_in_hash(tmp_path) -> None:
+    codec = RSSv1()
+    item = make_item()
+
+    record, _ = codec.build_record(item, "2026-07-29T10:05:00Z", GENESIS_HASH, tmp_path, tmp_path / "images")
+
+    assert record["schema_version"] == "1"
+    assert len(record["schema_hash"]) == 64
+    assert len(record["codec_hash"]) == 64
+    assert len(record["hash_function_hash"]) == 64
+    changed = dict(record, schema_hash="f" * 64)
+    assert codec.digest_record(codec.record_hash_material(changed, GENESIS_HASH)) != record["hash"]
 
 
 def test_build_record_ignores_retrieved_at_in_hash(tmp_path) -> None:

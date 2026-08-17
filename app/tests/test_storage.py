@@ -90,6 +90,21 @@ def test_sqlite_storage_appends_records_and_image_blobs(tmp_path) -> None:
     assert row[0] == b"image-bytes"
 
 
+def test_sqlite_storage_overwrites_anchor_artifacts_and_backup(tmp_path) -> None:
+    storage = SqliteStorage(tmp_path, "example")
+    storage.append_records([make_record("example-1", GENESIS_HASH)], {})
+
+    storage.store_anchor_artifacts("2026-08-17", "example.txt", b"manifest", "example.txt.ots", b"proof")
+    backup_paths = storage.backup_shards(tmp_path / "sqlite-backups")
+    storage.store_anchor_artifacts("2026-08-17", "example.txt", b"manifest-new", "example.txt.ots", b"proof-new")
+
+    with sqlite3.connect(storage.path) as connection:
+        rows = connection.execute("SELECT artifact_type, content FROM anchor_artifacts ORDER BY artifact_type").fetchall()
+    assert rows == [("manifest", b"manifest-new"), ("ots", b"proof-new")]
+    assert backup_paths == [tmp_path / "sqlite-backups" / "example.0.sqlite3"]
+    assert backup_paths[0].exists()
+
+
 def test_sqlite_storage_dashboard_stats_and_latest_records(tmp_path) -> None:
     storage = SqliteStorage(tmp_path, "example")
     image_hash = "a" * 64

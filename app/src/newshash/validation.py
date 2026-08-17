@@ -59,28 +59,52 @@ def _jsonl_records(path: Path) -> Iterable[tuple[int, dict[str, Any]]]:
 
 def _sqlite_records(path: Path) -> Iterable[tuple[int, dict[str, Any]]]:
     with sqlite3.connect(path) as connection:
-        rows = connection.execute(
-            """
-            SELECT source_url, source_id, title, content, author_name,
-                   codec_name, published_at, retrieved_at, previous_hash, hash, images_json
-            FROM records ORDER BY id
-            """
-        ).fetchall()
+        columns = [row[1] for row in connection.execute("PRAGMA table_info(records)").fetchall()]
+        if not columns:
+            raise sqlite3.DatabaseError("records table is missing")
+        selected_columns = [
+            "source_url",
+            "source_id",
+            "title",
+            "content",
+            "author_name",
+            "codec_name",
+            "published_at",
+            "retrieved_at",
+            "schema_version",
+            "schema_hash",
+            "codec_version",
+            "codec_hash",
+            "hash_function_version",
+            "hash_function_hash",
+            "previous_hash",
+            "hash",
+            "images_json",
+        ]
+        available_columns = [column for column in selected_columns if column in columns]
+        rows = connection.execute(f"SELECT {', '.join(available_columns)} FROM records ORDER BY id").fetchall()
     for row_number, row in enumerate(rows, start=1):
+        values = dict(zip(available_columns, row, strict=True))
         yield (
             row_number,
             {
-                "source_url": row[0],
-                "source_id": row[1],
-                "title": row[2],
-                "content": row[3],
-                "author_name": row[4],
-                "codec_name": row[5],
-                "published_at": row[6],
-                "retrieved_at": row[7],
-                "previous_hash": row[8],
-                "hash": row[9],
-                "images": json.loads(row[10]),
+                "source_url": values.get("source_url"),
+                "source_id": values.get("source_id"),
+                "title": values.get("title"),
+                "content": values.get("content"),
+                "author_name": values.get("author_name"),
+                "codec_name": values.get("codec_name"),
+                "published_at": values.get("published_at"),
+                "retrieved_at": values.get("retrieved_at"),
+                "schema_version": values.get("schema_version"),
+                "schema_hash": values.get("schema_hash"),
+                "codec_version": values.get("codec_version"),
+                "codec_hash": values.get("codec_hash"),
+                "hash_function_version": values.get("hash_function_version"),
+                "hash_function_hash": values.get("hash_function_hash"),
+                "previous_hash": values.get("previous_hash"),
+                "hash": values.get("hash"),
+                "images": json.loads(values.get("images_json") or "{}"),
             },
         )
 
@@ -113,7 +137,6 @@ def _validate_paths(
     if first_selected:
         expected_hash = _last_hash(paths[first_selected - 1], storage_format) or GENESIS_HASH
 
-    codec = get_codec(codec_name)
     records_checked = 0
     for path in selected_paths:
         shard_number = _shard_index(path)
@@ -124,7 +147,8 @@ def _validate_paths(
                 actual_previous = str(record.get("previous_hash"))
                 if actual_previous != expected_hash:
                     errors.append(f"{storage_format} shard={shard_number} record={row_number}: previous_hash={actual_previous!r}, expected={expected_hash!r}")
-                calculated_hash = codec.digest_record(codec.record_hash_material(record, expected_hash))
+                record_codec = get_codec(str(record.get("codec_name") or codec_name))
+                calculated_hash = record_codec.digest_record(record_codec.record_hash_material(record, expected_hash))
                 actual_hash = str(record.get("hash"))
                 if actual_hash != calculated_hash:
                     errors.append(f"{storage_format} shard={shard_number} record={row_number}: hash={actual_hash!r}, calculated={calculated_hash!r}")

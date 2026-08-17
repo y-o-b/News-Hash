@@ -9,6 +9,7 @@ from typing import Literal
 
 from newshash.main_types import AnchorableResult
 from newshash.settings import SourceConfig
+from newshash.storage import SqliteStorage
 
 OTS_TIMEOUT_SECONDS = 15
 AnchorStatus = Literal["no_anchor", "no_ots", "pending", "complete"]
@@ -64,6 +65,9 @@ class OpenTimestampsAnchor:
             text=True,
             timeout=OTS_TIMEOUT_SECONDS,
         )
+        sqlite_storage = SqliteStorage(self.storage_root, source.storage_name)
+        sqlite_storage.store_anchor_artifacts(day.isoformat(), manifest.name, manifest.read_bytes(), proof.name, proof.read_bytes())
+        sqlite_storage.backup_shards(self.storage_root / "sqlite-backups")
         return proof
 
     def check_status(self, source: SourceConfig, anchor_date: date | None = None) -> AnchorStatus:

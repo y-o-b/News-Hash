@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sqlite3
 from datetime import date
 from pathlib import Path
 
@@ -32,6 +33,10 @@ def test_anchor_source_writes_manifest_and_calls_ots(tmp_path, monkeypatch) -> N
     assert "latest_hash_jsonl" in manifest.read_text(encoding="utf-8")
     assert '"latest_shard_jsonl": 3' in manifest.read_text(encoding="utf-8")
     assert '"latest_shard_sqlite": 4' in manifest.read_text(encoding="utf-8")
+    with sqlite3.connect(tmp_path / "zdf.0.sqlite3") as connection:
+        artifacts = connection.execute("SELECT artifact_type, content FROM anchor_artifacts ORDER BY artifact_type").fetchall()
+    assert artifacts == [("manifest", manifest.read_bytes()), ("ots", b"proof")]
+    assert (tmp_path / "sqlite-backups/zdf.0.sqlite3").exists()
     assert calls == [["ots", "stamp", str(manifest)]]
 
 

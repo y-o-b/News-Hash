@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
@@ -21,6 +22,12 @@ RECORDS_COLUMNS = (
     "codec_name",
     "published_at",
     "retrieved_at",
+    "schema_version",
+    "schema_hash",
+    "codec_version",
+    "codec_hash",
+    "hash_function_version",
+    "hash_function_hash",
     "previous_hash",
     "hash",
     "images_json",
@@ -36,6 +43,12 @@ RECORDS_CREATE_SQL = """
         codec_name TEXT,
         published_at TEXT,
         retrieved_at TEXT,
+        schema_version TEXT,
+        schema_hash TEXT,
+        codec_version TEXT,
+        codec_hash TEXT,
+        hash_function_version TEXT,
+        hash_function_hash TEXT,
         previous_hash TEXT,
         hash TEXT UNIQUE,
         images_json TEXT
@@ -48,6 +61,31 @@ RECORD_IMAGES_CREATE_SQL = """
     CREATE TABLE IF NOT EXISTS record_images (
         image_hash TEXT PRIMARY KEY,
         image_data BLOB NOT NULL
+    )
+"""
+LEGACY_RECORDS_COLUMNS = (
+    "id",
+    "source_url",
+    "source_id",
+    "title",
+    "content",
+    "author_name",
+    "codec_name",
+    "published_at",
+    "retrieved_at",
+    "previous_hash",
+    "hash",
+    "images_json",
+)
+ANCHOR_ARTIFACTS_TABLE = "anchor_artifacts"
+ANCHOR_ARTIFACTS_COLUMNS = ("anchor_date", "artifact_type", "file_name", "content")
+ANCHOR_ARTIFACTS_CREATE_SQL = """
+    CREATE TABLE IF NOT EXISTS anchor_artifacts (
+        anchor_date TEXT NOT NULL,
+        artifact_type TEXT NOT NULL,
+        file_name TEXT NOT NULL,
+        content BLOB NOT NULL,
+        PRIMARY KEY (anchor_date, artifact_type)
     )
 """
 
@@ -194,7 +232,7 @@ class SqliteStorage:
             return
 
         current_columns = self._table_columns(connection, table_name)
-        if current_columns == expected_columns:
+        if current_columns == expected_columns or set(current_columns) == set(expected_columns):
             return
 
         legacy_name = self._next_legacy_table_name(connection, table_name)
@@ -207,13 +245,27 @@ class SqliteStorage:
         path.parent.mkdir(parents=True, exist_ok=True)
         connection = sqlite3.connect(path)
 
+        self._migrate_legacy_records(connection)
         self._rename_if_schema_mismatch(connection, RECORDS_TABLE, RECORDS_COLUMNS)
         self._rename_if_schema_mismatch(connection, RECORD_IMAGES_TABLE, RECORD_IMAGES_COLUMNS)
 
         connection.execute(RECORDS_CREATE_SQL)
         connection.execute(RECORD_IMAGES_CREATE_SQL)
+        connection.execute(ANCHOR_ARTIFACTS_CREATE_SQL)
         connection.commit()
         return connection
+
+    def _migrate_legacy_records(self, connection: sqlite3.Connection) -> None:
+        """Erweitere das bisherige Records-Schema um die versionierten Metadatenfelder."""
+
+        if RECORDS_TABLE not in self._existing_tables(connection):
+            return
+        current_columns = self._table_columns(connection, RECORDS_TABLE)
+        if current_columns != LEGACY_RECORDS_COLUMNS:
+            return
+        for column in RECORDS_COLUMNS:
+            if column not in LEGACY_RECORDS_COLUMNS:
+                connection.execute(f"ALTER TABLE {RECORDS_TABLE} ADD COLUMN {column} TEXT")
 
     def known_source_ids(self) -> set[str]:
         """Sammle die bereits gespeicherten source_id-Werte aus dem letzten Shard."""
@@ -267,8 +319,10 @@ class SqliteStorage:
                     """
                     INSERT INTO records (
                         source_url, source_id, title, content, author_name,
-                        codec_name, published_at, retrieved_at, previous_hash, hash, images_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        codec_name, published_at, retrieved_at, schema_version, schema_hash,
+                        codec_version, codec_hash, hash_function_version, hash_function_hash,
+                        previous_hash, hash, images_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         record["source_url"],
@@ -279,6 +333,12 @@ class SqliteStorage:
                         record["codec_name"],
                         record["published_at"],
                         record["retrieved_at"],
+                        record.get("schema_version"),
+                        record.get("schema_hash"),
+                        record.get("codec_version"),
+                        record.get("codec_hash"),
+                        record.get("hash_function_version"),
+                        record.get("hash_function_hash"),
                         record["previous_hash"],
                         record["hash"],
                         json.dumps(record["images"], ensure_ascii=False, sort_keys=True),
@@ -294,6 +354,32 @@ class SqliteStorage:
                     )
                 connection.commit()
 
+    def store_anchor_artifacts(self, anchor_date: str, manifest_name: str, manifest_bytes: bytes, proof_name: str, proof_bytes: bytes) -> None:
+        """Speichere Manifest und OTS-Proof im letzten Datenbank-Shard und ueberschreibe den Tag."""
+
+        target = self._shard_paths()[-1] if self._shard_paths() else self.path
+        with self._connect(target) as connection:
+            connection.executemany(
+                """
+                INSERT INTO anchor_artifacts (anchor_date, artifact_type, file_name, content)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(anchor_date, artifact_type) DO UPDATE SET file_name=excluded.file_name, content=excluded.content
+                """,
+                [(anchor_date, "manifest", manifest_name, manifest_bytes), (anchor_date, "ots", proof_name, proof_bytes)],
+            )
+            connection.commit()
+
+    def backup_shards(self, backup_root: Path) -> list[Path]:
+        """Kopiere alle SQLite-Shards in gleichnamige, bei jedem Lauf ueberschriebene Backups."""
+
+        backup_root.mkdir(parents=True, exist_ok=True)
+        backups: list[Path] = []
+        for shard in self._shard_paths():
+            target = backup_root / shard.name
+            shutil.copy2(shard, target)
+            backups.append(target)
+        return backups
+
     def read_records(self) -> list[dict[str, Any]]:
         """Lies alle Records ueber alle Shards, mit deserialisiertem images-Dict."""
 
@@ -303,7 +389,9 @@ class SqliteStorage:
                 rows = connection.execute(
                     """
                     SELECT source_url, source_id, title, content, author_name,
-                           codec_name, published_at, retrieved_at, previous_hash, hash, images_json
+                           codec_name, published_at, retrieved_at, schema_version, schema_hash,
+                           codec_version, codec_hash, hash_function_version, hash_function_hash,
+                           previous_hash, hash, images_json
                     FROM records ORDER BY id
                     """
                 ).fetchall()
@@ -318,9 +406,15 @@ class SqliteStorage:
                         "codec_name": row[5],
                         "published_at": row[6],
                         "retrieved_at": row[7],
-                        "previous_hash": row[8],
-                        "hash": row[9],
-                        "images": json.loads(row[10]),
+                        "schema_version": row[8],
+                        "schema_hash": row[9],
+                        "codec_version": row[10],
+                        "codec_hash": row[11],
+                        "hash_function_version": row[12],
+                        "hash_function_hash": row[13],
+                        "previous_hash": row[14],
+                        "hash": row[15],
+                        "images": json.loads(row[16]),
                     }
                 )
         return records
@@ -368,7 +462,9 @@ class SqliteStorage:
             rows = connection.execute(
                 """
                 SELECT source_url, source_id, title, content, author_name,
-                       codec_name, published_at, retrieved_at, previous_hash, hash, images_json
+                       codec_name, published_at, retrieved_at, schema_version, schema_hash,
+                       codec_version, codec_hash, hash_function_version, hash_function_hash,
+                       previous_hash, hash, images_json
                 FROM records ORDER BY published_at DESC, id DESC LIMIT ?
                 """,
                 (limit,),
@@ -383,9 +479,15 @@ class SqliteStorage:
                 "codec_name": row[5],
                 "published_at": row[6],
                 "retrieved_at": row[7],
-                "previous_hash": row[8],
-                "hash": row[9],
-                "images": json.loads(row[10]),
+                "schema_version": row[8],
+                "schema_hash": row[9],
+                "codec_version": row[10],
+                "codec_hash": row[11],
+                "hash_function_version": row[12],
+                "hash_function_hash": row[13],
+                "previous_hash": row[14],
+                "hash": row[15],
+                "images": json.loads(row[16]),
             }
             for row in rows
         ]
@@ -398,7 +500,9 @@ class SqliteStorage:
                 row = connection.execute(
                     """
                     SELECT source_url, source_id, title, content, author_name,
-                           codec_name, published_at, retrieved_at, previous_hash, hash, images_json
+                           codec_name, published_at, retrieved_at, schema_version, schema_hash,
+                           codec_version, codec_hash, hash_function_version, hash_function_hash,
+                           previous_hash, hash, images_json
                     FROM records WHERE source_id = ? LIMIT 1
                     """,
                     (source_id,),
@@ -413,9 +517,15 @@ class SqliteStorage:
                     "codec_name": row[5],
                     "published_at": row[6],
                     "retrieved_at": row[7],
-                    "previous_hash": row[8],
-                    "hash": row[9],
-                    "images": json.loads(row[10]),
+                    "schema_version": row[8],
+                    "schema_hash": row[9],
+                    "codec_version": row[10],
+                    "codec_hash": row[11],
+                    "hash_function_version": row[12],
+                    "hash_function_hash": row[13],
+                    "previous_hash": row[14],
+                    "hash": row[15],
+                    "images": json.loads(row[16]),
                 }
         return None
 

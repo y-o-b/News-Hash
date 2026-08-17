@@ -130,6 +130,8 @@ Die Felder haben folgende Bedeutung:
 - `codec_name` wählt die quellspezifische Verarbeitung. Standard ist `RSSv0`.
 - `poll_interval_seconds` bestimmt das individuelle Polling-Intervall im Daemon.
 
+Für neue Quellen werden die versionierten Codecs `RSSv1`, `TAZv1` und `SCREENv1` empfohlen. Sie legen `schema-v0/v1.json`, `codecs-v0/v1.json` und `hash-functions-v0/v1.json` in `app/data/` ab und speichern deren Hashes im Record. Bei der täglichen Manifestbildung werden SQLite-Shards unter `app/data/sqlite-backups/` mit gleichbleibenden Dateinamen überschrieben. Manifest und `.ots`-Proof werden zusätzlich in der Tabelle `anchor_artifacts` der SQLite-Datei gespeichert.
+
 Optional kann auf oberster Ebene ein Heartbeat-Ziel angegeben werden:
 
 ```toml
