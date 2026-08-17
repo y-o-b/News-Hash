@@ -1,72 +1,72 @@
 # News-Hash
 
-News-Hash ist ein lokales Nachrichtenarchiv mit überprüfbarer Historie. Die Anwendung liest konfigurierte Nachrichtenquellen ein, normalisiert neue Meldungen und speichert sie dauerhaft in einer append-only Datenstruktur. Jede Meldung bleibt mit ihrer zeitlichen Einordnung, Quelle und Hash-Historie nachvollziehbar.
+News-Hash is a local news archive with a verifiable history. The application reads configured news sources, normalizes new reports, and stores them permanently in an append-only data structure. Every report remains traceable through its timestamp, source, and hash history.
 
-English version: [README_en.md](README_en.md)
+Deutsche Version: [README.de.md](README.de.md)
 
-Die Python-Anwendung liegt unter `app/`. Die statische GitHub-Pages-Website liegt unter `docs/`. Die verbindliche Projekt- und Produktdokumentation befindet sich unter `project-docu/`.
+The Python application is located under `app/`. The static GitHub Pages website is located under `docs/`. The binding project and product documentation is located under `project-docu/`.
 
-Besonders wichtig sind die externen Nachweise und die Betriebsüberwachung: Hash-Manifeste werden über OpenTimestamps in der Bitcoin-Blockchain verankert und zusätzlich mit ihren `.ots`-Proofs per Git in einem GitHub-Repository veröffentlicht. Der laufende Betrieb kann über einen optionalen Heartbeat und über Prometheus-Metriken überwacht werden.
+The external proofs and operational monitoring are particularly important: hash manifests are anchored in the Bitcoin blockchain through OpenTimestamps and their `.ots` proofs are additionally published with Git in a GitHub repository. The running system can be monitored through an optional heartbeat and Prometheus metrics.
 
-> ✦ Mit KI gebaut, mit Liebe verfeinert, für neugierige Menschen ♥
+> Built with AI, refined with care, for curious people
 
-## Inhaltsverzeichnis
+## Table of contents
 
-- [Architektur](#architektur)
-- [Verzeichnisstruktur](#verzeichnisstruktur)
-- [Voraussetzungen](#voraussetzungen)
-- [Installation und Start](#installation-und-start)
-- [Konfiguration](#konfiguration)
-- [Datenfluss](#datenfluss)
-- [Speicherung und Shards](#speicherung-und-shards)
-- [Hash-Ketten](#hash-ketten)
+- [Architecture](#architecture)
+- [Directory structure](#directory-structure)
+- [Requirements](#requirements)
+- [Installation and startup](#installation-and-startup)
+- [Configuration](#configuration)
+- [Data flow](#data-flow)
+- [Storage and shards](#storage-and-shards)
+- [Hash chains](#hash-chains)
 - [Codecs](#codecs)
-- [Daemon und WebUI](#daemon-und-webui)
-- [Integritätsnachweise](#integritätsnachweise)
+- [Daemon and WebUI](#daemon-and-webui)
+- [Integrity proofs](#integrity-proofs)
 - [Monitoring](#monitoring)
-- [Anchoring und GitHub-Synchronisierung](#anchoring-und-github-synchronisierung)
+- [Anchoring and GitHub synchronization](#anchoring-and-github-synchronization)
 - [Docker](#docker)
-- [Tests und Qualitätssicherung](#tests-und-qualitätssicherung)
-- [Entwicklungsregeln](#entwicklungsregeln)
+- [Tests and quality assurance](#tests-and-quality-assurance)
+- [Development rules](#development-rules)
 
-## Architektur
+## Architecture
 
-News-Hash besteht aus einem CLI-Programm, einer Import- und Normalisierungsschicht, austauschbaren Quellen-Codecs, zwei parallelen Speichern und einer eingebetteten HTTP-WebUI.
+News-Hash consists of a CLI program, an import and normalization layer, replaceable source codecs, two parallel stores, and an embedded HTTP web UI.
 
-Die Anwendung arbeitet ohne öffentliche Blockchain und ohne externe Konsensmechanismen. Die interne Kette ist eine append-only Folge von Datensätzen. Jeder neue Datensatz referenziert den Hash des vorherigen Datensatzes. Dadurch lassen sich nachträgliche Änderungen an Inhalt oder Reihenfolge erkennen.
+The application operates without a public blockchain and without external consensus mechanisms. The internal chain is an append-only sequence of records. Each new record references the hash of the preceding record. This makes later changes to content or order detectable.
 
-JSONL und SQLite werden bewusst parallel geführt. Beide Speicher verwenden dasselbe Hash-Material, besitzen aber jeweils eine unabhängige Kette. Das erlaubt eine konsistente Wiederherstellung, wenn ein Prozess beispielsweise zwischen zwei Schreibvorgängen beendet wird.
+JSONL and SQLite are deliberately maintained in parallel. Both stores use the same hash material, but each has an independent chain. This allows consistent recovery if a process is terminated, for example, between two write operations.
 
-## Verzeichnisstruktur
+## Directory structure
 
 ```text
 app/
-├── data/                    Laufzeitdaten, Settings und Credentials
-├── src/newshash/            Anwendungscode
-├── tests/                   Unit- und Integrationstests
-├── pyproject.toml           Paketmetadaten und Tool-Konfiguration
-└── uv.lock                 Reproduzierbare Abhängigkeiten
-docs/                        Statische GitHub-Pages-Website
-project-docu/                Verbindliche Projekt- und Produktdokumentation
-anchors/                     Öffentlich synchronisierte Anchor-Dateien
-docker-compose.yml           Container-Deployment
+├── data/                    Runtime data, settings, and credentials
+├── src/newshash/            Application code
+├── tests/                   Unit and integration tests
+├── pyproject.toml           Package metadata and tool configuration
+└── uv.lock                 Reproducible dependencies
+docs/                        Static GitHub Pages website
+project-docu/                Binding project and product documentation
+anchors/                     Publicly synchronized anchor files
+docker-compose.yml           Container deployment
 ```
 
-Die Laufzeitdaten unter `app/data/` enthalten unter anderem SQLite-Dateien, JSONL-Dateien, Bilder und lokale Anchor-Dateien. Credentials werden aus `app/data/credentials.env` gelesen und nicht protokolliert.
+Runtime data under `app/data/` includes SQLite files, JSONL files, images, and local anchor files. Credentials are read from `app/data/credentials.env` and are never logged.
 
-## Voraussetzungen
+## Requirements
 
-- Python 3.14 oder kompatibel
+- Python 3.14 or compatible
 - `uv`
-- Für `SCREENv0`: Playwright mit installiertem Chromium
-- Für OpenTimestamps: der Befehl `ots`
-- Für GitHub-Synchronisierung: ein GitHub-Token und ein Repository in `data/credentials.env`
+- For `SCREENv0`: Playwright with Chromium installed
+- For OpenTimestamps: the `ots` command
+- For GitHub synchronization: a GitHub token and repository in `data/credentials.env`
 
-Die Python-Abhängigkeiten werden über `pyproject.toml` und `uv.lock` verwaltet. Die Anwendung nutzt unter anderem `requests`, `markdown`, `playwright` und `opentimestamps-client`.
+Python dependencies are managed through `pyproject.toml` and `uv.lock`. The application uses, among other packages, `requests`, `markdown`, `playwright`, and `opentimestamps-client`.
 
-## Installation und Start
+## Installation and startup
 
-Alle Python- und Testbefehle werden aus `app/` ausgeführt:
+Run all Python and test commands from `app/`:
 
 ```bash
 cd app
@@ -74,36 +74,36 @@ uv sync --dev
 uv run newshash
 ```
 
-Ein einmaliger Lauf ruft jede konfigurierte Quelle genau einmal ab. Für den dauerhaften Betrieb wird der Daemon gestartet:
+A single run retrieves each configured source exactly once. Start the daemon for continuous operation:
 
 ```bash
 uv run newshash --daemon
 ```
 
-OpenTimestamps kann bei einem einmaligen Lauf explizit aktiviert werden:
+OpenTimestamps can be explicitly enabled for a single run:
 
 ```bash
 uv run newshash --ots
 ```
 
-Verfügbare CLI-Optionen:
+Available CLI options:
 
-- `--settings <pfad>` lädt eine alternative TOML-Datei.
-- `--daemon` startet den dauerhaften Polling-Betrieb mit WebUI.
-- `--ots` aktiviert Anchoring bei einem einmaligen Lauf.
-- `--host <adresse>` setzt die Bind-Adresse der WebUI.
-- `--port <nummer>` setzt den HTTP-Port der WebUI.
-- `--version` zeigt die installierte App-Version.
+- `--settings <path>` loads an alternative TOML file.
+- `--daemon` starts continuous polling with the web UI.
+- `--ots` enables anchoring for a single run.
+- `--host <address>` sets the web UI bind address.
+- `--port <number>` sets the web UI HTTP port.
+- `--version` displays the installed application version.
 
-Standardmäßig bindet die WebUI im Daemon-Modus auf `0.0.0.0:8000`. Für lokale Tests kann die Bind-Adresse eingeschränkt werden:
+By default, the web UI binds to `0.0.0.0:8000` in daemon mode. Restrict the bind address for local tests:
 
 ```bash
 uv run newshash --daemon --host 127.0.0.1 --port 8000
 ```
 
-## Konfiguration
+## Configuration
 
-Die Standarddatei ist `app/data/settings.toml`. Sie muss mindestens einen `[[sources]]`-Block enthalten. Ein vollständiger Quellenblock sieht so aus:
+The default file is `app/data/settings.toml`. It must contain at least one `[[sources]]` block. A complete source block looks like this:
 
 ```toml
 [[sources]]
@@ -114,59 +114,59 @@ codec_name = "RSSv0"
 poll_interval_seconds = 300
 ```
 
-Die Felder haben folgende Bedeutung:
+The fields mean:
 
-- `name` ist der Anzeigename in der WebUI.
-- `feed_url` ist die URL des JSON- oder XML-Feeds.
-- `storage_name` bestimmt die Dateinamen der JSONL- und SQLite-Shards.
-- `codec_name` wählt die quellspezifische Verarbeitung. Standard ist `RSSv0`.
-- `poll_interval_seconds` bestimmt das individuelle Polling-Intervall im Daemon.
+- `name` is the display name in the web UI.
+- `feed_url` is the URL of the JSON or XML feed.
+- `storage_name` determines the JSONL and SQLite shard file names.
+- `codec_name` selects source-specific processing. The default is `RSSv0`.
+- `poll_interval_seconds` determines the individual polling interval in the daemon.
 
-Optional kann auf oberster Ebene ein Heartbeat-Ziel angegeben werden:
+An optional heartbeat target can be specified at the top level:
 
 ```toml
 heartbeat_url = "https://example.org/heartbeat"
 ```
 
-Ist `heartbeat_url` nicht gesetzt oder leer, wird kein Heartbeat gesendet. Die Anwendung verwendet keine fest eingebaute Heartbeat-Adresse.
+If `heartbeat_url` is not set or is empty, no heartbeat is sent. The application does not use a hard-coded heartbeat address.
 
-## Datenfluss
+## Data flow
 
-Bei jedem Quellenlauf durchläuft eine Meldung diese Schritte:
+Each time a source is processed, a report passes through these steps:
 
-1. Der konfigurierte Feed wird per HTTP abgerufen.
-2. JSON oder XML wird in das interne Feed-Format überführt.
-3. Der ausgewählte Codec normalisiert Titel, Inhalt, URL, Autor und Zeitstempel.
-4. Bereits bekannte `source_id`s werden vor teuren Verarbeitungsschritten übersprungen.
-5. Verlinkte Bilder oder quellspezifische Inhalte werden geladen, sofern der Codec dies vorsieht.
-6. Für JSONL und SQLite wird jeweils der nächste Hash anhand der eigenen Kette berechnet.
-7. Die neuen Datensätze werden in beide Speicherformate geschrieben.
-8. Optional wird ein Tagesmanifest erzeugt, verankert und synchronisiert.
+1. The configured feed is retrieved over HTTP.
+2. JSON or XML is converted into the internal feed format.
+3. The selected codec normalizes the title, content, URL, author, and timestamps.
+4. Already known `source_id` values are skipped before expensive processing steps.
+5. Linked images or source-specific content are loaded if the codec requires it.
+6. The next hash is calculated separately for JSONL and SQLite using each store's chain.
+7. The new records are written to both storage formats.
+8. A daily manifest is optionally created, anchored, and synchronized.
 
-Fehler bei einer Quelle werden gezählt, nach `stderr` geschrieben und im laufenden Prozess für Dashboard und Metriken vorgehalten. Ein Fehler soll die Verarbeitung anderer Quellen nicht stoppen.
+Errors from a source are counted, written to `stderr`, and retained in the running process for the dashboard and metrics. An error must not stop processing of other sources.
 
-## Speicherung und Shards
+## Storage and shards
 
-Pro Quelle entstehen unter `app/data/` Dateien nach diesem Muster:
+Each source creates files under `app/data/` following this pattern:
 
 ```text
 <storage_name>.0.jsonl
 <storage_name>.0.sqlite3
 ```
 
-Erreicht eine Datei 1 GB, wird der nächste nummerierte Shard angelegt. JSONL enthält einen JSON-Datensatz pro Zeile. SQLite speichert die Records in `records` und deduplizierte Bilddaten in `record_images`.
+When a file reaches 1 GB, the next numbered shard is created. JSONL contains one JSON record per line. SQLite stores records in `records` and deduplicated image data in `record_images`.
 
-Die JSONL-Bildverweise zeigen auf relative Dateien unter `data/images/`. SQLite speichert dieselben Bilddaten zusätzlich als BLOB, damit Detailansichten auch unabhängig von der JSONL-Datei auf die Archivdaten zugreifen können.
+JSONL image references point to relative files under `data/images/`. SQLite also stores the same image data as BLOBs so detail views can access archived data independently of the JSONL file.
 
-Die Dublettenprüfung liest nur den jeweils neuesten Shard je Speicherformat. Kennzahlen und Detailzugriffe arbeiten dagegen über alle Shards. Die Dashboard-Liste verwendet aus Performancegründen nur den neuesten SQLite-Shard.
+Duplicate detection reads only the newest shard for each storage format. Metrics and detail access, on the other hand, use all shards. For performance reasons, the dashboard list uses only the newest SQLite shard.
 
-Wenn sich das Schema einer vorhandenen SQLite-Tabelle ändert, wird die alte Tabelle nach `<tabelle>_legacy_<zeitstempel>` umbenannt. Sie wird nicht gelöscht und nicht automatisch überschrieben.
+If the schema of an existing SQLite table changes, the old table is renamed to `<table>_legacy_<timestamp>`. It is not deleted or overwritten automatically.
 
-## Hash-Ketten
+## Hash chains
 
-Für jeden Datensatz wird zunächst ein kanonisches Hash-Material als JSON-Objekt aufgebaut. Die Schlüssel werden sortiert, es werden keine zusätzlichen Leerzeichen verwendet und die UTF-8-Darstellung wird gehasht. Der Algorithmus ist SHA-256.
+For each record, canonical hash material is first built as a JSON object. Keys are sorted, no additional whitespace is used, and the UTF-8 representation is hashed. The algorithm is SHA-256.
 
-Das Hash-Material von `RSSv0` umfasst:
+The hash material for `RSSv0` includes:
 
 - `author_name`
 - `content`
@@ -178,85 +178,85 @@ Das Hash-Material von `RSSv0` umfasst:
 - `source_url`
 - `title`
 
-Der erste Datensatz verwendet 64 Nullen als `previous_hash`. Jeder folgende Datensatz referenziert den Hash des vorherigen Datensatzes. `retrieved_at` wird gespeichert, fließt aber nicht in den Hash ein, damit derselbe veröffentlichte Inhalt bei einem späteren Abruf nicht nachträglich einen anderen Inhalts-Hash erhält.
+The first record uses 64 zeroes as its `previous_hash`. Every subsequent record references the hash of the preceding record. `retrieved_at` is stored but does not contribute to the hash, so the same published content does not receive a different content hash after a later retrieval.
 
-Ein Datensatz ist gültig, wenn `previous_hash` auf den erwarteten Vorgänger zeigt und `hash` dem neu berechneten Wert entspricht. Die Prüflogik steht im Codec und wird durch Tests abgedeckt.
+A record is valid if `previous_hash` points to the expected predecessor and `hash` matches the newly calculated value. The validation logic is in the codec and covered by tests.
 
 ## Codecs
 
-Codecs kapseln quellspezifische Verarbeitung, ohne die allgemeine Importlogik mit Hostnamen oder Sonderfällen zu belasten:
+Codecs encapsulate source-specific processing without burdening the general import logic with host names or special cases:
 
-- `RSSv0` verarbeitet allgemeine JSON-Feeds und klassischen XML-RSS. Zeitstempel werden nach UTC normalisiert und Bilder aus HTML-Inhalten geladen.
-- `TAZv0` ruft zusätzlich den vollständigen TAZ-Artikel über den Feed-Link ab und übernimmt den strukturierten Artikeltext.
-- `SCREENv0` öffnet den Feed-Link mit Chromium und speichert einen vollständigen PNG-Seitenscreenshot. Bekannte Consent- und Cookie-Banner werden vor der Aufnahme entfernt.
+- `RSSv0` processes general JSON feeds and classic XML RSS. Timestamps are normalized to UTC and images are loaded from HTML content.
+- `TAZv0` additionally retrieves the complete TAZ article through the feed link and uses its structured article text.
+- `SCREENv0` opens the feed link with Chromium and stores a complete PNG page screenshot. Known consent and cookie banners are removed before capture.
 
-Neue Quellen werden über zusätzliche `[[sources]]`-Blöcke und einen vorhandenen oder neuen Codec eingebunden.
+New sources are added through additional `[[sources]]` blocks and an existing or new codec.
 
-## Daemon und WebUI
+## Daemon and WebUI
 
-Der Daemon verarbeitet jede Quelle nach ihrem eigenen Intervall und startet parallel den eingebetteten HTTP-Server. Die WebUI bietet:
+The daemon processes each source according to its own interval and starts the embedded HTTP server in parallel. The web UI provides:
 
-- Quellenkarten mit Meldungs-, Bild-, Fehler- und Anchor-Status
-- Quellenfilter und zehn Meldungen pro Seite
-- Detailseiten mit Inhalt, Hashes, Zeitstempeln und gespeicherten Bildern
-- lokale Browser-Zeiten bei intern gespeicherten UTC-Zeitstempeln
-- fünf Themes: `Comic`, `DarkMode`, `LightMode`, `Papier` und `News`
-- Laufzeit-Log und flüchtige Fehleranzeige
-- kontrolliertes Beenden des Daemons
-- Prometheus-Metriken unter `/metrics`
+- Source cards with message, image, error, and anchor status
+- Source filters and ten messages per page
+- Detail pages with content, hashes, timestamps, and stored images
+- Local browser times for internally stored UTC timestamps
+- Five themes: `Comic`, `DarkMode`, `LightMode`, `Papier`, and `News`
+- Runtime log and transient error display
+- Controlled daemon shutdown
+- Prometheus metrics at `/metrics`
 
-Wichtige Endpunkte sind `/`, `/hilfe`, `/metrics`, `/meldung/<storage>/<source_id>`, `/media/<pfad>`, `/anchor/<storage>/<datum>/<art>`, `/fetch` und `/shutdown`.
+Important endpoints are `/`, `/hilfe`, `/metrics`, `/meldung/<storage>/<source_id>`, `/media/<path>`, `/anchor/<storage>/<date>/<type>`, `/fetch`, and `/shutdown`.
 
-Die WebUI besitzt keine Benutzerverwaltung und keine Authentifizierung. Sie sollte deshalb nicht ungeschützt in ein öffentliches Netz exponiert werden.
+The web UI has no user management or authentication. It must therefore not be exposed to a public network without protection.
 
-## Integritätsnachweise
+## Integrity proofs
 
-News-Hash bietet zwei voneinander unabhängige Wege, die Existenz und Herkunft der Archivnachweise nachzuvollziehen:
+News-Hash provides two independent ways to trace the existence and origin of archive proofs:
 
-1. OpenTimestamps verankert die Hash-Manifeste über Bitcoin. Das Manifest enthält die aktuellen Hashes der JSONL- und SQLite-Ketten, aber keine Nachrichteninhalte. Der OpenTimestamps-Proof kann später prüfen, dass diese Hashes spätestens zum bestätigten Zeitpunkt existiert haben.
-2. GitHub veröffentlicht die zugehörigen Manifest- und `.ots`-Dateien versioniert in einem Repository. Damit bleiben die Nachweise öffentlich auffindbar und über die Git-Historie nachvollziehbar. Unveränderte Dateien werden nicht erneut hochgeladen.
+1. OpenTimestamps anchors the hash manifests through Bitcoin. The manifest contains the current hashes of the JSONL and SQLite chains, but no news content. The OpenTimestamps proof can later verify that these hashes existed no later than the confirmed timestamp.
+2. GitHub publishes the associated manifest and `.ots` files in a versioned repository. This keeps the proofs publicly discoverable and traceable through Git history. Unchanged files are not uploaded again.
 
-Die beiden Wege erfüllen unterschiedliche Aufgaben: Bitcoin liefert die externe Zeitverankerung, während GitHub die Nachweisdateien zugänglich und historisch sichtbar macht. Keine der beiden Ablagen veröffentlicht die archivierten Nachrichteninhalte.
+The two methods serve different purposes: Bitcoin provides external time anchoring, while GitHub makes the proof files accessible and historically visible. Neither storage publishes the archived news content.
 
 ## Monitoring
 
-Für den laufenden Betrieb stehen zwei Monitoringmöglichkeiten zur Verfügung:
+Two monitoring options are available for continuous operation:
 
-- Der optionale `heartbeat_url` wird im Daemon nach den Polling-Schritten aufgerufen und meldet den Prozessbetrieb an einen konfigurierten Monitoringdienst. Ohne Eintrag wird kein Heartbeat gesendet.
-- `/metrics` stellt Prometheus-Metriken für konfigurierte Quellen, gespeicherte Meldungen, Bilder und Quellenfehler bereit. Die Metriken können von Prometheus oder einem kompatiblen Monitoringdienst regelmäßig abgefragt werden.
+- The optional `heartbeat_url` is called by the daemon after polling steps and reports process operation to a configured monitoring service. No heartbeat is sent without this setting.
+- `/metrics` provides Prometheus metrics for configured sources, stored reports, images, and source errors. Prometheus or a compatible monitoring service can query these metrics regularly.
 
-Beispiel für den Heartbeat in `app/data/settings.toml`:
+Example heartbeat in `app/data/settings.toml`:
 
 ```toml
 heartbeat_url = "https://example.org/heartbeat"
 ```
 
-Der Heartbeat ersetzt keine fachliche Integritätsprüfung. Er zeigt, dass der Daemon läuft; die Hash-Ketten, OpenTimestamps-Proofs und GitHub-Dateien ermöglichen dagegen die spätere Prüfung der archivierten Historie.
+The heartbeat does not replace a functional integrity check. It shows that the daemon is running; the hash chains, OpenTimestamps proofs, and GitHub files enable later verification of the archived history.
 
-## Anchoring und GitHub-Synchronisierung
+## Anchoring and GitHub synchronization
 
-Nach einem erfolgreichen Quellenlauf kann für den UTC-Tag ein Manifest unter `data/anchors/<datum>/` erzeugt werden. Das Manifest enthält die jeweils letzten JSONL- und SQLite-Hashes, aber keine Nachrichteninhalte. `ots stamp` übergibt das Manifest an OpenTimestamps und erzeugt daraus die zugehörige `.ots`-Datei für die Bitcoin-basierte Zeitverankerung.
+After a successful source run, a manifest can be created for the UTC date under `data/anchors/<date>/`. The manifest contains the latest JSONL and SQLite hashes, but no news content. `ots stamp` submits the manifest to OpenTimestamps and creates the associated `.ots` file for Bitcoin-based time anchoring.
 
-Der Status unterscheidet zwischen keinem Anchor, fehlender `.ots`-Datei, ausstehender Attestation und vollständiger Bestätigung. Bestehende Anchor-Dateien werden vor dem GitHub-Upload inhaltlich verglichen. Unveränderte Dateien werden nicht erneut per `PUT` hochgeladen, damit keine unnötigen Git-Commits entstehen.
+The status distinguishes between no anchor, a missing `.ots` file, pending attestation, and complete confirmation. Existing anchor files are compared by content before GitHub upload. Unchanged files are not uploaded again with `PUT`, preventing unnecessary Git commits.
 
-Für die Synchronisierung werden in `app/data/credentials.env` folgende Werte erwartet:
+The following values are expected in `app/data/credentials.env` for synchronization:
 
 ```text
 GITHUB_TOKEN=<token>
 GITHUB_REPOSITORY=<owner>/<repository>
 ```
 
-Der Token wird nicht geloggt. Ohne vollständige Credentials findet keine GitHub-Synchronisierung statt.
+The token is not logged. GitHub synchronization does not take place without complete credentials.
 
 ## Docker
 
-`docker-compose.yml` baut ein Image auf Basis von Python 3.14, installiert die Abhängigkeiten und Chromium und startet den Daemon. Die Projektdokumentation wird als `project-docu/` und der Anwendungscode als `src/` in das Image kopiert.
+`docker-compose.yml` builds an image based on Python 3.14, installs the dependencies and Chromium, and starts the daemon. The project documentation is copied into the image as `project-docu/` and the application code as `src/`.
 
-Die Laufzeitdaten werden über ein Volume nach `/app/data` eingebunden. Die Werte für Containername, Image, Datenpfad und Netzwerk werden über die Compose-Umgebung gesetzt. Der Container bindet standardmäßig auf Port 8000 innerhalb des Containers.
+Runtime data is mounted to `/app/data` through a volume. Container name, image, data path, and network values are supplied through the Compose environment. The container binds to port 8000 inside the container by default.
 
-## Tests und Qualitätssicherung
+## Tests and quality assurance
 
-Die Tests werden aus `app/` ausgeführt:
+Run tests from `app/`:
 
 ```bash
 uv run pytest
@@ -264,24 +264,25 @@ uv run ruff check .
 uv run ruff format . --check
 ```
 
-Die Tests decken unter anderem Settings-Validierung, Feed-Normalisierung, Hash-Ketten, Sharding, SQLite-Schema, Anchoring, GitHub-Synchronisierung, Daemon-Polling und WebUI-Rendering ab. Screenshot-Tests benötigen Chromium; sie laden Seiten mit `domcontentloaded` und einer kurzen Render-Wartezeit statt mit `networkidle`.
+The tests cover settings validation, feed normalization, hash chains, sharding, the SQLite schema, anchoring, GitHub synchronization, daemon polling, and web UI rendering, among other areas. Screenshot tests require Chromium; they load pages with `domcontentloaded` and a short render wait instead of `networkidle`.
 
-## Entwicklungsregeln
+## Development rules
 
-- Bei jeder Code-Änderung wird das Patchlevel erhöht.
-- Die Versionsnummer in `app/pyproject.toml`, `app/src/newshash/__init__.py` und `app/uv.lock` bleibt synchron.
-- Reine Änderungen an der statischen Website unter `docs/` erhöhen das App-Patchlevel nicht.
-- Abgeschlossene Änderungen werden jeweils in einem eigenen Commit festgehalten.
-- Architekturentscheidungen und relevante Anforderungen werden in `project-docu/` nachgeführt.
+- The patch level is increased for every code change.
+- The version in `app/pyproject.toml`, `app/src/newshash/__init__.py`, and `app/uv.lock` remains synchronized.
+- Changes only to the static website under `docs/` do not increase the application patch level.
+- Completed changes are recorded in a separate commit each.
+- Architecture decisions and relevant requirements are maintained under `project-docu/`.
 
-## Weitere Dokumentation
+## Further documentation
 
-- `project-docu/architecture.md` beschreibt Architektur und Hash-Berechnung.
-- `project-docu/requirements.md` beschreibt Muss-, Soll- und Nicht-Scope-Anforderungen.
-- `project-docu/webui.md` beschreibt Bedienung und Endpunkte der WebUI.
-- `project-docu/description_for_enduser.md` ist die ausführliche deutschsprachige Hilfe für Anwender.
-- `docs/` enthält ausschließlich die statische GitHub-Pages-Website.
+- `project-docu/architecture.md` describes the architecture and hash calculation.
+- `project-docu/requirements.md` describes mandatory, optional, and out-of-scope requirements.
+- `project-docu/webui.md` describes web UI usage and endpoints.
+- `project-docu/description_for_enduser.md` is the detailed German user help.
+- `project-docu/description_for_enduser_en.md` is the English user help.
+- `docs/` contains only the static GitHub Pages website.
 
-## Lizenz
+## License
 
-News-Hash steht unter der [MIT-Lizenz](LICENSE).
+News-Hash is released under the [MIT License](LICENSE).
