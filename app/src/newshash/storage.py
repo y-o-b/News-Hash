@@ -107,6 +107,14 @@ class JsonlStorage:
                 return json.loads(lines[-1])["hash"]
         return genesis_hash
 
+    def latest_shard_index(self) -> int:
+        """Gib die Shardnummer des letzten nichtleeren Shards zurueck."""
+
+        for shard in reversed(self._shard_paths()):
+            if any(line.strip() for line in shard.read_text(encoding="utf-8").splitlines()):
+                return _shard_index(shard)
+        return 0
+
     def count(self) -> int:
         """Zaehle alle gespeicherten Records ueber alle Shards."""
 
@@ -227,6 +235,15 @@ class SqliteStorage:
             if row is not None:
                 return row[0]
         return genesis_hash
+
+    def latest_shard_index(self) -> int:
+        """Gib die Shardnummer des letzten nichtleeren Shards zurueck."""
+
+        for shard in reversed(self._shard_paths()):
+            with self._connect(shard) as connection:
+                if connection.execute("SELECT 1 FROM records LIMIT 1").fetchone() is not None:
+                    return _shard_index(shard)
+        return 0
 
     def count(self) -> int:
         """Zaehle alle gespeicherten Records ueber alle Shards."""

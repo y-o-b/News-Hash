@@ -53,6 +53,8 @@ class OpenTimestampsAnchor:
             "storage_name": source.storage_name,
             "latest_hash_jsonl": result.latest_hash_jsonl,
             "latest_hash_sqlite": result.latest_hash_sqlite,
+            "latest_shard_jsonl": getattr(result, "latest_shard_jsonl", 0),
+            "latest_shard_sqlite": getattr(result, "latest_shard_sqlite", 0),
         }
         manifest.write_text(json.dumps(content, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
         subprocess.run(

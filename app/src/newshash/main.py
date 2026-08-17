@@ -30,6 +30,8 @@ class IngestResult:
     latest_hash_sqlite: str
     jsonl_path: Path
     sqlite_path: Path
+    latest_shard_jsonl: int = 0
+    latest_shard_sqlite: int = 0
 
 
 def _error_text(exc: Exception) -> str:
@@ -115,6 +117,8 @@ def ingest_source(source: SourceConfig, settings_manager: SettingsManager) -> In
         total_sqlite=sqlite_storage.count(),
         latest_hash_jsonl=jsonl_storage.latest_hash(GENESIS_HASH),
         latest_hash_sqlite=sqlite_storage.latest_hash(GENESIS_HASH),
+        latest_shard_jsonl=jsonl_storage.latest_shard_index(),
+        latest_shard_sqlite=sqlite_storage.latest_shard_index(),
         jsonl_path=jsonl_storage.path,
         sqlite_path=sqlite_storage.path,
     )

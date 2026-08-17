@@ -8,3 +8,5 @@ class AnchorableResult(Protocol):
 
     latest_hash_jsonl: str
     latest_hash_sqlite: str
+    latest_shard_jsonl: int
+    latest_shard_sqlite: int

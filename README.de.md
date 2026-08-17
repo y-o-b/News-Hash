@@ -101,6 +101,14 @@ Standardmäßig bindet die WebUI im Daemon-Modus auf `0.0.0.0:8000`. Für lokale
 uv run newshash --daemon --host 127.0.0.1 --port 8000
 ```
 
+Hash-Ketten können unabhängig vom Feedabruf geprüft werden. Standardmäßig wird nur der letzte nichtleere Shard geprüft:
+
+```bash
+uv run newshash-validate --settings data/settings.toml --data-dir data
+```
+
+Für eine vollständige Prüfung aller Shards wird `--all-shards` ergänzt. Mit `--source <storage_name>` kann die Prüfung auf eine Quelle eingeschränkt werden. Die Prüfung umfasst JSONL und SQLite und endet bei einer ungültigen Kette mit Status 1.
+
 ## Konfiguration
 
 Die Standarddatei ist `app/data/settings.toml`. Sie muss mindestens einen `[[sources]]`-Block enthalten. Ein vollständiger Quellenblock sieht so aus:

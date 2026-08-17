@@ -101,6 +101,14 @@ By default, the web UI binds to `0.0.0.0:8000` in daemon mode. Restrict the bind
 uv run newshash --daemon --host 127.0.0.1 --port 8000
 ```
 
+Hash chains can be checked independently of feed retrieval. By default, only the latest non-empty shard is checked:
+
+```bash
+uv run newshash-validate --settings data/settings.toml --data-dir data
+```
+
+Add `--all-shards` to validate every shard. Use `--source <storage_name>` to restrict validation to one source. The command checks both JSONL and SQLite and exits with status 1 when a chain is invalid.
+
 ## Configuration
 
 The default file is `app/data/settings.toml`. It must contain at least one `[[sources]]` block. A complete source block looks like this:

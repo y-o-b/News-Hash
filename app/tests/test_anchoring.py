@@ -10,6 +10,8 @@ from newshash.settings import SourceConfig
 class Result:
     latest_hash_jsonl = "a" * 64
     latest_hash_sqlite = "b" * 64
+    latest_shard_jsonl = 3
+    latest_shard_sqlite = 4
 
 
 def test_anchor_source_writes_manifest_and_calls_ots(tmp_path, monkeypatch) -> None:
@@ -28,6 +30,8 @@ def test_anchor_source_writes_manifest_and_calls_ots(tmp_path, monkeypatch) -> N
     assert proof == Path(f"{manifest}.ots")
     assert manifest.exists()
     assert "latest_hash_jsonl" in manifest.read_text(encoding="utf-8")
+    assert '"latest_shard_jsonl": 3' in manifest.read_text(encoding="utf-8")
+    assert '"latest_shard_sqlite": 4' in manifest.read_text(encoding="utf-8")
     assert calls == [["ots", "stamp", str(manifest)]]
 
 

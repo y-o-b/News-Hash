@@ -13,7 +13,7 @@
 - Pro Quelle kann ein `codec_name` gewählt werden.
 - `RSSv0` verarbeitet allgemeine JSON- und XML-RSS-Feeds; `TAZv0` lädt zusätzlich den vollständigen TAZ-Artikel über dessen Link.
 - `SCREENv0` folgt jedem Feed-Link mit Chromium und speichert einen vollständigen PNG-Seiten-Screenshot als Bild-Record.
-- Nach einem erfolgreichen Quellenlauf wird pro UTC-Tag ein Manifest mit den aktuellen JSONL- und SQLite-Hashes erzeugt und als OpenTimestamps-Proof unter `data/anchors/` verankert.
+- Nach einem erfolgreichen Quellenlauf wird pro UTC-Tag ein Manifest mit den aktuellen JSONL- und SQLite-Hashes sowie den Nummern der zugehörigen letzten Shards erzeugt und als OpenTimestamps-Proof unter `data/anchors/` verankert.
 - Erfolgreich erzeugte Anchor-Dateien werden mit `GITHUB_TOKEN` und `GITHUB_REPOSITORY` aus `data/credentials.env` synchronisiert.
 - `--daemon` startet zusätzlich den eingebauten HTTP-Webserver; Standard-Bind-Adresse ist `0.0.0.0:8000`.
 - Bilder aus Feed-Einträgen werden für JSONL unter `data/images/` abgelegt und für SQLite zusätzlich als BLOB gespeichert.
@@ -24,6 +24,7 @@
 - Die Dashboard-Vorschau liest Meldungen ausschließlich aus dem neuesten SQLite-Shard; aggregierte Kennzahlen werden über alle Shards gebildet.
 - `--daemon`: startet einen Endlosschleifen-Modus, der jede Quelle nach ihrem eigenen `poll_interval_seconds` erneut verarbeitet.
 - `/metrics`: liefert Prometheus-Metriken für Quellen, Datensätze, Bilder und Laufzeitfehler.
+- `newshash-validate` prüft die JSONL- und SQLite-Hash-Ketten; standardmäßig wird nur der letzte nichtleere Shard geprüft, `--all-shards` prüft den vollständigen Bestand.
 - Quellenfehler und die letzten Fehlermeldungen werden nur im Prozessspeicher gehalten, nach `stderr` geloggt und über Dashboard sowie `/metrics` bereitgestellt; Netzwerk- und Interpretationsfehler stoppen die übrigen Quellen nicht.
 - Bilder bekommen Dateinamen mit Veröffentlichungszeitpunkt und laufender Nummer.
 - Ein neues Shard wird erstellt, sobald eine Datei 1 GB erreicht.
