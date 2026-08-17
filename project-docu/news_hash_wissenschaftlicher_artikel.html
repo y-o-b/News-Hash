@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>News-Hash: Ein nachvollziehbares Nachrichtenarchiv</title>
+  <style>
+    @page { size:A4; margin:16mm 17mm 15mm; }
+    :root { color:#171717; font-family:Georgia,"Times New Roman",serif; }
+    * { box-sizing:border-box; }
+    body { font-size:9.7pt; line-height:1.28; margin:0; }
+    header { border-bottom:1.2pt solid #171717; margin-bottom:8pt; padding-bottom:7pt; }
+    h1 { font-size:19pt; line-height:1.08; margin:0 0 4pt; }
+    .subtitle { font-size:10pt; margin:0; }
+    .metadata { color:#555; font-family:Arial,sans-serif; font-size:8pt; margin-top:6pt; }
+    h2 { font-size:11pt; line-height:1.15; margin:8pt 0 3pt; }
+    h3 { font-size:10pt; margin:6pt 0 2pt; }
+    p { margin:0 0 4.5pt; text-align:justify; }
+    .abstract { border-left:3pt solid #4b8ed8; font-size:9.2pt; margin:6pt 0 7pt; padding:4pt 7pt; }
+    .keywords { font-family:Arial,sans-serif; font-size:8pt; margin-top:4pt; }
+    .article-body { column-count:2; column-gap:9mm; }
+    section { break-inside:avoid-column; }
+    ul { margin:2pt 0 5pt 14pt; padding:0; }
+    li { margin:0 0 2pt; }
+    code { font-family:"Courier New",monospace; font-size:8.3pt; }
+    .formula { background:#f2f4f6; font-family:"Courier New",monospace; font-size:8.2pt; margin:4pt 0 5pt; padding:4pt 6pt; }
+    .references { border-top:1pt solid #999; margin-top:5pt; padding-top:3pt; }
+    .references p { font-size:8.2pt; margin-bottom:2.5pt; }
+    .note { color:#555; font-size:8.2pt; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>News-Hash: Ein nachvollziehbares Nachrichtenarchiv mit Hash-Ketten und öffentlicher Zeitverankerung</h1>
+    <p class="subtitle">Technischer Projektbericht zu Entwurf, Integritätsmodell und Betrieb eines lokalen Nachrichtenarchivs</p>
+    <div class="metadata">News-Hash-Projekt · Version 0.1.49 · 17. August 2026</div>
+  </header>
+
+  <div class="abstract">
+    <strong>Zusammenfassung.</strong> Nachrichteninhalte sind flüchtig: Artikel werden nachträglich verändert, gekürzt, verschoben oder entfernt. Dieser Beitrag beschreibt News-Hash, ein lokales Nachrichtenarchiv, das konfigurierte JSON- und XML-Quellen regelmäßig abruft und neue Meldungen in append-only Speicherstrukturen ablegt. Die interne Nachvollziehbarkeit entsteht durch getrennte Hash-Ketten in JSONL und SQLite. Tägliche Manifeste verdichten die Ketten und werden optional mit OpenTimestamps öffentlich zeitverankert. Der Beitrag erläutert Architektur, Datenfluss, Hash-Berechnung, quellspezifische Codecs und die Grenzen des Verfahrens. News-Hash beweist nicht die journalistische Wahrheit einer Meldung, sondern die Integrität und zeitliche Existenz der archivierten Fassung.
+    <div class="keywords"><strong>Schlüsselwörter:</strong> Nachrichtenarchiv, Hash-Kette, OpenTimestamps, digitale Langzeitarchivierung, Datenintegrität</div>
+  </div>
+
+  <div class="article-body">
+    <section>
+      <h2>1. Problemstellung und Zielsetzung</h2>
+      <p>Die öffentliche Nachrichtenkommunikation ist auf Aktualität und Veränderbarkeit ausgelegt. Genau diese Eigenschaften erschweren eine spätere Rekonstruktion: Ein Link kann auf eine redigierte Fassung zeigen oder vollständig ins Leere laufen. Für wissenschaftliche, journalistische und gesellschaftliche Einordnung ist jedoch relevant, welche Information zu einem bestimmten Zeitpunkt vorlag.</p>
+      <p>News-Hash verfolgt deshalb ein begrenztes, technisch überprüfbares Ziel. Die Anwendung soll konfigurierte Nachrichtenquellen regelmäßig erfassen, neue Datensätze dauerhaft lokal speichern und nachträgliche Veränderungen erkennbar machen. Die Lösung ist kein Wahrheitssystem und keine eigene Blockchain. Sie ist ein Archivierungsdienst mit einer internen Verkettung von Datensätzen und einem optionalen externen Existenznachweis.</p>
+    </section>
+
+    <section>
+      <h2>2. Systemarchitektur</h2>
+      <p>Die Python-Anwendung besteht aus einem Kommandozeilenprogramm, einer Import- und Normalisierungsschicht, austauschbaren Quellen-Codecs, zwei Speichern und einer eingebetteten HTTP-WebUI. Quellen werden in einer TOML-Datei mit URL, Speichername, Codec und individuellem Abrufintervall definiert. Der Daemon verarbeitet die Quellen unabhängig voneinander; ein Fehler bei einer Quelle soll die übrigen Quellen nicht anhalten.</p>
+      <p>JSONL und SQLite werden parallel geführt. JSONL ist als einfaches, zeilenorientiertes Austausch- und Archivformat lesbar. SQLite unterstützt schnelle Abfragen, Filterung und Detailansichten im Dashboard. Beide Formate verwenden dasselbe fachliche Hash-Material, führen aber jeweils eine eigene Kette. Diese Trennung verhindert, dass ein unvollständiger Schreibvorgang in einem Format automatisch die Integrität des anderen aufhebt.</p>
+      <p>Große Dateien werden in nummerierte Shards aufgeteilt. Die Laufzeit prüft das Schema von SQLite beim Öffnen und benennt inkompatible Alt-Tabellen um, statt sie stillschweigend zu überschreiben. Dadurch bleiben historische Daten bei Schemaänderungen erhalten.</p>
+    </section>
+
+    <section>
+      <h2>3. Datenfluss und Normalisierung</h2>
+      <p>Ein Quellenlauf beginnt mit dem HTTP-Abruf eines JSON- oder XML-Feeds. Das Feedformat wird in eine interne Darstellung überführt. Der ausgewählte Codec normalisiert Titel, Inhalt, URL, Autor, Veröffentlichungszeit und Bilder. Bereits bekannte <code>source_id</code>-Werte werden vor teuren Verarbeitungsschritten übersprungen. Neue Datensätze werden anschließend in beide Speicher geschrieben.</p>
+      <p>Die Codec-Schnittstelle kapselt Besonderheiten einzelner Anbieter. <code>RSSv0</code> verarbeitet allgemeine Feeds und lädt Bilder aus HTML-Inhalten. <code>TAZv0</code> ruft ergänzend den vollständigen Artikel über den Feed-Link ab. <code>SCREENv0</code> öffnet den ersten Link mit Chromium, entfernt bekannte Consent- und Cookie-Banner und speichert einen visuellen PNG-Schnappschuss. So bleibt die allgemeine Importlogik unabhängig von host- oder quellenspezifischen Regeln.</p>
+    </section>
+
+    <section>
+      <h2>4. Integritätsmodell</h2>
+      <p>Für jeden Datensatz wird ein kanonisches JSON-Objekt gebildet. Seine Schlüssel werden sortiert, zusätzliche Leerzeichen vermieden und die UTF-8-Darstellung mit SHA-256 gehasht. Das Material von <code>RSSv0</code> umfasst unter anderem Quelle, Titel, Inhalt, Veröffentlichungszeit, Codec, Bilder und den Hash des Vorgängers. Der Abrufzeitpunkt wird gespeichert, aber nicht gehasht, damit ein späterer Abruf derselben veröffentlichten Fassung keinen neuen Inhalts-Hash erzeugt.</p>
+      <div class="formula">hash_i = SHA-256(canonical_json(record_i, previous_hash_i))<br>previous_hash_0 = 0000000000000000000000000000000000000000000000000000000000000000</div>
+      <p>Ein Datensatz ist gültig, wenn sein gespeicherter <code>previous_hash</code> auf den erwarteten Vorgänger zeigt und sein <code>hash</code> dem neu berechneten Wert entspricht. Eine nachträgliche Änderung am Inhalt verändert den Hash des betroffenen Datensatzes; wegen der Verkettung werden außerdem alle nachfolgenden Abweichungen sichtbar. Das Modell schützt damit vor unbemerktem Umschreiben der lokalen Archivspur, nicht vor einer falschen oder manipulierten Quelle vor dem Abruf.</p>
+    </section>
+
+    <section>
+      <h2>5. Öffentliche Zeitverankerung</h2>
+      <p>Einmal täglich werden die jeweils letzten Hashes der JSONL- und SQLite-Kette in einem Manifest zusammengefasst. Das Manifest enthält keine Nachrichtentexte. Mit <code>ots stamp</code> kann es an OpenTimestamps übergeben werden. Die daraus entstehende <code>.ots</code>-Datei verbindet den Hash mit einem öffentlichen Zeitnachweis und letztlich mit der Bitcoin-Zeitachse.</p>
+      <p>Zusätzlich können Manifest und Proof-Datei in einem GitHub-Repository versioniert veröffentlicht werden. OpenTimestamps liefert damit die externe zeitliche Einordnung, während GitHub die Nachweisdateien auffindbar und ihre Änderungsgeschichte sichtbar hält. Unveränderte Dateien werden nicht erneut hochgeladen.</p>
+    </section>
+
+    <section>
+      <h2>6. Anwendung und Betrieb</h2>
+      <p>Die WebUI zeigt Quellenkarten, Kennzahlen, Anchor-Status, Meldungslisten und gespeicherte Detaildaten. Filter und Pagination unterstützen die Untersuchung großer Archive. Zeitstempel werden intern in UTC verarbeitet und im Browser lokal dargestellt. Prometheus-Metriken stellen Quellen-, Datensatz-, Bild- und Fehlerzähler bereit; ein optionaler Heartbeat signalisiert zusätzlich, dass der Daemon läuft.</p>
+      <p>Die WebUI besitzt bewusst keine Benutzerverwaltung und keine Authentifizierung. Sie ist daher für lokale oder anderweitig geschützte Netze gedacht und darf nicht ungeschützt in ein öffentliches Netz exponiert werden. Die Betriebsüberwachung ersetzt außerdem keine Integritätsprüfung: Ein laufender Prozess kann korrekte Daten ebenso wenig garantieren wie ein Heartbeat.</p>
+    </section>
+
+    <section>
+      <h2>7. Diskussion und Grenzen</h2>
+      <p>Der wichtigste Vorteil des Entwurfs ist die klare Trennung von Archiv, Integritätsmodell und öffentlichem Nachweis. Lokale Inhalte bleiben unter Kontrolle des Betreibers; die Blockchain muss keine Nachrichten speichern. Die parallelen Speicher erhöhen die Nutzbarkeit und erlauben eine partielle Wiederherstellung. Die Codec-Struktur erleichtert die Erweiterung auf Quellen mit unterschiedlichen technischen Anforderungen.</p>
+      <p>Dem stehen Grenzen gegenüber. Die Hash-Kette belegt nicht, dass eine Quelle korrekt berichtet, und sie kann nicht beweisen, dass vor dem Abruf keine Manipulation stattfand. Ein lokaler Betreiber kann Daten zurückhalten, fehlerhaft konfigurieren oder den Abruf ausfallen lassen. Auch die öffentliche Zeitverankerung bestätigt primär die Existenz eines Hashes, nicht den Inhalt selbst. Vollständige Unabhängigkeit erfordert daher zusätzlich Vertrauen in Quellen, Abrufzeitpunkt, Konfiguration und Veröffentlichungsprozess.</p>
+    </section>
+
+    <section>
+      <h2>8. Fazit</h2>
+      <p>News-Hash zeigt, wie sich ein pragmatisches Nachrichtenarchiv mit Standardformaten, SHA-256 und einem externen Zeitnachweis entwerfen lässt. Die Architektur bleibt lokal betreibbar, erweitert aber die interne Nachvollziehbarkeit um einen öffentlich prüfbaren Anker. Damit entsteht keine objektive Wahrheit über Nachrichten, wohl aber eine belastbare technische Spur dessen, was archiviert wurde und wann diese Spur spätestens existierte.</p>
+    </section>
+
+    <section class="references">
+      <h2>Literatur und Projektdokumentation</h2>
+      <p>[1] News-Hash-Projekt: <em>Architektur</em>, `project-docu/architecture.md`, 2026.</p>
+      <p>[2] News-Hash-Projekt: <em>Anforderungen</em>, `project-docu/requirements.md`, 2026.</p>
+      <p>[3] OpenTimestamps: <em>OpenTimestamps Documentation</em>, https://opentimestamps.org/.</p>
+      <p class="note">Dieser Artikel beschreibt den Stand des Projekts zum 17. August 2026.</p>
+    </section>
+  </div>
+</body>
+</html>
