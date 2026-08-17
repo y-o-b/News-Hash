@@ -19,29 +19,33 @@
     .links { display:flex; flex-wrap:wrap; gap:12px; margin-top:32px; }
     .links a { border:3px solid var(--ink); padding:8px 14px; text-decoration:none; }
     .links a:hover { background:var(--red); color:white; }
-    .language-block { border-top:3px solid var(--ink); margin-top:42px; padding-top:28px; }
-    .language-block h2 { font:700 clamp(27px,5vw,42px)/1.05 Georgia,serif; margin:0 0 12px; }
-    .language-block p { margin-bottom:0; }
+    .card + .card { margin-top:36px; }
     .motto { margin:42px 0 0; text-align:center; font-size:14px; }
   </style>
 </head>
 <body>
-  <main><section class="card">
-    <div>Nachrichten · Hash-Ketten</div>
-    <div class="brand"><img class="logo" src="logo.svg" alt="News-Hash Logo"><h1>News-Hash</h1></div>
-    <p>Ein nachvollziehbares Nachrichtenarchiv: Quellen werden regelmäßig gelesen, Inhalte lokal bewahrt und mit Hash-Ketten sowie OpenTimestamps zeitlich verankert.</p>
-    <div class="links">
-      <a href="projekt.html">Das Projekt entdecken</a>
-      <a href="https://github.com/y-o-b/News-Hash">GitHub</a>
-    </div>
-    <section class="language-block" lang="en">
-      <h2>News-Hash in English</h2>
+  <main>
+    <section class="card" lang="de">
+      <div>Nachrichten · Hash-Ketten</div>
+      <div class="brand"><img class="logo" src="logo.svg" alt="News-Hash Logo"><h1>News-Hash</h1></div>
+      <p>Ein nachvollziehbares Nachrichtenarchiv: Quellen werden regelmäßig gelesen, Inhalte lokal bewahrt und mit Hash-Ketten sowie OpenTimestamps zeitlich verankert.</p>
+      <div class="links">
+        <a href="projekt.html">Das Projekt entdecken</a>
+        <a href="https://github.com/y-o-b/News-Hash">GitHub</a>
+      </div>
+      <footer class="motto">✦ Mit KI gebaut, mit Liebe verfeinert, für neugierige Menschen ♥<br>Entwickelt mit <a href="https://opencode.ai/" target="_blank" rel="noreferrer">OpenCode</a></footer>
+    </section>
+
+    <section class="card" lang="en">
+      <div>News · Hash Chains</div>
+      <div class="brand"><img class="logo" src="logo.svg" alt="News-Hash logo"><h1>News-Hash</h1></div>
       <p>A traceable news archive: sources are read regularly, content is preserved locally, and hash chains together with OpenTimestamps anchor it in time.</p>
       <div class="links">
-        <a href="projekt_en.html">Read the project description</a>
+        <a href="projekt_en.html">Discover the project</a>
+        <a href="https://github.com/y-o-b/News-Hash">GitHub</a>
       </div>
+      <footer class="motto">✦ Built with AI, refined with care, for curious people ♥<br>Developed with <a href="https://opencode.ai/" target="_blank" rel="noreferrer">OpenCode</a></footer>
     </section>
-    <footer class="motto">✦ Mit KI gebaut, mit Liebe verfeinert, für neugierige Menschen ♥<br>Entwickelt mit <a href="https://opencode.ai/" target="_blank" rel="noreferrer">OpenCode</a></footer>
-  </section></main>
+  </main>
 </body>
 </html>
