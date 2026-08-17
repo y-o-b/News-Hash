@@ -32,7 +32,7 @@ class ValidationResult:
 
 
 def _nonempty_jsonl_paths(storage: JsonlStorage) -> list[Path]:
-    return [path for path in storage._shard_paths() if any(line.strip() for line in path.read_text(encoding="utf-8").splitlines())]
+    return [path for path in storage._shard_paths() if any(line.strip() for line in path.read_text(encoding="utf-8").split("\n"))]
 
 
 def _nonempty_sqlite_paths(storage: SqliteStorage) -> list[Path]:
@@ -49,7 +49,7 @@ def _nonempty_sqlite_paths(storage: SqliteStorage) -> list[Path]:
 
 
 def _jsonl_records(path: Path) -> Iterable[tuple[int, dict[str, Any]]]:
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").split("\n"), start=1):
         if line.strip():
             value = json.loads(line)
             if not isinstance(value, dict):

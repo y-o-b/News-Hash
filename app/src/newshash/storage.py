@@ -134,13 +134,13 @@ class JsonlStorage:
             return set()
 
         latest = shards[-1]
-        return {json.loads(line)["source_id"] for line in latest.read_text(encoding="utf-8").splitlines() if line.strip()}
+        return {json.loads(line)["source_id"] for line in latest.read_text(encoding="utf-8").split("\n") if line.strip()}
 
     def latest_hash(self, genesis_hash: str) -> str:
         """Gib den Hash des zuletzt gespeicherten Records zurueck, sonst den Genesis-Hash."""
 
         for shard in reversed(self._shard_paths()):
-            lines = [line for line in shard.read_text(encoding="utf-8").splitlines() if line.strip()]
+            lines = [line for line in shard.read_text(encoding="utf-8").split("\n") if line.strip()]
             if lines:
                 return json.loads(lines[-1])["hash"]
         return genesis_hash
@@ -149,14 +149,14 @@ class JsonlStorage:
         """Gib die Shardnummer des letzten nichtleeren Shards zurueck."""
 
         for shard in reversed(self._shard_paths()):
-            if any(line.strip() for line in shard.read_text(encoding="utf-8").splitlines()):
+            if any(line.strip() for line in shard.read_text(encoding="utf-8").split("\n")):
                 return _shard_index(shard)
         return 0
 
     def count(self) -> int:
         """Zaehle alle gespeicherten Records ueber alle Shards."""
 
-        return sum(1 for shard in self._shard_paths() for line in shard.read_text(encoding="utf-8").splitlines() if line.strip())
+        return sum(1 for shard in self._shard_paths() for line in shard.read_text(encoding="utf-8").split("\n") if line.strip())
 
     def append_records(self, records: list[dict[str, Any]]) -> None:
         """Haenge Records als JSON-Zeilen an den aktuellen Shard an, mit Rollover bei 1 GB."""
@@ -168,7 +168,7 @@ class JsonlStorage:
         for record in records:
             target_path = self.path
             with target_path.open("a", encoding="utf-8") as handle:
-                handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True))
+                handle.write(json.dumps(record, ensure_ascii=True, sort_keys=True))
                 handle.write("\n")
 
 

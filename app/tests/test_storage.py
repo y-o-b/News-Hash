@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 
 from newshash.codec import GENESIS_HASH
@@ -43,6 +44,18 @@ def test_jsonl_storage_default_state_without_existing_shard(tmp_path) -> None:
     assert storage.count() == 0
     assert storage.known_source_ids() == set()
     assert storage.latest_hash(GENESIS_HASH) == GENESIS_HASH
+
+
+def test_jsonl_storage_preserves_unicode_line_separator_inside_json(tmp_path) -> None:
+    storage = JsonlStorage(tmp_path, "example")
+    record = make_record("example-1", GENESIS_HASH)
+    record["content"] = "vorher\u2028nachher\u2029ende"
+
+    storage.append_records([record])
+
+    assert storage.count() == 1
+    assert storage.known_source_ids() == {"example-1"}
+    assert json.loads(storage.path.read_text(encoding="utf-8"))["content"] == "vorher\u2028nachher\u2029ende"
 
 
 def test_jsonl_storage_rolls_over_shard_when_size_limit_reached(tmp_path, monkeypatch) -> None:
