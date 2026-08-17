@@ -12,7 +12,7 @@
 - Die Quellen werden in `data/settings.toml` konfiguriert.
 - Ein optionaler Top-Level-Wert `heartbeat_url` in `data/settings.toml` steuert den Daemon-Heartbeat; ohne Wert wird kein Ping gesendet.
 - Pro Quelle kann ein `codec_name` gewählt werden.
-- Die versionierten Codecs `RSSv2`, `TAZv2` und `SCREENv2` legen je Codec eine normalisierte JSON-Datei unter `data/Codec/` ab. Diese enthält Codec, Schema und Hashfunktion. Der normalisierte Dokumenthash wird als `codec_hash` gespeichert und in das Hashmaterial aufgenommen; v0- und v1-Codecs bleiben für alte Records verfügbar.
+- Die versionierten Codecs `RSSv2`, `TAZv2` und `SCREENv2` legen je Codec eine normalisierte JSON-Datei unter `data/Codec/` ab. Diese enthält Codec, Schema und Hashfunktion. Der normalisierte Dokumenthash wird als `codec_hash` gespeichert und in das Hashmaterial aufgenommen; v0- und v1-Codecs bleiben ausschließlich für alte Records und die Validierung verfügbar.
 - `RSSv0` verarbeitet allgemeine JSON- und XML-RSS-Feeds; `TAZv0` lädt zusätzlich den vollständigen TAZ-Artikel über dessen Link.
 - `SCREENv0` folgt jedem Feed-Link mit Chromium und speichert einen vollständigen PNG-Seiten-Screenshot als Bild-Record.
 - Nach einem erfolgreichen Quellenlauf wird pro UTC-Tag ein Manifest mit den aktuellen JSONL- und SQLite-Hashes sowie den Nummern der zugehörigen letzten Shards erzeugt und als OpenTimestamps-Proof unter `data/anchors/` verankert.

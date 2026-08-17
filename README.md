@@ -118,7 +118,7 @@ The default file is `app/data/settings.toml`. It must contain at least one `[[so
 name = "Tagesschau"
 feed_url = "https://example.org/feed.json"
 storage_name = "tagesschau"
-codec_name = "RSSv0"
+codec_name = "RSSv2"
 poll_interval_seconds = 300
 ```
 
@@ -127,7 +127,7 @@ The fields mean:
 - `name` is the display name in the web UI.
 - `feed_url` is the URL of the JSON or XML feed.
 - `storage_name` determines the JSONL and SQLite shard file names.
-- `codec_name` selects source-specific processing. The default is `RSSv0`.
+- `codec_name` selects active source-specific processing. The default is `RSSv2`; historical v0 and v1 codecs are available only for validation.
 - `poll_interval_seconds` determines the individual polling interval in the daemon.
 
 For new sources, use the versioned codecs `RSSv2`, `TAZv2`, and `SCREENv2`. Each writes a normalized `app/data/Codec/<codec>.json` containing the codec, schema, and hash function, and stores that document hash in each record. During daily manifest creation, SQLite shards are copied to `app/data/sqlite-backups/` using stable, overwritten file names. The manifest and `.ots` proof are also stored in the SQLite `anchor_artifacts` table.

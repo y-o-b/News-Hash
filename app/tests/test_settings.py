@@ -28,7 +28,7 @@ def test_loads_source_with_default_codec(tmp_path) -> None:
     assert len(settings.sources) == 1
     source = settings.sources[0]
     assert source.name == "alpha"
-    assert source.codec_name == "RSSv0"
+    assert source.codec_name == "RSSv2"
     assert source.poll_interval_seconds == 300
     assert settings.heartbeat_url is None
 
@@ -60,7 +60,7 @@ def test_parses_poll_intervals_and_codec(tmp_path) -> None:
         name = "alpha"
         feed_url = "https://example.invalid/a"
         storage_name = "alpha"
-        codec_name = "RSSv0"
+        codec_name = "RSSv2"
         poll_interval_seconds = 7
 
         [[sources]]
@@ -86,6 +86,23 @@ def test_rejects_unknown_codec_name(tmp_path) -> None:
         feed_url = "https://example.invalid/a"
         storage_name = "alpha"
         codec_name = "Unknown"
+        poll_interval_seconds = 300
+        """,
+    )
+
+    with pytest.raises(ValueError, match="unknown codec_name"):
+        SettingsManager().load_settings(settings_path)
+
+
+def test_rejects_historical_codec_for_new_configuration(tmp_path) -> None:
+    settings_path = write_settings(
+        tmp_path,
+        """
+        [[sources]]
+        name = "legacy"
+        feed_url = "https://example.invalid/legacy"
+        storage_name = "legacy"
+        codec_name = "RSSv1"
         poll_interval_seconds = 300
         """,
     )

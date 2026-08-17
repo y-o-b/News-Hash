@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from newshash.codec import GENESIS_HASH, get_codec
+from newshash.codec import GENESIS_HASH, get_validation_codec
 from newshash.settings import DEFAULT_DATA_DIR, SettingsManager, SourceConfig
 from newshash.storage import JsonlStorage, SqliteStorage, _shard_index
 
@@ -165,7 +165,7 @@ def _validate_paths(
                 actual_previous = str(record.get("previous_hash"))
                 if actual_previous != expected_hash:
                     errors.append(f"{storage_format} shard={shard_number} record={row_number}: previous_hash={actual_previous!r}, expected={expected_hash!r}")
-                record_codec = get_codec(str(record.get("codec_name") or codec_name))
+                record_codec = get_validation_codec(str(record.get("codec_name") or codec_name))
                 calculated_hash = record_codec.digest_record(record_codec.record_hash_material(record, expected_hash))
                 actual_hash = str(record.get("hash"))
                 if actual_hash != calculated_hash:

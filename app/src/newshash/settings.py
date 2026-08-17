@@ -10,7 +10,7 @@ from newshash.codec import CODEC_REGISTRY
 
 DEFAULT_SETTINGS_PATH = Path("data/settings.toml")
 DEFAULT_DATA_DIR = Path("data")
-DEFAULT_CODEC_NAME = "RSSv0"
+DEFAULT_CODEC_NAME = "RSSv2"
 
 
 @dataclass(frozen=True)

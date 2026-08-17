@@ -542,24 +542,36 @@ class SCREENv2(_VersionedCodecMixin, SCREENv0):
     codec_name = "SCREENv2"
 
 
-DEFAULT_CODEC = RSSv0()
 CODEC_REGISTRY: dict[str, RSSv0] = {
-    "RSSv0": DEFAULT_CODEC,
+    "RSSv2": RSSv2(),
+    "TAZv2": TAZv2(),
+    "SCREENv2": SCREENv2(),
+}
+VALIDATION_CODEC_REGISTRY: dict[str, RSSv0] = {
+    "RSSv0": RSSv0(),
     "TAZv0": TAZv0(),
     "SCREENv0": SCREENv0(),
     "RSSv1": RSSv1(),
     "TAZv1": TAZv1(),
     "SCREENv1": SCREENv1(),
-    "RSSv2": RSSv2(),
-    "TAZv2": TAZv2(),
-    "SCREENv2": SCREENv2(),
+    **CODEC_REGISTRY,
 }
+DEFAULT_CODEC = CODEC_REGISTRY["RSSv2"]
 
 
 def get_codec(name: str) -> RSSv0:
-    """Hole einen Codec aus der Registry per Namen."""
+    """Hole einen aktiven Codec fuer neue Verarbeitung per Namen."""
 
     try:
         return CODEC_REGISTRY[name]
     except KeyError as exc:
         raise ValueError(f"Unsupported codec: {name}") from exc
+
+
+def get_validation_codec(name: str) -> RSSv0:
+    """Hole einen aktiven oder historischen Codec fuer die Validierung."""
+
+    try:
+        return VALIDATION_CODEC_REGISTRY[name]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported validation codec: {name}") from exc

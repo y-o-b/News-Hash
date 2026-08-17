@@ -44,9 +44,9 @@ def fake_feed_two_items() -> dict:
 
 
 def test_ingest_source_writes_jsonl_and_sqlite(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr(CODEC_REGISTRY["RSSv0"], "fetch_feed", lambda url: fake_feed())
+    monkeypatch.setattr(CODEC_REGISTRY["RSSv2"], "fetch_feed", lambda url: fake_feed())
     settings_manager = SettingsManager(data_dir=tmp_path)
-    source = SourceConfig(name="example", feed_url="https://example.invalid/feed", storage_name="example", poll_interval_seconds=300)
+    source = SourceConfig(name="example", feed_url="https://example.invalid/feed", storage_name="example", poll_interval_seconds=300, codec_name="RSSv2")
 
     result = main.ingest_source(source, settings_manager)
 
@@ -70,18 +70,18 @@ def test_ingest_source_writes_jsonl_and_sqlite(tmp_path, monkeypatch) -> None:
 
 
 def test_ingest_source_skips_already_known_records(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr(CODEC_REGISTRY["RSSv0"], "fetch_feed", lambda url: fake_feed())
+    monkeypatch.setattr(CODEC_REGISTRY["RSSv2"], "fetch_feed", lambda url: fake_feed())
     prepare_calls = 0
-    original_prepare_item = CODEC_REGISTRY["RSSv0"].prepare_item
+    original_prepare_item = CODEC_REGISTRY["RSSv2"].prepare_item
 
     def track_prepare_item(*args, **kwargs):
         nonlocal prepare_calls
         prepare_calls += 1
         return original_prepare_item(*args, **kwargs)
 
-    monkeypatch.setattr(CODEC_REGISTRY["RSSv0"], "prepare_item", track_prepare_item)
+    monkeypatch.setattr(CODEC_REGISTRY["RSSv2"], "prepare_item", track_prepare_item)
     settings_manager = SettingsManager(data_dir=tmp_path)
-    source = SourceConfig(name="example", feed_url="https://example.invalid/feed", storage_name="example", poll_interval_seconds=300)
+    source = SourceConfig(name="example", feed_url="https://example.invalid/feed", storage_name="example", poll_interval_seconds=300, codec_name="RSSv2")
 
     main.ingest_source(source, settings_manager)
     second_result = main.ingest_source(source, settings_manager)
@@ -94,9 +94,9 @@ def test_ingest_source_skips_already_known_records(tmp_path, monkeypatch) -> Non
 
 
 def test_ingest_source_produces_identical_hash_chain_in_both_stores(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr(CODEC_REGISTRY["RSSv0"], "fetch_feed", lambda url: fake_feed_two_items())
+    monkeypatch.setattr(CODEC_REGISTRY["RSSv2"], "fetch_feed", lambda url: fake_feed_two_items())
     settings_manager = SettingsManager(data_dir=tmp_path)
-    source = SourceConfig(name="example", feed_url="https://example.invalid/feed", storage_name="example", poll_interval_seconds=300)
+    source = SourceConfig(name="example", feed_url="https://example.invalid/feed", storage_name="example", poll_interval_seconds=300, codec_name="RSSv2")
 
     result = main.ingest_source(source, settings_manager)
 
@@ -114,9 +114,9 @@ def test_ingest_source_produces_identical_hash_chain_in_both_stores(tmp_path, mo
 
 def test_ingest_source_tracks_previous_hash_independently_per_store(tmp_path, monkeypatch) -> None:
     settings_manager = SettingsManager(data_dir=tmp_path)
-    source = SourceConfig(name="example", feed_url="https://example.invalid/feed", storage_name="example", poll_interval_seconds=300)
+    source = SourceConfig(name="example", feed_url="https://example.invalid/feed", storage_name="example", poll_interval_seconds=300, codec_name="RSSv2")
 
-    codec = CODEC_REGISTRY["RSSv0"]
+    codec = CODEC_REGISTRY["RSSv2"]
     seed_item = {
         "id": "seed-1",
         "title": "Seed",
@@ -131,7 +131,7 @@ def test_ingest_source_tracks_previous_hash_independently_per_store(tmp_path, mo
     # Nur JSONL kennt "seed-1" bereits (z.B. weil SQLite nach einem Absturz zurueckliegt).
     JsonlStorage(tmp_path, "example").append_records([seed_record])
 
-    monkeypatch.setattr(CODEC_REGISTRY["RSSv0"], "fetch_feed", lambda url: fake_feed())
+    monkeypatch.setattr(CODEC_REGISTRY["RSSv2"], "fetch_feed", lambda url: fake_feed())
 
     result = main.ingest_source(source, settings_manager)
 
@@ -153,14 +153,14 @@ def test_ingest_source_tracks_previous_hash_independently_per_store(tmp_path, mo
 
 
 def test_process_sources_handles_all_configured_sources(tmp_path, monkeypatch, capsys) -> None:
-    monkeypatch.setattr(CODEC_REGISTRY["RSSv0"], "fetch_feed", lambda url: fake_feed())
+    monkeypatch.setattr(CODEC_REGISTRY["RSSv2"], "fetch_feed", lambda url: fake_feed())
     settings_manager = SettingsManager(data_dir=tmp_path)
     config = AppConfig(
         settings_path=tmp_path / "settings.toml",
         settings=Settings(
             sources=(
-                SourceConfig(name="alpha", feed_url="https://example.invalid/a", storage_name="alpha", poll_interval_seconds=300),
-                SourceConfig(name="beta", feed_url="https://example.invalid/b", storage_name="beta", poll_interval_seconds=120),
+                SourceConfig(name="alpha", feed_url="https://example.invalid/a", storage_name="alpha", poll_interval_seconds=300, codec_name="RSSv2"),
+                SourceConfig(name="beta", feed_url="https://example.invalid/b", storage_name="beta", poll_interval_seconds=120, codec_name="RSSv2"),
             )
         ),
     )
