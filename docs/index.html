@@ -12,6 +12,7 @@
     main { display:grid; gap:36px; grid-template-columns:repeat(2,minmax(0,1fr)); max-width:1200px; margin:auto; padding:72px 24px; }
     .card { background:var(--paper); border:5px solid var(--ink); box-shadow:10px 10px 0 var(--ink); padding:clamp(28px,6vw,72px); }
     .heading-card { grid-column:1/-1; }
+    .heading-labels { display:flex; justify-content:space-between; gap:20px; }
     .brand { align-items:center; display:flex; gap:20px; margin:28px 0; }
     .logo { display:block; height:76px; width:76px; }
     h1 { font:900 clamp(48px,10vw,108px)/.9 Impact,"Arial Black",sans-serif; margin:0; text-shadow:5px 5px 0 var(--red); }
@@ -30,11 +31,11 @@
 <body>
   <main>
     <section class="card heading-card" aria-label="News-Hash">
+      <div class="heading-labels"><span>Nachrichten · Hash-Ketten</span><span lang="en">News · Hash Chains</span></div>
       <div class="brand"><img class="logo" src="logo.svg" alt="News-Hash Logo"><h1>News-Hash</h1></div>
     </section>
 
     <section class="card" lang="de">
-      <div>Nachrichten · Hash-Ketten</div>
       <p>Ein nachvollziehbares Nachrichtenarchiv: Quellen werden regelmäßig gelesen, Inhalte lokal bewahrt und mit Hash-Ketten sowie OpenTimestamps zeitlich verankert.</p>
       <div class="links">
         <a href="projekt.html">Das Projekt entdecken</a>
@@ -44,7 +45,6 @@
     </section>
 
     <section class="card" lang="en">
-      <div>News · Hash Chains</div>
       <p>A traceable news archive: sources are read regularly, content is preserved locally, and hash chains together with OpenTimestamps anchor it in time.</p>
       <div class="links">
         <a href="projekt_en.html">Discover the project</a>
