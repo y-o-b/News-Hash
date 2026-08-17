@@ -1,0 +1,7 @@
+{
+  "date": "2026-08-16",
+  "latest_hash_jsonl": "fdfa591c9b8f3f47db369bc9ba57ebaa75efdf554903424ad9923e56499a4237",
+  "latest_hash_sqlite": "fdfa591c9b8f3f47db369bc9ba57ebaa75efdf554903424ad9923e56499a4237",
+  "source": "TAZ",
+  "storage_name": "taz"
+}
