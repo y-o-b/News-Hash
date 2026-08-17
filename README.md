@@ -2,6 +2,8 @@
 
 News-Hash ist ein lokales Nachrichtenarchiv mit überprüfbarer Historie. Die Anwendung liest konfigurierte Nachrichtenquellen ein, normalisiert neue Meldungen und speichert sie dauerhaft in einer append-only Datenstruktur. Jede Meldung bleibt mit ihrer zeitlichen Einordnung, Quelle und Hash-Historie nachvollziehbar.
 
+English version: [README_en.md](README_en.md)
+
 Die Python-Anwendung liegt unter `app/`. Die statische GitHub-Pages-Website liegt unter `docs/`. Die verbindliche Projekt- und Produktdokumentation befindet sich unter `project-docu/`.
 
 Besonders wichtig sind die externen Nachweise und die Betriebsüberwachung: Hash-Manifeste werden über OpenTimestamps in der Bitcoin-Blockchain verankert und zusätzlich mit ihren `.ots`-Proofs per Git in einem GitHub-Repository veröffentlicht. Der laufende Betrieb kann über einen optionalen Heartbeat und über Prometheus-Metriken überwacht werden.
