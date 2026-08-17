@@ -107,7 +107,7 @@ Hash chains can be checked independently of feed retrieval. By default, only the
 uv run newshash-validate --settings data/settings.toml --data-dir data
 ```
 
-Add `--all-shards` to validate every shard. Use `--source <storage_name>` to restrict validation to one source. The command checks both JSONL and SQLite and exits with status 1 when a chain is invalid.
+Add `--all-shards` to validate every shard. Use `--shard <number>` to validate one specific shard. Manifests under `data/anchors/` are checked against their named shards automatically; use `--manifest <path>` to select individual manifests. Use `--source <storage_name>` to restrict validation to one source. The command checks JSONL, SQLite, and manifests and exits with status 1 on any error.
 
 ## Configuration
 

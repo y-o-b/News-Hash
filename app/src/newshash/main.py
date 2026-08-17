@@ -203,6 +203,8 @@ def run_daemon(
                         emit_source_result(source, result)
                         if enable_ots:
                             anchor_source_result(source, result, settings_manager)
+                        if config.settings.heartbeat_url and (result.inserted_jsonl > 0 or result.inserted_sqlite > 0):
+                            post(config.settings.heartbeat_url, json={"status": "ok"})
                     except Exception as exc:
                         print(f'source="{source.name}" action="error" error="{_error_text(exc)}"', file=sys.stderr)
                     next_runs[source] = now + source.poll_interval_seconds
@@ -212,9 +214,6 @@ def run_daemon(
                     next_deadline = deadline
 
             sleep_seconds = max(0.0, (next_deadline or now) - monotonic_fn())
-
-            if config.settings.heartbeat_url:
-                post(config.settings.heartbeat_url, json={"status": "ok"})
 
             if stop_event is not None:
                 stop_event.wait(sleep_seconds)

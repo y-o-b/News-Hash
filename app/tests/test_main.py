@@ -217,7 +217,7 @@ def test_run_daemon_processes_sources_on_their_own_interval(tmp_path, monkeypatc
 def test_run_daemon_sends_configured_heartbeat(tmp_path, monkeypatch) -> None:
     heartbeat_calls: list[tuple[str, dict]] = []
 
-    monkeypatch.setattr(main, "ingest_source", lambda source, settings_manager: IngestResult(0, 0, 0, 0, "", "", Path("jsonl"), Path("sqlite")))
+    monkeypatch.setattr(main, "ingest_source", lambda source, settings_manager: IngestResult(1, 1, 1, 1, "", "", Path("jsonl"), Path("sqlite")))
     monkeypatch.setattr(main, "post", lambda url, json: heartbeat_calls.append((url, json)))
 
     config = AppConfig(
@@ -234,6 +234,27 @@ def test_run_daemon_sends_configured_heartbeat(tmp_path, monkeypatch) -> None:
     main.run_daemon(config, SettingsManager(data_dir=tmp_path), sleep_fn=stop_daemon)
 
     assert heartbeat_calls == [("https://example.invalid/heartbeat", {"status": "ok"})]
+
+
+def test_run_daemon_does_not_send_heartbeat_without_new_records(tmp_path, monkeypatch) -> None:
+    heartbeat_calls: list[tuple[str, dict]] = []
+
+    monkeypatch.setattr(main, "ingest_source", lambda source, settings_manager: IngestResult(0, 0, 1, 1, "", "", Path("jsonl"), Path("sqlite")))
+    monkeypatch.setattr(main, "post", lambda url, json: heartbeat_calls.append((url, json)))
+    config = AppConfig(
+        settings_path=tmp_path / "settings.toml",
+        settings=Settings(
+            sources=(SourceConfig(name="alpha", feed_url="feed", storage_name="alpha", poll_interval_seconds=5),),
+            heartbeat_url="https://example.invalid/heartbeat",
+        ),
+    )
+
+    def stop_daemon(interval: float) -> None:
+        raise KeyboardInterrupt
+
+    main.run_daemon(config, SettingsManager(data_dir=tmp_path), sleep_fn=stop_daemon)
+
+    assert heartbeat_calls == []
 
 
 def test_run_daemon_rejects_empty_sources(tmp_path) -> None:

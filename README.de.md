@@ -107,7 +107,7 @@ Hash-Ketten können unabhängig vom Feedabruf geprüft werden. Standardmäßig w
 uv run newshash-validate --settings data/settings.toml --data-dir data
 ```
 
-Für eine vollständige Prüfung aller Shards wird `--all-shards` ergänzt. Mit `--source <storage_name>` kann die Prüfung auf eine Quelle eingeschränkt werden. Die Prüfung umfasst JSONL und SQLite und endet bei einer ungültigen Kette mit Status 1.
+Für eine vollständige Prüfung aller Shards wird `--all-shards` ergänzt. Mit `--shard <nummer>` kann ein bestimmter Shard geprüft werden. Manifeste unter `data/anchors/` werden automatisch gegen ihre genannten Shards geprüft; mit `--manifest <pfad>` können gezielt einzelne Manifeste angegeben werden. Mit `--source <storage_name>` kann die Prüfung auf eine Quelle eingeschränkt werden. Die Prüfung umfasst JSONL, SQLite und Manifeste und endet bei einem Fehler mit Status 1.
 
 ## Konfiguration
 

@@ -27,6 +27,7 @@
 - `--daemon`: startet einen Endlosschleifen-Modus, der jede Quelle nach ihrem eigenen `poll_interval_seconds` erneut verarbeitet.
 - `/metrics`: liefert Prometheus-Metriken für Quellen, Datensätze, Bilder und Laufzeitfehler.
 - `newshash-validate` prüft die JSONL- und SQLite-Hash-Ketten; standardmäßig wird nur der letzte nichtleere Shard geprüft, `--all-shards` prüft den vollständigen Bestand.
+- `newshash-validate` prüft zusätzlich Manifeste; mit `--shard <nummer>` kann ein einzelner Shard gezielt geprüft werden.
 - Quellenfehler und die letzten Fehlermeldungen werden nur im Prozessspeicher gehalten, nach `stderr` geloggt und über Dashboard sowie `/metrics` bereitgestellt; Netzwerk- und Interpretationsfehler stoppen die übrigen Quellen nicht.
 - Bilder bekommen Dateinamen mit Veröffentlichungszeitpunkt und laufender Nummer.
 - Ein neues Shard wird erstellt, sobald eine Datei 1 GB erreicht.

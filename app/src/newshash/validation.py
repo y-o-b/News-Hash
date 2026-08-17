@@ -120,18 +120,36 @@ def _last_hash(path: Path, storage_format: str) -> str | None:
     return last
 
 
+def _find_shard_for_hash(storage_root: Path, storage_name: str, storage_format: str, wanted_hash: str) -> int | None:
+    suffix = "jsonl" if storage_format == "jsonl" else "sqlite3"
+    paths = sorted(storage_root.glob(f"{storage_name}.*.{suffix}"), key=_shard_index)
+    for path in paths:
+        try:
+            if _last_hash(path, storage_format) == wanted_hash:
+                return _shard_index(path)
+        except OSError, json.JSONDecodeError, sqlite3.DatabaseError, TypeError, ValueError:
+            continue
+    return None
+
+
 def _validate_paths(
     paths: list[Path],
     storage_name: str,
     storage_format: str,
     codec_name: str,
     all_shards: bool,
+    shard_index: int | None = None,
 ) -> ValidationResult:
     errors: list[str] = []
     if not paths:
         return ValidationResult(storage_name, storage_format, (), 0, ())
 
-    selected_paths = paths if all_shards else paths[-1:]
+    if shard_index is not None:
+        selected_paths = [path for path in paths if _shard_index(path) == shard_index]
+        if not selected_paths:
+            return ValidationResult(storage_name, storage_format, (shard_index,), 0, (f"{storage_format} shard={shard_index}: shard not found",))
+    else:
+        selected_paths = paths if all_shards else paths[-1:]
     first_selected = paths.index(selected_paths[0])
     expected_hash = GENESIS_HASH
     if first_selected:
@@ -165,15 +183,51 @@ def _validate_paths(
     )
 
 
-def validate_source(storage_root: Path, source: SourceConfig, all_shards: bool = False) -> tuple[ValidationResult, ValidationResult]:
+def validate_source(
+    storage_root: Path, source: SourceConfig, all_shards: bool = False, shard_index: int | None = None
+) -> tuple[ValidationResult, ValidationResult]:
     """Pruefe JSONL- und SQLite-Kette einer Quelle, standardmaessig nur den letzten Shard."""
 
     jsonl = JsonlStorage(storage_root, source.storage_name)
     sqlite = SqliteStorage(storage_root, source.storage_name)
     return (
-        _validate_paths(_nonempty_jsonl_paths(jsonl), source.storage_name, "jsonl", source.codec_name, all_shards),
-        _validate_paths(_nonempty_sqlite_paths(sqlite), source.storage_name, "sqlite", source.codec_name, all_shards),
+        _validate_paths(_nonempty_jsonl_paths(jsonl), source.storage_name, "jsonl", source.codec_name, all_shards, shard_index),
+        _validate_paths(_nonempty_sqlite_paths(sqlite), source.storage_name, "sqlite", source.codec_name, all_shards, shard_index),
     )
+
+
+def validate_manifest(manifest_path: Path, storage_root: Path, storage_name: str | None = None) -> tuple[str, ...]:
+    """Pruefe die in einem Manifest genannten Hashes gegen die genannten Shards."""
+
+    errors: list[str] = []
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(manifest, dict):
+            raise ValueError("manifest is not a JSON object")
+        actual_storage_name = str(manifest["storage_name"])
+        if storage_name is not None and actual_storage_name != storage_name:
+            return ()
+        jsonl_hash = str(manifest["latest_hash_jsonl"])
+        sqlite_hash = str(manifest["latest_hash_sqlite"])
+        jsonl_shard = int(manifest.get("latest_shard_jsonl", _find_shard_for_hash(storage_root, actual_storage_name, "jsonl", jsonl_hash)))
+        sqlite_shard = int(manifest.get("latest_shard_sqlite", _find_shard_for_hash(storage_root, actual_storage_name, "sqlite", sqlite_hash)))
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+        return (f"manifest={manifest_path}: {type(error).__name__}: {error}",)
+
+    for storage_format, shard_number, expected_hash in (("jsonl", jsonl_shard, jsonl_hash), ("sqlite", sqlite_shard, sqlite_hash)):
+        paths = sorted(storage_root.glob(f"{actual_storage_name}.*.{storage_format if storage_format == 'jsonl' else 'sqlite3'}"), key=_shard_index)
+        target = next((path for path in paths if _shard_index(path) == shard_number), None)
+        if target is None:
+            errors.append(f"manifest={manifest_path}: {storage_format} shard={shard_number} not found")
+            continue
+        try:
+            actual_hash = _last_hash(target, storage_format)
+        except (OSError, json.JSONDecodeError, sqlite3.DatabaseError, TypeError, ValueError) as error:
+            errors.append(f"manifest={manifest_path}: {storage_format} shard={shard_number}: {type(error).__name__}: {error}")
+            continue
+        if actual_hash != expected_hash:
+            errors.append(f"manifest={manifest_path}: {storage_format} shard={shard_number}: hash does not match")
+    return tuple(errors)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -181,7 +235,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--settings", help="Path to settings.toml")
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR, help="Storage directory (default: data)")
     parser.add_argument("--source", help="Validate only this storage_name")
-    parser.add_argument("--all-shards", action="store_true", help="Validate every shard instead of only the latest non-empty shard")
+    shard_group = parser.add_mutually_exclusive_group()
+    shard_group.add_argument("--all-shards", action="store_true", help="Validate every shard instead of only the latest non-empty shard")
+    shard_group.add_argument("--shard", type=int, help="Validate this shard number")
+    parser.add_argument("--manifest", action="append", type=Path, help="Validate this manifest (repeatable; default: all data/anchors manifests)")
     return parser
 
 
@@ -198,7 +255,7 @@ def main(argv: list[str] | None = None) -> None:
 
     invalid = False
     for source in sources:
-        for result in validate_source(args.data_dir, source, args.all_shards):
+        for result in validate_source(args.data_dir, source, args.all_shards, args.shard):
             status = "ok" if result.valid else "invalid"
             print(
                 f"source={source.storage_name} format={result.storage_format} status={status} "
@@ -207,6 +264,13 @@ def main(argv: list[str] | None = None) -> None:
             for error in result.errors:
                 print(f"error={error}", file=sys.stderr)
                 invalid = True
+    manifest_paths = args.manifest or sorted(args.data_dir.glob("anchors/*/*.txt"))
+    for manifest_path in manifest_paths:
+        errors = validate_manifest(manifest_path, args.data_dir, args.source)
+        print(f"manifest={manifest_path} status={'ok' if not errors else 'invalid'}")
+        for error in errors:
+            print(f"error={error}", file=sys.stderr)
+            invalid = True
     if invalid:
         raise SystemExit(1)
 
