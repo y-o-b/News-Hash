@@ -448,10 +448,9 @@ class SCREENv0(RSSv0):
     codec_name = "SCREENv0"
 
     def fetch_feed(self, url: str) -> dict[str, Any]:
-        """Begrenze den Screenshot-Lauf auf den ersten Eintrag des Feeds."""
+        """Lade den gesamten Feed; die Importlogik waehlt den ersten unbekannten Eintrag."""
 
-        feed = super().fetch_feed(url)
-        return {**feed, "items": feed.get("items", [])[:1]}
+        return super().fetch_feed(url)
 
     def capture_screenshot(self, url: str, path: Path) -> bytes:
         """Rendere eine Seite mit Chromium und speichere sie vollständig als PNG."""

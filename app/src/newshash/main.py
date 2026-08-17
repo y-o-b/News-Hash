@@ -67,6 +67,13 @@ def ingest_source(source: SourceConfig, settings_manager: SettingsManager) -> In
         settings_manager.log_runtime(f'source="{source.name}" action="fetch error" error="{error}"')
         raise
     settings_manager.log_runtime(f'source="{source.name}" action="fetch finished" items={len(feed["items"])}')
+    if source.codec_name.startswith("SCREEN"):
+        unknown_items = [
+            item
+            for item in feed["items"]
+            if str(item.get("id")) not in jsonl_known_source_ids or str(item.get("id")) not in sqlite_known_source_ids
+        ]
+        feed["items"] = unknown_items[:1]
     retrieved_at = codec.utc_now()
     image_root = storage_root / "images"
 

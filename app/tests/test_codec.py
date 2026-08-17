@@ -84,13 +84,13 @@ def test_screen_codec_stores_full_page_screenshot(tmp_path, monkeypatch) -> None
     assert image_bytes
 
 
-def test_screen_codec_processes_only_first_feed_item(monkeypatch) -> None:
+def test_screen_codec_returns_feed_for_unknown_item_selection(monkeypatch) -> None:
     codec = SCREENv0()
     monkeypatch.setattr(RSSv0, "fetch_feed", lambda self, url: {"items": [{"id": "one"}, {"id": "two"}]})
 
     feed = codec.fetch_feed("https://example.invalid/feed")
 
-    assert [item["id"] for item in feed["items"]] == ["one"]
+    assert [item["id"] for item in feed["items"]] == ["one", "two"]
 
 
 def test_extract_image_urls_from_img_tags() -> None:

@@ -152,6 +152,29 @@ def test_ingest_source_tracks_previous_hash_independently_per_store(tmp_path, mo
     assert jsonl_example_1["hash"] != sqlite_example_1["hash"]
 
 
+def test_screenshot_ingest_selects_first_unknown_item(tmp_path, monkeypatch) -> None:
+    codec = CODEC_REGISTRY["SCREENv2"]
+    first = {**fake_feed()["items"][0], "id": "known"}
+    second = {**fake_feed()["items"][0], "id": "unknown"}
+    monkeypatch.setattr(
+        codec,
+        "capture_screenshot",
+        lambda url, path: (path.parent.mkdir(parents=True, exist_ok=True), path.write_bytes(b"png"), b"png")[2],
+    )
+    prepared, image_bytes = codec.prepare_item(first, "2026-08-17T10:00:00Z", tmp_path, tmp_path / "images", storage_name="screen")
+    seed = codec.finalize_record(prepared, GENESIS_HASH)
+    JsonlStorage(tmp_path, "screen").append_records([seed])
+    SqliteStorage(tmp_path, "screen").append_records([seed], image_bytes)
+    monkeypatch.setattr(codec, "fetch_feed", lambda url: {"items": [first, second]})
+    source = SourceConfig("screen", "feed", "screen", 300, codec_name="SCREENv2")
+
+    result = main.ingest_source(source, SettingsManager(data_dir=tmp_path))
+
+    assert result.inserted_jsonl == 1
+    records = [json.loads(line) for line in result.jsonl_path.read_text(encoding="utf-8").split("\n") if line.strip()]
+    assert records[-1]["source_id"] == "unknown"
+
+
 def test_process_sources_handles_all_configured_sources(tmp_path, monkeypatch, capsys) -> None:
     monkeypatch.setattr(CODEC_REGISTRY["RSSv2"], "fetch_feed", lambda url: fake_feed())
     settings_manager = SettingsManager(data_dir=tmp_path)
