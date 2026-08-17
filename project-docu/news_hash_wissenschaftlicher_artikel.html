@@ -18,6 +18,10 @@
     .abstract { border-left:3pt solid #4b8ed8; font-size:9.2pt; margin:6pt 0 7pt; padding:4pt 7pt; }
     .keywords { font-family:Arial,sans-serif; font-size:8pt; margin-top:4pt; }
     .article-body { column-count:2; column-gap:9mm; }
+    .paper-page { break-before:page; column-count:2; column-gap:9mm; page-break-before:always; }
+    .paper-page.continued-page { break-before:auto; page-break-before:auto; }
+    .paper-page h2 { column-span:all; }
+    .paper-page p { break-inside:avoid; }
     section { break-inside:avoid-column; }
     ul { margin:2pt 0 5pt 14pt; padding:0; }
     li { margin:0 0 2pt; }
@@ -98,5 +102,83 @@
       <p class="note">Dieser Artikel beschreibt den Stand des Projekts zum 17. August 2026.</p>
     </section>
   </div>
+
+  <section class="paper-page">
+    <h2>9. Verwandte Konzepte und Einordnung</h2>
+    <p>News-Hash steht an der Schnittstelle von Webarchivierung, Datenintegrität und digitaler Provenienz. Klassische Webarchive konzentrieren sich häufig auf die möglichst vollständige Wiederauffindbarkeit von Ressourcen. Ein Hash-basiertes Archiv verfolgt eine andere Priorität: Es speichert einen lokal definierten Ausschnitt und macht nachträgliche Veränderungen an diesem Ausschnitt prüfbar. Beide Ziele ergänzen sich, sind aber nicht identisch. Vollständigkeit lässt sich aus einer Hash-Kette nicht ableiten, und Integrität ersetzt keine langfristige Verfügbarkeit.</p>
+    <p>In relationalen Datenbanksystemen werden Konsistenz und Dauerhaftigkeit typischerweise über Transaktionen, Constraints und Sicherungskopien behandelt. News-Hash ergänzt diese Mechanismen um eine sequenzielle Prüfbarkeit auf Anwendungsebene. Das ist besonders nützlich, wenn Daten zwischen verschiedenen Formaten exportiert, repliziert oder unabhängig archiviert werden. Die Kette ist dabei kein Ersatz für SQLite-Transaktionen. Sie bildet eine zusätzliche Beobachtungsschicht, mit der ein späterer Prüfer erkennen kann, ob die erwartete Reihenfolge und der erwartete Inhalt noch vorliegen.</p>
+    <p>Der Ansatz ist außerdem von einer Blockchain zu unterscheiden. Eine Blockchain verbindet Verkettung mit einem verteilten Konsens- und Replikationsmodell. News-Hash verwendet dagegen zunächst einen einzelnen lokalen Betreiber und eine lokale Kette. Erst das tägliche Manifest wird optional öffentlich verankert. Diese Reduktion senkt Komplexität und Betriebskosten, macht aber die Vertrauensannahmen explizit: Der lokale Archivbetreiber bleibt für Abruf, Konfiguration und Veröffentlichung verantwortlich.</p>
+    <p>Die konzeptionelle Leistung des Projekts liegt somit weniger in einem neuen kryptografischen Verfahren als in der Kombination etablierter Bausteine. Standardfeeds, kanonische JSON-Serialisierung, SHA-256, SQLite, JSONL und OpenTimestamps werden zu einem nachvollziehbaren Arbeitsablauf verbunden. Das erleichtert die technische Prüfung, weil jede Schicht mit bekannten Werkzeugen und klaren Grenzen beschrieben werden kann.</p>
+  </section>
+
+  <section class="paper-page">
+    <h2>10. Forschungsfragen und Untersuchungsmethode</h2>
+    <p>Der Projektbericht untersucht vier Leitfragen. Erstens: Wie kann ein regelmäßig aktualisiertes Nachrichtenarchiv so gespeichert werden, dass nachträgliche Änderungen an einzelnen Datensätzen sichtbar werden? Zweitens: Wie lassen sich unterschiedliche Speichermedien parallel nutzen, ohne eine unnötige Kopplung zwischen ihnen zu erzeugen? Drittens: Wie können quellspezifische Anforderungen wie vollständige Artikeltexte oder visuelle Screenshots in einen einheitlichen Importprozess integriert werden? Viertens: Wie lässt sich die Existenz einer lokalen Archivspur unabhängig vom Betreiber zeitlich einordnen?</p>
+    <p>Die Untersuchung folgt einem konstruktionsorientierten Vorgehen. Aus dem fachlichen Ziel werden zunächst Invarianten abgeleitet: Ein gespeicherter Datensatz darf nicht stillschweigend verändert werden; jede Speicherform besitzt eine prüfbare Vorgängerverknüpfung; bekannte Quellenkennungen werden dedupliziert; Fehler einer Quelle isolieren die anderen Quellen. Diese Invarianten werden in Architektur, Codecs und Tests abgebildet. Die Implementierung ist damit zugleich Artefakt und Untersuchungsgegenstand.</p>
+    <p>Die Bewertung erfolgt anhand von Szenarien statt anhand eines Anspruchs auf statistische Repräsentativität. Betrachtet werden ein normaler Feedimport, ein Wiederholungsabruf, ein Abbruch zwischen zwei Speicheroperationen, eine Schemaabweichung, ein fehlerhafter Feed und eine nachträgliche Datenänderung. Für jedes Szenario wird geprüft, welche Beobachtung möglich ist und welche Aussage gerade nicht zulässig ist. Diese Negativabgrenzung ist wichtig, weil Integritätsmechanismen leicht stärker interpretiert werden, als sie tatsächlich sind.</p>
+    <p>Als technische Evidenz dienen Unit- und Integrationstests, die Prüfung von Hash-Ketten, die Validierung des SQLite-Schemas, WebUI-Rendering und die kontrollierte Ausführung der Screenshot-Codecs. Die Tests beweisen keine allgemeine Korrektheit des Gesamtsystems, machen aber zentrale Verhaltensannahmen reproduzierbar und regressionsfest.</p>
+  </section>
+
+  <section class="paper-page">
+    <h2>11. Quellenaufnahme und Codec-Modell</h2>
+    <p>Eine zentrale Designentscheidung ist die Trennung zwischen allgemeiner Importlogik und quellspezifischer Verarbeitung. Die Importlogik kennt Feedabruf, Deduplizierung, Speicherung und Fehlerbehandlung. Ein Codec kennt dagegen die Struktur und Besonderheiten einer Quelle. Dadurch kann ein zusätzlicher Anbieter über einen neuen Konfigurationsblock und gegebenenfalls einen neuen Codec angeschlossen werden, ohne die Hash- oder Speicherschicht umzuschreiben.</p>
+    <p>Die Normalisierung reduziert heterogene Eingaben auf ein gemeinsames Datenmodell. Für einen RSS-Datensatz werden insbesondere <code>source_id</code>, Titel, URL, Inhalt, Autor, Veröffentlichungszeit, Codecname und Bildmetadaten zusammengeführt. Zeitangaben werden intern in UTC behandelt. Eine feste Feldzuordnung ist für die Hash-Berechnung entscheidend: Wenn zwei semantisch gleiche Meldungen wegen zufälliger Eingabereihenfolge unterschiedliche Hashes erzeugen, wäre die Kette nicht sinnvoll interpretierbar.</p>
+    <p>Der TAZ-Codec illustriert die Grenze einfacher Feedverarbeitung. Ein Feed kann einen Titel und einen kurzen Anreißer liefern, während die relevante Artikelfassung erst über den verlinkten Beitrag zugänglich ist. Der Codec lädt diesen Inhalt zusätzlich und übernimmt den strukturierten Artikeltext. Der Screenshot-Codec geht noch einen Schritt weiter und konserviert nicht nur Text, sondern die visuelle Erscheinung einer Zielseite. Chromium, Renderwartezeit und das Entfernen bekannter Consent-Banner werden dadurch Teil der Archivierungsbedingungen.</p>
+    <p>Diese Flexibilität erzeugt zugleich eine dokumentarische Pflicht. Ein Screenshot ist stärker vom Zeitpunkt, Viewport und Browser abhängig als ein JSON-Feld. Ein vollständiger Artikel kann sich trotz identischer Feedkennung verändern. News-Hash speichert deshalb den konkreten Abruf, nicht die Behauptung, eine Quelle sei für alle Zeiten vollständig abgebildet.</p>
+  </section>
+
+  <section class="paper-page">
+    <h2>12. Datenmodell und Fehlersemantik</h2>
+    <p>Die parallele Speicherung in JSONL und SQLite verfolgt zwei Ziele. JSONL stellt eine einfache, sequenzielle und langfristig lesbare Repräsentation bereit. SQLite ermöglicht Indizes, Abfragen und die WebUI. Beide Formate speichern dieselben fachlichen Datensätze, aber nicht zwingend im selben Schreibmoment. Deshalb werden letzter Hash und Vorgänger pro Speicherformat getrennt ermittelt.</p>
+    <p>Ein Prozessabbruch kann dazu führen, dass ein Format bereits einen neuen Datensatz enthält, während das andere noch auf dem vorherigen Stand ist. Das ist zunächst kein Beweis für Datenverlust oder Manipulation. Die unabhängigen Ketten machen den Zustand sichtbar und erlauben, die betroffene Seite kontrolliert weiterzuführen. Eine globale Transaktion über Dateisystem und SQLite wäre komplexer und würde die gewünschte Austauschbarkeit der Speicherformate verringern.</p>
+    <p>Die Shard-Strategie begrenzt die Größe einzelner Dateien. Bei Erreichen von 1 GB wird ein neuer nummerierter Shard begonnen. Die Deduplizierung betrachtet aus Performancegründen nur den jeweils neuesten Shard, während Kennzahlen und Detailzugriffe über alle Shards aggregieren. Diese asymmetrische Regel ist eine bewusste Betriebsentscheidung: Der häufige Importpfad soll schnell bleiben, während historische Abfragen vollständig sein müssen.</p>
+    <p>Fehler werden pro Quelle gezählt, nach <code>stderr</code> geschrieben und im Prozessspeicher für Dashboard und Prometheus vorgehalten. Ein Neustart setzt diese flüchtigen Laufzeitinformationen zurück. Persistiert werden dagegen die bereits geschriebenen Datensätze. Diese Trennung verhindert, dass temporäre Betriebszustände mit dem unveränderlichen Archivinhalt verwechselt werden.</p>
+  </section>
+
+  <section class="paper-page">
+    <h2>13. Formales Integritätsmodell</h2>
+    <p>Sei <em>R</em><sub>i</sub> ein normalisierter Datensatz und <em>H</em><sub>i</sub> sein Hash. Für den ersten Datensatz wird der Vorgängerwert als 256-Bit-Nullwert definiert. Für jeden folgenden Datensatz gilt <em>P</em><sub>i</sub> = <em>H</em><sub>i-1</sub>. Der Hash ergibt sich aus einer kanonischen Funktion <em>C</em> über die fachlichen Felder: <em>H</em><sub>i</sub> = SHA-256(<em>C</em>(<em>R</em><sub>i</sub>, <em>P</em><sub>i</sub>)). Die Funktion sortiert Schlüssel und verwendet eine deterministische UTF-8-Darstellung.</p>
+    <p>Die lokale Prüfung besteht aus zwei Bedingungen. Erstens muss der gespeicherte Vorgängerwert dem Hash des unmittelbar erwarteten Vorgängers entsprechen. Zweitens muss der neu berechnete Hash dem gespeicherten Hash entsprechen. Eine Änderung an einem Datensatz verletzt mindestens die zweite Bedingung. Wird nur die Reihenfolge verändert, verletzt sie typischerweise die erste Bedingung. Änderungen an einem frühen Element propagieren über alle späteren Vorgängerbezüge.</p>
+    <p>Das Modell setzt voraus, dass die kanonische Darstellung stabil bleibt. Änderungen am Codec oder an der Feldzuordnung können daher eine neue Schema- oder Kettenversion erforderlich machen. Die Anwendung behandelt inkompatible SQLite-Tabellen vorsichtig, indem sie alte Tabellen umbenennt. Für eine langfristige Archivmigration wäre zusätzlich eine explizite Kennzeichnung von Algorithmus- und Schema-Versionen sinnvoll.</p>
+    <p>Kryptografische Kollisionsresistenz ist eine notwendige, aber keine hinreichende Bedingung für Archivvertrauen. Auch ein perfekter Hash kann nur die Übereinstimmung zwischen Daten und Berechnung zeigen. Er kennt weder die Wahrheit einer Meldung noch die Vollständigkeit des Abrufs. Die Aussage des Verfahrens lautet deshalb präzise: Die vorliegende Archivfassung stimmt mit der gespeicherten Kette überein oder eine Abweichung ist feststellbar.</p>
+  </section>
+
+  <section class="paper-page">
+    <h2>14. Zeitverankerung und Reproduzierbarkeit</h2>
+    <p>Die tägliche Manifestbildung reduziert den extern zu veröffentlichenden Zustand auf wenige Hashwerte. Dadurch werden keine Nachrichteninhalte an den Zeitstempeldienst übertragen. Ein Manifest repräsentiert die zu diesem UTC-Tag bekannten Endpunkte der beiden lokalen Ketten. OpenTimestamps kann anschließend bestätigen, dass genau diese Bytefolge spätestens zu einem bestimmten Zeitpunkt existierte.</p>
+    <p>Für eine unabhängige Prüfung benötigt eine dritte Person drei Komponenten: die lokale Archivdatei oder eine vertrauenswürdige Kopie, das Manifest und die zugehörige <code>.ots</code>-Datei. Zunächst werden die Datensätze und Hash-Ketten lokal geprüft. Danach wird die Manifestdatei gegen die aktuellen Kettenwerte verglichen. Erst anschließend wird der Zeitnachweis mit dem OpenTimestamps-Werkzeug verifiziert. Die Reihenfolge trennt Inhaltsprüfung und Existenzprüfung.</p>
+    <p>Die GitHub-Synchronisierung erfüllt eine zusätzliche Reproduzierbarkeitsfunktion. Versionierte Manifest- und Proof-Dateien bleiben öffentlich auffindbar; unveränderte Dateien werden nicht erneut hochgeladen. Die Git-Historie dokumentiert dabei die Veröffentlichung, ersetzt aber nicht die kryptografische Attestation. Umgekehrt ersetzt die Attestation kein öffentlich zugängliches Archiv der Nachweisdateien.</p>
+    <p>Reproduzierbarkeit umfasst neben Dateien auch Konfiguration und Softwarestand. Quellen, Codecname, Abrufintervall, Browserumgebung und Zeitzonen beeinflussen die Ergebnisse. Der Projektstand dokumentiert diese Faktoren in Settings, Paketmetadaten, Tests und Architekturentscheidungen. Vollständige bitweise Reproduzierbarkeit eines Webscreenshots bleibt dennoch wegen externer Seiten und Browserrendering eingeschränkt.</p>
+  </section>
+
+  <section class="paper-page">
+    <h2>15. Evaluation und Betriebsszenarien</h2>
+    <p>Im Normalbetrieb wird jede konfigurierte Quelle nach ihrem Intervall verarbeitet. Ein neuer Datensatz durchläuft Abruf, Parsing, Normalisierung, Bildverarbeitung, Hash-Berechnung und parallele Speicherung. Die WebUI stellt den aktuellen Stand quellenbezogen dar. Die Pagination begrenzt die Menge gleichzeitig gerenderter Meldungen, während SQLite die Abfrage der Detailansicht unterstützt.</p>
+    <p>Beim Wiederholungsabruf derselben Quelle werden bekannte Kennungen erkannt und übersprungen. Dieses Verhalten reduziert nicht nur Laufzeit und Netzwerkverkehr, sondern verhindert auch, dass unveränderte Inhalte unnötig neue Kettenelemente erzeugen. Ein abweichender Datensatz wird als neue Fassung behandelt, sofern seine Quellenkennung dies zulässt. Die fachliche Entscheidung, ob zwei Veröffentlichungen identisch sind, liegt damit wesentlich in der Semantik der Quelle.</p>
+    <p>Fällt ein Feed aus, bleibt der Fehler auf die betroffene Quelle begrenzt. Das Dashboard und die Metriken machen den Zustand sichtbar, während andere Quellen weiterlaufen. Fällt der Prozess selbst aus, bleiben bereits geschriebene Daten in den persistenten Speichern erhalten. Nach dem Neustart werden Laufzeitfehler neu gezählt; die Kette setzt auf dem letzten gültigen Speicherstand auf.</p>
+    <p>Die Tests prüfen unter anderem Settings-Validierung, Feednormalisierung, Hash-Berechnung, Sharding, SQLite-Schema, Anchoring, GitHub-Synchronisierung, Daemon-Polling und WebUI-Rendering. Screenshottests verwenden <code>domcontentloaded</code> und eine kurze Renderwartezeit statt <code>networkidle</code>, weil dauerhafte Verbindungen sonst die Testausführung unbestimmt verlängern können.</p>
+  </section>
+
+  <section class="paper-page">
+    <h2>16. Bedrohungsmodell, Datenschutz und Grenzen</h2>
+    <p>Das Bedrohungsmodell betrachtet vor allem nachträgliche lokale Änderungen, unvollständige Schreibvorgänge, beschädigte Speicherdateien und eine nicht verfügbare Quelle. Gegen einen Betreiber, der vor dem Hashing absichtlich falsche Inhalte speichert, schützt die Kette nicht. Gegen das heimliche Löschen eines gesamten Archivs hilft sie ebenfalls nur dann, wenn unabhängige Kopien oder veröffentlichte Manifeste vorhanden sind.</p>
+    <p>Der Ansatz minimiert den externen Datenabfluss. OpenTimestamps erhält nur Hashmanifeste, keine Nachrichtentexte. Gleichwohl können archivierte Inhalte personenbezogene Daten oder urheberrechtlich geschützte Texte enthalten. Lokaler Betrieb bedeutet nicht automatisch rechtliche Unbedenklichkeit. Quellenwahl, Aufbewahrungsdauer, Zugriffsrechte und Löschkonzepte müssen außerhalb des Hash-Modells verantwortet werden.</p>
+    <p>Die WebUI ist ohne Authentifizierung konzipiert. Dies vereinfacht den lokalen Betrieb, erweitert aber die Angriffsfläche, sobald der Server öffentlich erreichbar ist. Insbesondere Abruf- und Shutdown-Endpunkte dürfen nicht ohne Netzwerk- oder Reverse-Proxy-Schutz exponiert werden. Credentials für GitHub werden aus einer lokalen Datei gelesen und nicht protokolliert; ihre Dateirechte und Bereitstellung bleiben Aufgaben der Betriebsumgebung.</p>
+    <p>Auch semantische Grenzen sind relevant. Eine Hash-Kette zeigt, dass eine gespeicherte Fassung unverändert ist, nicht dass sie ausgewogen, wahr oder vollständig ist. Ein Screenshot dokumentiert eine Darstellung, kann aber wegen dynamischer Inhalte, Cookie-Zuständen oder externer Ressourcen variieren. Wissenschaftliche Auswertungen müssen diese Unsicherheiten als Teil der Quellenkritik ausweisen.</p>
+  </section>
+
+  <section class="paper-page continued-page">
+    <h2>17. Weiterentwicklung und Schlussfolgerung</h2>
+    <p>Für eine nächste Entwicklungsstufe bieten sich mehrere Erweiterungen an. Eine explizite Schema- und Algorithmuskennung würde Migrationen und langfristige Prüfungen erleichtern. Ein unabhängiger Verifikationsclient könnte die Hash-Ketten lesen, ohne die vollständige Anwendung zu starten. Signierte Konfigurationssnapshots würden zusätzlich dokumentieren, welche Quellen und Codecversionen für einen Abruf aktiv waren.</p>
+    <p>Für die betriebliche Robustheit wären unveränderliche oder geografisch getrennte Replikate der JSONL-, SQLite- und Anchor-Dateien sinnvoll. Ein Monitoring der erwarteten Abrufintervalle könnte nicht nur Fehler, sondern auch ausbleibende Daten erkennen. Für Screenshots könnten standardisierte Viewports, Browser-Versionen und eine Erfassung der geladenen Ressourcen die Vergleichbarkeit erhöhen. Jede dieser Maßnahmen vergrößert jedoch Speicherbedarf und Betriebsaufwand.</p>
+    <p>News-Hash demonstriert, dass nachvollziehbare Nachrichtenarchivierung nicht zwingend eine neue verteilte Infrastruktur erfordert. Ein lokaler, getesteter Prozess kann Daten dauerhaft ablegen, ihre interne Konsistenz prüfen und einen kompakten öffentlichen Zeitnachweis erzeugen. Die entscheidende Voraussetzung ist eine präzise Sprache für die Aussagegrenzen: Integrität bezieht sich auf die archivierte Repräsentation, nicht automatisch auf Realität, Wahrheit oder Vollständigkeit.</p>
+    <p>Als wissenschaftliches Artefakt ist das Projekt deshalb vor allem wegen seiner überprüfbaren Schnittstellen interessant. Feed, Normalisierung, Hashing, Speicherung, Manifest und WebUI sind getrennte Untersuchungsflächen. Diese Trennung erlaubt es, einzelne Annahmen zu testen, Fehler sichtbar zu machen und den Betrieb schrittweise zu erweitern. Der Beitrag von News-Hash liegt damit in einer nachvollziehbaren Verbindung praktischer Archivierung mit explizitem Integritäts- und Vertrauensmodell.</p>
+    <div class="references">
+      <h2>Erweiterte Quellen</h2>
+      <p>[4] News-Hash-Projekt: <em>README und Bedienungsdokumentation</em>, Projektstand 2026.</p>
+      <p>[5] News-Hash-Projekt: <em>description_for_enduser.md</em> und <em>webui.md</em>, Projektstand 2026.</p>
+      <p>[6] National Institute of Standards and Technology: <em>Secure Hash Standard (SHS)</em>, FIPS PUB 180-4.</p>
+    </div>
+  </section>
 </body>
 </html>
