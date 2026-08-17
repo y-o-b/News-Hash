@@ -41,3 +41,31 @@ feed_url = "https://www.tagesschau.de/infoservices/alle-meldungen-100~rss2.xml"
 storage_name = "tagesschau_screenshot"
 codec_name = "SCREENv1"
 poll_interval_seconds = 300
+
+[[sources]]
+name = "Tagesschau - Schleswig-Holstein"
+feed_url = "https://www.tagesschau.de/inland/regional/schleswigholstein/index~rss2.xml"
+storage_name = "tagesschau_sh"
+codec_name = "SCREENv1"
+poll_interval_seconds = 300
+
+[[sources]]
+name = "FAZ"
+feed_url = "https://www.faz.net/rss/aktuell"
+storage_name = "faz"
+codec_name = "SCREENv1"
+poll_interval_seconds = 300
+
+[[sources]]
+name = "Deutscher Bundestag"
+feed_url = "https://www.bundestag.de/static/appdata/includes/rss/aktuellethemen.rss"
+storage_name = "deutscher_bundestag_aktuelle_themen"
+codec_name = "RSSv1"
+poll_interval_seconds = 300
+
+[[sources]]
+name = "n-tv"
+feed_url = "https://www.n-tv.de/politik/rss"
+storage_name = "ntv"
+codec_name = "SCREENv1"
+poll_interval_seconds = 300

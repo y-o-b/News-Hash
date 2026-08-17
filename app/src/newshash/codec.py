@@ -473,6 +473,7 @@ class SCREENv0(RSSv0):
                         const selectors = [
                             "#consent-manager", "#consent-layer", "#onetrust-banner-sdk",
                             "#usercentrics-root", "#sp_message_container", ".cmp-consent",
+                            "[id^='sp_message_container']",
                             "[id*='cookie' i]", "[class*='cookie' i]", "[id*='consent' i]",
                             "[class*='consent' i]"
                         ];
