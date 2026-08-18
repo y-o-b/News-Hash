@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import html
 import json
@@ -20,6 +21,7 @@ from newshash.metadata import metadata_hashes
 
 GENESIS_HASH = "0" * 64
 REQUEST_TIMEOUT_SECONDS = 30
+SCREENSHOT_TIMEOUT_SECONDS = 120
 USER_AGENT = "newshash/0.1"
 
 
@@ -456,6 +458,7 @@ class SCREENv0(RSSv0):
         """Rendere eine Seite mit Chromium und speichere sie vollständig als PNG."""
 
         try:
+            from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
             from playwright.sync_api import sync_playwright
         except ImportError as exc:
             raise RuntimeError("SCREENv0 requires Playwright and an installed Chromium browser") from exc
@@ -467,6 +470,7 @@ class SCREENv0(RSSv0):
                 page.goto(url, wait_until="domcontentloaded", timeout=REQUEST_TIMEOUT_SECONDS * 1000)
                 page.wait_for_timeout(2000)
                 page.add_style_tag(content="*,:before,:after { animation: none !important; transition: none !important; }")
+                page.evaluate("() => document.querySelectorAll('video').forEach(video => video.pause())")
                 page.evaluate(
                     """() => {
                         const selectors = [
@@ -480,13 +484,30 @@ class SCREENv0(RSSv0):
                         const zdfConsent = document.querySelector("#cmp-dialog");
                         if (zdfConsent) {
                             const dialog = zdfConsent.closest('[role="dialog"]');
-                            const overlay = dialog?.parentElement?.parentElement;
-                            (overlay || dialog || zdfConsent).remove();
+                            if (dialog) {
+                                const parent = dialog.parentElement;
+                                Array.from(parent?.children || []).forEach((element) => {
+                                    if (element === dialog) return;
+                                    const rect = element.getBoundingClientRect();
+                                    if (rect.width >= window.innerWidth * 0.9 && rect.height >= window.innerHeight * 0.9) element.remove();
+                                });
+                                dialog.remove();
+                            } else {
+                                zdfConsent.remove();
+                            }
                         }
                     }"""
                 )
                 path.parent.mkdir(parents=True, exist_ok=True)
-                page.screenshot(path=str(path), full_page=True, type="png", timeout=60_000)
+                try:
+                    page.screenshot(path=str(path), full_page=True, type="png", timeout=SCREENSHOT_TIMEOUT_SECONDS * 1000)
+                except PlaywrightTimeoutError:
+                    try:
+                        page.screenshot(path=str(path), full_page=False, type="png", timeout=30_000)
+                    except PlaywrightTimeoutError:
+                        cdp = page.context.new_cdp_session(page)
+                        screenshot = cdp.send("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": False, "fromSurface": True})
+                        path.write_bytes(base64.b64decode(screenshot["data"]))
             finally:
                 browser.close()
         return path.read_bytes()
