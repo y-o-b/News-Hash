@@ -8,7 +8,7 @@ The Python application is located under `app/`. The static GitHub Pages website 
 
 The external proofs and operational monitoring are particularly important: hash manifests are anchored in the Bitcoin blockchain through OpenTimestamps and their `.ots` proofs are additionally published with Git in a GitHub repository. The running system can be monitored through an optional heartbeat and Prometheus metrics.
 
-> Built with AI, refined with care, for curious people
+> ✦ Built with AI, refined with care, for curious people ♥
 
 ## Table of contents
 
