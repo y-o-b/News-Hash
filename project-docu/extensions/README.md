@@ -44,6 +44,15 @@ Diese Phase wird erst nach weiteren Erfahrungen mit Quellen und Fehlerfällen be
 
 **Abhängigkeit:** Beide Erweiterungen benötigen mehr konkrete Quellen- und Fehlerdaten.
 
+## Phase 4: Veröffentlichung
+
+Diese Phase macht den unabhängigen Verifizierer und ausgewählte Anwendungskomponenten leichter installierbar.
+
+1. [Veröffentlichung auf PyPI](11-pypi-veroeffentlichung.md)
+   Das Python-Paket soll reproduzierbar gebaut und als öffentliche Version auf PyPI veröffentlicht werden.
+
+**Abhängigkeit:** Vor der Veröffentlichung müssen Paketmetadaten, Lizenz, Dokumentation, Buildprozess und die Abgrenzung zwischen Anwendung und unabhängigem Go-Verifizierer geklärt sein.
+
 ## Nicht innerhalb der App geplant
 
 1. [Zugriffsschutz für die WebUI](07-webui-zugriffsschutz.md)
@@ -67,6 +76,7 @@ Diese Phase wird erst nach weiteren Erfahrungen mit Quellen und Fehlerfällen be
 | 08 | [Persistentes Betriebs- und Fehlerprotokoll](08-betriebsprotokoll.md) | Nicht geplant |
 | 09 | [Mehrere Anchor- und Veröffentlichungsziele](09-anchor-provider.md) | Mit Fokus auf Verifizierung zurückgestellt |
 | 10 | [Datenschutz und Löschkonzept](10-datenschutz-und-loeschkonzept.md) | Weiter ausarbeiten |
+| 11 | [Veröffentlichung auf PyPI](11-pypi-veroeffentlichung.md) | Vorgeschlagen |
 
 ## Neubewertung
 
