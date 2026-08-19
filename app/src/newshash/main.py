@@ -40,6 +40,12 @@ def _error_text(exc: Exception) -> str:
     return f"{type(exc).__name__}: {exc}".replace("\n", " | ")
 
 
+def _log_source_error(source: SourceConfig, action: str, error: str) -> None:
+    """Schreibe einen Quellenfehler sofort auf stderr."""
+
+    print(f'source="{source.name}" action="{action}" error="{error}"', file=sys.stderr, flush=True)
+
+
 def ingest_source(source: SourceConfig, settings_manager: SettingsManager) -> IngestResult:
     """Importiere neue Eintraege einer Quelle mit getrennten Hash-Ketten fuer JSONL und SQLite."""
 
@@ -69,9 +75,7 @@ def ingest_source(source: SourceConfig, settings_manager: SettingsManager) -> In
     settings_manager.log_runtime(f'source="{source.name}" action="fetch finished" items={len(feed["items"])}')
     if source.codec_name.startswith("SCREEN"):
         unknown_items = [
-            item
-            for item in feed["items"]
-            if str(item.get("id")) not in jsonl_known_source_ids or str(item.get("id")) not in sqlite_known_source_ids
+            item for item in feed["items"] if str(item.get("id")) not in jsonl_known_source_ids or str(item.get("id")) not in sqlite_known_source_ids
         ]
         feed["items"] = unknown_items[:1]
     retrieved_at = codec.utc_now()
@@ -90,14 +94,12 @@ def ingest_source(source: SourceConfig, settings_manager: SettingsManager) -> In
             continue
 
         try:
-            prepared_item, item_image_bytes = codec.prepare_item(
-                item, retrieved_at, storage_root, image_root, storage_name=source.storage_name
-            )
+            prepared_item, item_image_bytes = codec.prepare_item(item, retrieved_at, storage_root, image_root, storage_name=source.storage_name)
         except Exception as exc:
             error = f"{_error_text(exc)} url={item.get('url', '')}"
             settings_manager.record_source_error(source.name, error)
             settings_manager.log_runtime(f'source="{source.name}" action="interpret error" error="{error}"')
-            print(f'source="{source.name}" action="interpret error" error="{error}"', file=sys.stderr)
+            _log_source_error(source, "interpret error", error)
             continue
         image_bytes_by_hash.update(item_image_bytes)
 
@@ -113,9 +115,7 @@ def ingest_source(source: SourceConfig, settings_manager: SettingsManager) -> In
 
     jsonl_storage.append_records(jsonl_records)
     sqlite_storage.append_records(sqlite_records, image_bytes_by_hash)
-    settings_manager.log_runtime(
-        f'source="{source.name}" action="stored" jsonl={len(jsonl_records)} sqlite={len(sqlite_records)}'
-    )
+    settings_manager.log_runtime(f'source="{source.name}" action="stored" jsonl={len(jsonl_records)} sqlite={len(sqlite_records)}')
 
     return IngestResult(
         inserted_jsonl=len(jsonl_records),
@@ -150,7 +150,7 @@ def anchor_source_result(source: SourceConfig, result: IngestResult, settings_ma
     except Exception as exc:
         error = _error_text(exc)
         settings_manager.log_runtime(f'source="{source.name}" action="anchor error" error="{error}"')
-        print(f'source="{source.name}" action="anchor error" error="{error}"', file=sys.stderr)
+        _log_source_error(source, "anchor error", error)
     else:
         settings_manager.log_runtime(f'source="{source.name}" action="anchor finished" proof="{proof}"')
 
@@ -163,7 +163,7 @@ def anchor_source_result(source: SourceConfig, result: IngestResult, settings_ma
     except Exception as exc:
         error = _error_text(exc)
         settings_manager.log_runtime(f'source="{source.name}" action="github upload error" error="{error}"')
-        print(f'source="{source.name}" action="github upload error" error="{error}"', file=sys.stderr)
+        _log_source_error(source, "github upload error", error)
     else:
         if published_urls:
             settings_manager.log_runtime(f'source="{source.name}" action="github upload finished" files={len(published_urls)}')
@@ -179,7 +179,7 @@ def process_sources(config: AppConfig, settings_manager: SettingsManager, enable
             if enable_ots:
                 anchor_source_result(source, result, settings_manager)
         except Exception as exc:
-            print(f'source="{source.name}" action="error" error="{_error_text(exc)}"', file=sys.stderr)
+            _log_source_error(source, "error", _error_text(exc))
 
 
 def run_daemon(
@@ -213,7 +213,7 @@ def run_daemon(
                         if config.settings.heartbeat_url and (result.inserted_jsonl > 0 or result.inserted_sqlite > 0):
                             post(config.settings.heartbeat_url, json={"status": "ok"})
                     except Exception as exc:
-                        print(f'source="{source.name}" action="error" error="{_error_text(exc)}"', file=sys.stderr)
+                        _log_source_error(source, "error", _error_text(exc))
                     next_runs[source] = now + source.poll_interval_seconds
 
                 deadline = next_runs[source]

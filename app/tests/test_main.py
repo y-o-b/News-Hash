@@ -195,6 +195,27 @@ def test_process_sources_handles_all_configured_sources(tmp_path, monkeypatch, c
     assert "source=beta" in output
 
 
+def test_ingest_source_logs_taz_article_error_to_stderr(tmp_path, monkeypatch, capsys) -> None:
+    codec = CODEC_REGISTRY["TAZv2"]
+    item = fake_feed()["items"][0]
+    item["url"] = "https://taz.de/Korea-Konflikt/!6205481/"
+    monkeypatch.setattr(codec, "fetch_feed", lambda url: {"items": [item]})
+
+    def fail_to_prepare(*args, **kwargs):
+        raise ValueError("TAZ article does not contain an articleBody")
+
+    monkeypatch.setattr(codec, "prepare_item", fail_to_prepare)
+    settings_manager = SettingsManager(data_dir=tmp_path)
+    source = SourceConfig(name="TAZ", feed_url="https://example.invalid/feed", storage_name="taz", poll_interval_seconds=300, codec_name="TAZv2")
+
+    result = main.ingest_source(source, settings_manager)
+
+    captured = capsys.readouterr()
+    assert result.inserted_jsonl == 0
+    assert 'source="TAZ" action="interpret error"' in captured.err
+    assert "ValueError: TAZ article does not contain an articleBody url=https://taz.de/Korea-Konflikt/!6205481/" in captured.err
+
+
 def test_run_daemon_processes_sources_on_their_own_interval(tmp_path, monkeypatch) -> None:
     calls: list[str] = []
     current_time = {"value": 0.0}
