@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+import shutil
 
-from newshash.codec import GENESIS_HASH, RSSv0
+from newshash.codec import GENESIS_HASH, RSSv0, RSSv2
 from newshash.settings import SourceConfig
-from newshash.validation import validate_manifest, validate_source
+from newshash.storage import SqliteStorage
+from newshash.validation import validate_manifest, validate_source, validate_sqlite_file
 
 
 def _record(codec: RSSv0, source_id: str, previous_hash: str) -> dict:
@@ -94,3 +96,28 @@ def test_validate_manifest_checks_hashes_in_named_shards(tmp_path) -> None:
     )
 
     assert validate_manifest(manifest, tmp_path) == ("manifest=" + str(manifest) + ": sqlite shard=0 not found",)
+
+
+def test_validate_sqlite_file_does_not_need_external_metadata(tmp_path) -> None:
+    codec = RSSv2()
+    record, image_bytes = codec.build_record(
+        {
+            "id": "one",
+            "url": "https://example.invalid/one",
+            "title": "One",
+            "content_html": "<p>content</p>",
+            "_rssbridge": {"dc": {"date": "2026-08-17T10:00:00Z"}},
+        },
+        "2026-08-17T10:01:00Z",
+        GENESIS_HASH,
+        tmp_path,
+        tmp_path / "images",
+    )
+    storage = SqliteStorage(tmp_path, "example")
+    storage.append_records([record], image_bytes)
+    shutil.rmtree(tmp_path / "Codec")
+
+    result = validate_sqlite_file(storage.path)
+
+    assert result.valid
+    assert result.records_checked == 1

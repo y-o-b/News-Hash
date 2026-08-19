@@ -8,6 +8,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from newshash.metadata import canonical_json, codec_definition
+
 SHARD_SIZE_LIMIT_BYTES = 1_000_000_000
 SHARD_INDEX_PATTERN = re.compile(r"\.(\d+)\.")
 
@@ -86,6 +88,29 @@ ANCHOR_ARTIFACTS_CREATE_SQL = """
         file_name TEXT NOT NULL,
         content BLOB NOT NULL,
         PRIMARY KEY (anchor_date, artifact_type)
+    )
+"""
+CODEC_METADATA_TABLE = "codec_metadata"
+CODEC_METADATA_COLUMNS = (
+    "codec_name",
+    "schema_version",
+    "schema_hash",
+    "codec_version",
+    "codec_hash",
+    "hash_function_version",
+    "hash_function_hash",
+    "definition_json",
+)
+CODEC_METADATA_CREATE_SQL = """
+    CREATE TABLE IF NOT EXISTS codec_metadata (
+        codec_name TEXT PRIMARY KEY,
+        schema_version TEXT NOT NULL,
+        schema_hash TEXT NOT NULL,
+        codec_version TEXT NOT NULL,
+        codec_hash TEXT NOT NULL,
+        hash_function_version TEXT NOT NULL,
+        hash_function_hash TEXT NOT NULL,
+        definition_json TEXT NOT NULL
     )
 """
 
@@ -252,6 +277,7 @@ class SqliteStorage:
         connection.execute(RECORDS_CREATE_SQL)
         connection.execute(RECORD_IMAGES_CREATE_SQL)
         connection.execute(ANCHOR_ARTIFACTS_CREATE_SQL)
+        connection.execute(CODEC_METADATA_CREATE_SQL)
         connection.commit()
         return connection
 
@@ -315,6 +341,26 @@ class SqliteStorage:
         for record in records:
             target_path = self.path
             with self._connect(target_path) as connection:
+                definition = codec_definition(str(record["codec_name"]))
+                if definition is not None:
+                    connection.execute(
+                        """
+                        INSERT OR IGNORE INTO codec_metadata (
+                            codec_name, schema_version, schema_hash, codec_version, codec_hash,
+                            hash_function_version, hash_function_hash, definition_json
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            record["codec_name"],
+                            record["schema_version"],
+                            record["schema_hash"],
+                            record["codec_version"],
+                            record["codec_hash"],
+                            record["hash_function_version"],
+                            record["hash_function_hash"],
+                            canonical_json(definition).decode("utf-8"),
+                        ),
+                    )
                 connection.execute(
                     """
                     INSERT INTO records (

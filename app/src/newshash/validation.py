@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
 import sqlite3
 import sys
 from collections.abc import Iterable
@@ -10,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from newshash.codec import GENESIS_HASH, get_validation_codec
+from newshash.metadata import canonical_json
 from newshash.settings import DEFAULT_DATA_DIR, SettingsManager, SourceConfig
 from newshash.storage import JsonlStorage, SqliteStorage, _shard_index
 
@@ -109,6 +112,69 @@ def _sqlite_records(path: Path) -> Iterable[tuple[int, dict[str, Any]]]:
         )
 
 
+def _validate_sqlite_metadata(path: Path) -> tuple[str, ...]:
+    """Prüfe, dass ein SQLite-Shard seine Codec-Definitionen vollständig enthält."""
+
+    errors: list[str] = []
+    with sqlite3.connect(path) as connection:
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(codec_metadata)").fetchall()}
+        required = {
+            "codec_name",
+            "schema_version",
+            "schema_hash",
+            "codec_version",
+            "codec_hash",
+            "hash_function_version",
+            "hash_function_hash",
+            "definition_json",
+        }
+        if not columns:
+            return (f"sqlite shard={_shard_index(path)}: codec_metadata table is missing",)
+        if not required <= columns:
+            return (f"sqlite shard={_shard_index(path)}: codec_metadata table is incomplete",)
+        rows = connection.execute(
+            "SELECT codec_name, schema_version, schema_hash, codec_version, codec_hash, "
+            "hash_function_version, hash_function_hash, definition_json FROM codec_metadata ORDER BY codec_name"
+        ).fetchall()
+    for row in rows:
+        codec_name, schema_version, schema_hash, codec_version, codec_hash, hash_function_version, hash_function_hash, definition_json = row
+        try:
+            definition = json.loads(definition_json)
+            actual_schema_hash = hashlib.sha256(canonical_json(definition["schema"])).hexdigest()
+            actual_codec_hash = hashlib.sha256(canonical_json(definition)).hexdigest()
+            actual_hash_function_hash = hashlib.sha256(canonical_json(definition["hash_function"])).hexdigest()
+            if definition["codec"]["name"] != codec_name:
+                raise ValueError("codec name does not match definition")
+            if (schema_version, schema_hash, codec_version, codec_hash, hash_function_version, hash_function_hash) != (
+                str(definition["schema"]["version"]),
+                actual_schema_hash,
+                str(definition["codec"]["version"]),
+                actual_codec_hash,
+                str(definition["hash_function"]["version"]),
+                actual_hash_function_hash,
+            ):
+                raise ValueError("stored metadata hash does not match definition")
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+            errors.append(f"sqlite shard={_shard_index(path)} codec={codec_name}: {type(error).__name__}: {error}")
+    return tuple(errors)
+
+
+def _sqlite_codec_name(path: Path) -> str:
+    with sqlite3.connect(path) as connection:
+        try:
+            row = connection.execute("SELECT codec_name FROM codec_metadata ORDER BY codec_name LIMIT 1").fetchone()
+        except sqlite3.DatabaseError:
+            row = None
+        if row is not None:
+            return str(row[0])
+        row = connection.execute("SELECT codec_name FROM records ORDER BY id LIMIT 1").fetchone()
+    return str(row[0]) if row is not None else "RSSv0"
+
+
+def _sqlite_storage_name(path: Path) -> str:
+    return re.sub(r"\.\d+\.sqlite3$", "", path.name)
+
+
 def _records(path: Path, storage_format: str) -> Iterable[tuple[int, dict[str, Any]]]:
     return _jsonl_records(path) if storage_format == "jsonl" else _sqlite_records(path)
 
@@ -159,6 +225,8 @@ def _validate_paths(
     for path in selected_paths:
         shard_number = _shard_index(path)
         try:
+            metadata_errors = _validate_sqlite_metadata(path) if storage_format == "sqlite" else ()
+            errors.extend(metadata_errors)
             records = _records(path, storage_format)
             for row_number, record in records:
                 records_checked += 1
@@ -194,6 +262,14 @@ def validate_source(
         _validate_paths(_nonempty_jsonl_paths(jsonl), source.storage_name, "jsonl", source.codec_name, all_shards, shard_index),
         _validate_paths(_nonempty_sqlite_paths(sqlite), source.storage_name, "sqlite", source.codec_name, all_shards, shard_index),
     )
+
+
+def validate_sqlite_file(path: Path) -> ValidationResult:
+    """Validiere einen SQLite-Shard ohne Settings, JSONL oder externe Metadatendateien."""
+
+    if not path.exists():
+        return ValidationResult(_sqlite_storage_name(path), "sqlite", (_shard_index(path),), 0, (f"sqlite file not found: {path}",))
+    return _validate_paths([path], _sqlite_storage_name(path), "sqlite", _sqlite_codec_name(path), True)
 
 
 def validate_manifest(manifest_path: Path, storage_root: Path, storage_name: str | None = None) -> tuple[str, ...]:
@@ -238,6 +314,7 @@ def _build_parser() -> argparse.ArgumentParser:
     shard_group = parser.add_mutually_exclusive_group()
     shard_group.add_argument("--all-shards", action="store_true", help="Validate every shard instead of only the latest non-empty shard")
     shard_group.add_argument("--shard", type=int, help="Validate this shard number")
+    parser.add_argument("--sqlite", action="append", type=Path, help="Validate SQLite shard(s) without settings or external metadata")
     parser.add_argument("--manifest", action="append", type=Path, help="Validate this manifest (repeatable; default: all data/anchors manifests)")
     return parser
 
@@ -247,6 +324,20 @@ def main(argv: list[str] | None = None) -> None:
 
     parser = _build_parser()
     args = parser.parse_args(argv)
+    if args.sqlite and (args.settings or args.source or args.all_shards or args.shard is not None):
+        parser.error("--sqlite cannot be combined with source, settings, shard, or all-shards options")
+    if args.sqlite:
+        invalid = False
+        for path in args.sqlite:
+            result = validate_sqlite_file(path)
+            status = "ok" if result.valid else "invalid"
+            print(f"sqlite={path} status={status} shards={','.join(map(str, result.shards_checked)) or '-'} records={result.records_checked}")
+            for error in result.errors:
+                print(f"error={error}", file=sys.stderr)
+                invalid = True
+        if invalid:
+            raise SystemExit(1)
+        return
     manager = SettingsManager(data_dir=args.data_dir, default_settings_path=args.data_dir / "settings.toml")
     config = manager.resolve_config(args.settings)
     sources = [source for source in config.settings.sources if args.source is None or source.storage_name == args.source]

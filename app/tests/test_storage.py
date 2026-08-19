@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 import sqlite3
 
-from newshash.codec import GENESIS_HASH
-from newshash.storage import RECORD_IMAGES_COLUMNS, RECORDS_COLUMNS, SHARD_SIZE_LIMIT_BYTES, JsonlStorage, SqliteStorage
+from newshash.codec import GENESIS_HASH, RSSv2
+from newshash.storage import CODEC_METADATA_COLUMNS, RECORD_IMAGES_COLUMNS, RECORDS_COLUMNS, SHARD_SIZE_LIMIT_BYTES, JsonlStorage, SqliteStorage
 
 
 def make_record(source_id: str, previous_hash: str, image_hash: str | None = None) -> dict:
@@ -101,6 +101,33 @@ def test_sqlite_storage_appends_records_and_image_blobs(tmp_path) -> None:
     with sqlite3.connect(storage.path) as connection:
         row = connection.execute("SELECT image_data FROM record_images WHERE image_hash = ?", (image_hash,)).fetchone()
     assert row[0] == b"image-bytes"
+
+
+def test_sqlite_storage_persists_codec_definition(tmp_path) -> None:
+    codec = RSSv2()
+    record, _ = codec.build_record(
+        {
+            "id": "example-1",
+            "url": "https://example.invalid/example-1",
+            "title": "Titel",
+            "content_html": "<p>Text</p>",
+            "_rssbridge": {"dc": {"date": "2026-08-17T10:00:00Z"}},
+        },
+        "2026-08-17T10:01:00Z",
+        GENESIS_HASH,
+        tmp_path,
+        tmp_path / "images",
+    )
+    storage = SqliteStorage(tmp_path, "example")
+
+    storage.append_records([record], {})
+
+    with sqlite3.connect(storage.path) as connection:
+        columns = tuple(row[1] for row in connection.execute("PRAGMA table_info(codec_metadata)").fetchall())
+        metadata = connection.execute("SELECT codec_name, definition_json FROM codec_metadata").fetchone()
+    assert columns == CODEC_METADATA_COLUMNS
+    assert metadata[0] == "RSSv2"
+    assert '"hash_function"' in metadata[1]
 
 
 def test_sqlite_storage_overwrites_anchor_artifacts_and_backup(tmp_path) -> None:

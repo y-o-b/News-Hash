@@ -60,6 +60,14 @@ def _codec_definition(codec_name: str) -> dict[str, Any]:
     return {"codec": {"name": codec_name, **codec}, "schema": SCHEMA_V2, "hash_function": HASH_FUNCTION_V2}
 
 
+def codec_definition(codec_name: str) -> dict[str, Any] | None:
+    """Gib die persistierbare Definition eines versionierten Codecs zurück."""
+
+    if not codec_name.endswith("v2"):
+        return None
+    return _codec_definition(codec_name)
+
+
 def metadata_hashes(storage_root: Path, codec_name: str) -> dict[str, str]:
     """Lege den normalisierten Codecvertrag ab und gib alle drei Teilhashes zurueck."""
 
