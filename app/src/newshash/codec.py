@@ -74,7 +74,7 @@ class RSSv0:
         except ValueError:
             try:
                 parsed = parsedate_to_datetime(text)
-            except (TypeError, ValueError, OverflowError):
+            except TypeError, ValueError, OverflowError:
                 return text
         if parsed.tzinfo is None:
             parsed = parsed.replace(tzinfo=UTC)
@@ -209,9 +209,7 @@ class RSSv0:
                     highest = max(highest, int(match.group(1)))
         return highest + 1
 
-    def download_image(
-        self, url: str, image_root: Path, published_at: Any, counter: int, storage_name: str | None = None
-    ) -> tuple[str, str, bytes]:
+    def download_image(self, url: str, image_root: Path, published_at: Any, counter: int, storage_name: str | None = None) -> tuple[str, str, bytes]:
         """Lade ein Bild herunter, speichere es und gib Pfad, Hash und Rohbytes zurueck."""
 
         image_bytes, content_type = self.fetch_image(url)

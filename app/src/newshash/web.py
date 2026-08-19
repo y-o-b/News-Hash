@@ -56,7 +56,7 @@ def _timestamp(value: Any) -> datetime:
     except ValueError:
         try:
             parsed = parsedate_to_datetime(text)
-        except (TypeError, ValueError, OverflowError):
+        except TypeError, ValueError, OverflowError:
             return datetime.min.replace(tzinfo=UTC)
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=UTC)
@@ -305,17 +305,15 @@ def render_detail(
         else '<span class="nav-placeholder"></span>'
     )
     theme_picker = f"""<label class="record-theme"><select onchange="setTheme(this.value)" aria-label="Theme">
-      <option value="lite" {'selected' if theme == 'lite' else ''}>LightMode</option>
-      <option value="dark" {'selected' if theme == 'dark' else ''}>DarkMode</option>
-      <option value="paper" {'selected' if theme == 'paper' else ''}>Papier</option>
-      <option value="news" {'selected' if theme == 'news' else ''}>News</option>
-      <option value="comic" {'selected' if theme == 'comic' else ''}>Comic</option>
+      <option value="lite" {"selected" if theme == "lite" else ""}>LightMode</option>
+      <option value="dark" {"selected" if theme == "dark" else ""}>DarkMode</option>
+      <option value="paper" {"selected" if theme == "paper" else ""}>Papier</option>
+      <option value="news" {"selected" if theme == "news" else ""}>News</option>
+      <option value="comic" {"selected" if theme == "comic" else ""}>Comic</option>
     </select></label>"""
     navigation = f'<nav class="record-navigation">{previous_link}{theme_picker}{next_link}</nav>' if previous_record or next_record else ""
     back_link = f'<a href="/?source={quote(source_name, safe="")}&amp;page=1&amp;theme={theme}">Zurück zur Quelle</a>'
-    top_navigation = (
-        f'<nav class="record-navigation top-navigation">{previous_link}{back_link}{next_link}</nav>'
-    )
+    top_navigation = f'<nav class="record-navigation top-navigation">{previous_link}{back_link}{next_link}</nav>'
     return f"""<!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="/favicon.svg?v=1&amp;theme={theme}" type="image/svg+xml" sizes="any">
@@ -381,16 +379,16 @@ def render_detail(
   {top_navigation}
   <div class="detail-header">
   <div class="eyebrow">{_text(source_name)}</div>
-  <h1>{_text(record.get('title'))}</h1>
+  <h1>{_text(record.get("title"))}</h1>
   <div class="meta-grid">
-    <div class="meta-item">Veröffentlicht: {_local_time(record.get('published_at'))}</div>
-    <div class="meta-item">Importiert: {_local_time(record.get('retrieved_at'))}</div>
-    <div class="meta-item">Hash: <code>{_text(record.get('hash'))}</code></div>
-    <div class="meta-item">PreHash: <code>{_text(record.get('previous_hash'))}</code></div>
+    <div class="meta-item">Veröffentlicht: {_local_time(record.get("published_at"))}</div>
+    <div class="meta-item">Importiert: {_local_time(record.get("retrieved_at"))}</div>
+    <div class="meta-item">Hash: <code>{_text(record.get("hash"))}</code></div>
+    <div class="meta-item">PreHash: <code>{_text(record.get("previous_hash"))}</code></div>
   </div>
   </div>
   {content_section}
-  {f'<div class="gallery">{images}</div>' if images else ''}
+  {f'<div class="gallery">{images}</div>' if images else ""}
   {navigation}
   <script>
     function setTheme(theme) {{
@@ -422,7 +420,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
         f"""
         <div class="source-card" data-source="{_text(source.name)}">
           <div class="source-top"><span>{_text(source.name)}</span></div>
-          <a class="source-count" href="?{_query({'source': source.storage_name, 'page': 1, **theme_query})}">
+          <a class="source-count" href="?{_query({"source": source.storage_name, "page": 1, **theme_query})}">
             <strong>{_number(source.records)}</strong><span class="muted"> Meldungen</span>
           </a>
           <div class="source-meta">{_number(source.images)} Bilder · {_number(source.errors)} Fehler<br>
@@ -431,34 +429,37 @@ def render_dashboard(data: dict[str, Any]) -> str:
             <span class="anchor-status anchor-{source.anchor_status}" title="{_text(source.anchor_status)}">
               {_anchor_label(source.anchor_status)}
             </span>{_anchor_links(source)}</div>
-          {f'<div class="source-error">{_text(source.last_error)}</div>' if source.last_error else ''}
-          <form method="post" action="/fetch?{_query({'source': source.storage_name, **theme_query})}">
+          {f'<div class="source-error">{_text(source.last_error)}</div>' if source.last_error else ""}
+          <form method="post" action="/fetch?{_query({"source": source.storage_name, **theme_query})}">
             <button class="fetch-button" type="submit">Jetzt abrufen</button>
           </form>
         </div>
         """
         for source in data["sources"]
     )
-    record_rows = "".join(
-        f"""
-        <li data-source="{_text(record.get('source_name'))}">
-          <div><span class="eyebrow">{_text(record.get('source_name'))}</span>
-          <a href="{_detail_url({**record, 'theme': theme})}">{_text(record.get('title'))}</a>
-          <div class="record-hash">Hash: {_text(record.get('hash'))}</div></div>
-          {_local_time(record.get('published_at') or record.get('retrieved_at'))}
+    record_rows = (
+        "".join(
+            f"""
+        <li data-source="{_text(record.get("source_name"))}">
+          <div><span class="eyebrow">{_text(record.get("source_name"))}</span>
+          <a href="{_detail_url({**record, "theme": theme})}">{_text(record.get("title"))}</a>
+          <div class="record-hash">Hash: {_text(record.get("hash"))}</div></div>
+          {_local_time(record.get("published_at") or record.get("retrieved_at"))}
         </li>
         """
-        for record in data["records"]
-    ) or '<li class="empty">Noch keine Meldungen importiert.</li>'
+            for record in data["records"]
+        )
+        or '<li class="empty">Noch keine Meldungen importiert.</li>'
+    )
     pagination = ""
     if total_pages > 1:
-        pagination = "<nav class=\"pagination\" aria-label=\"Seitennavigation\">"
+        pagination = '<nav class="pagination" aria-label="Seitennavigation">'
         if page > 1:
             first_query = {"source": selected_source, "page": 1, **theme_query} if selected_source else {"page": 1, **theme_query}
             pagination += f'<a href="?{_query(first_query)}">&lt;&lt; Erste</a>'
             previous_query = {"source": selected_source, "page": page - 1, **theme_query} if selected_source else {"page": page - 1, **theme_query}
             pagination += f'<a href="?{_query(previous_query)}">&lt; Zurück</a>'
-        pagination += f'<span>Seite {page} von {total_pages}</span>'
+        pagination += f"<span>Seite {page} von {total_pages}</span>"
         if page < total_pages:
             next_query = {"source": selected_source, "page": page + 1, **theme_query} if selected_source else {"page": page + 1, **theme_query}
             pagination += f'<a href="?{_query(next_query)}">Weiter &gt;</a>'
@@ -606,25 +607,25 @@ def render_dashboard(data: dict[str, Any]) -> str:
     <div class="updated"><a class="help-link" href="/hilfe?theme={theme}">Hilfe &amp; FAQ</a><br><span class="refresh-line">Live-Übersicht
       <button class="refresh-countdown" id="refresh-countdown" type="button"
         title="Nächste Aktualisierung in 60 Sekunden" aria-label="Seite sofort aktualisieren"></button></span><br>
-      Stand {_local_time(data['generated_at'])}<br>
+      Stand {_local_time(data["generated_at"])}<br>
       </div></header>
   <div class="metrics">
-    <div class="metric"><span class="kicker">Quellen</span><strong>{len(data['sources'])}</strong></div>
-    <div class="metric"><span class="kicker">Meldungen</span><strong>{_number(data['total_records'])}</strong></div>
-    <div class="metric"><span class="kicker">Bilder</span><strong>{_number(data['total_images'])}</strong></div>
+    <div class="metric"><span class="kicker">Quellen</span><strong>{len(data["sources"])}</strong></div>
+    <div class="metric"><span class="kicker">Meldungen</span><strong>{_number(data["total_records"])}</strong></div>
+    <div class="metric"><span class="kicker">Bilder</span><strong>{_number(data["total_images"])}</strong></div>
   </div>
   <section><h2>Quellen</h2><div class="sources">{source_cards}</div></section>
   <section><div class="section-heading"><h2>{heading}</h2>
-    <a href="?{_query({'page': 1, **theme_query})}">Filter zurücksetzen</a></div>
+    <a href="?{_query({"page": 1, **theme_query})}">Filter zurücksetzen</a></div>
     <ul class="latest">{record_rows}</ul>{pagination}</section>
-  <section class="runtime-log"><h2>Laufzeit-Log</h2><ul>{log_entries or '<li>Noch keine Laufzeitereignisse.</li>'}</ul></section>
+  <section class="runtime-log"><h2>Laufzeit-Log</h2><ul>{log_entries or "<li>Noch keine Laufzeitereignisse.</li>"}</ul></section>
   <div class="footer-actions"><button class="shutdown" type="button" onclick="shutdownDaemon()">Daemon beenden</button>
     <label class="theme-picker"><select onchange="setTheme(this.value)">
-      <option value="lite" {'selected' if theme == 'lite' else ''}>LightMode</option>
-      <option value="dark" {'selected' if theme == 'dark' else ''}>DarkMode</option>
-      <option value="paper" {'selected' if theme == 'paper' else ''}>Papier</option>
-      <option value="news" {'selected' if theme == 'news' else ''}>News</option>
-      <option value="comic" {'selected' if theme == 'comic' else ''}>Comic</option>
+      <option value="lite" {"selected" if theme == "lite" else ""}>LightMode</option>
+      <option value="dark" {"selected" if theme == "dark" else ""}>DarkMode</option>
+      <option value="paper" {"selected" if theme == "paper" else ""}>Papier</option>
+      <option value="news" {"selected" if theme == "news" else ""}>News</option>
+      <option value="comic" {"selected" if theme == "comic" else ""}>Comic</option>
     </select></label></div>
   <footer class="site-footer"><span class="spark">✦</span> Mit KI gebaut, mit Liebe verfeinert, für neugierige Menschen <span class="spark">♥</span><br>
     Entwickelt mit <a href="https://opencode.ai/" target="_blank" rel="noreferrer">OpenCode</a> ·

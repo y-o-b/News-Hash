@@ -81,8 +81,8 @@ def test_render_dashboard_supports_source_filter_and_pagination() -> None:
         }
     )
 
-    assert 'source=zdf' in page
-    assert 'theme=lite' in page
+    assert "source=zdf" in page
+    assert "theme=lite" in page
     assert "Filter zurücksetzen" in page
     assert "Meldungen · zdf" in page
     assert "Seite 2 von 3" in page

@@ -100,7 +100,7 @@ class OpenTimestampsAnchor:
                 text=True,
                 timeout=OTS_TIMEOUT_SECONDS,
             )
-        except (OSError, subprocess.TimeoutExpired):
+        except OSError, subprocess.TimeoutExpired:
             return "pending"
 
         output = f"{verification.stdout}\n{verification.stderr}"

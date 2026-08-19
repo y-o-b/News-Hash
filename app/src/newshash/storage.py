@@ -539,12 +539,8 @@ class SqliteStorage:
             current = connection.execute("SELECT id FROM records WHERE source_id = ? LIMIT 1", (source_id,)).fetchone()
             if current is None:
                 return None, None
-            previous = connection.execute(
-                "SELECT source_id, title FROM records WHERE id < ? ORDER BY id DESC LIMIT 1", (current[0],)
-            ).fetchone()
-            next_record = connection.execute(
-                "SELECT source_id, title FROM records WHERE id > ? ORDER BY id LIMIT 1", (current[0],)
-            ).fetchone()
+            previous = connection.execute("SELECT source_id, title FROM records WHERE id < ? ORDER BY id DESC LIMIT 1", (current[0],)).fetchone()
+            next_record = connection.execute("SELECT source_id, title FROM records WHERE id > ? ORDER BY id LIMIT 1", (current[0],)).fetchone()
 
         def navigation(row: tuple[str, str] | None) -> dict[str, str] | None:
             return {"source_id": row[0], "title": row[1]} if row is not None else None
