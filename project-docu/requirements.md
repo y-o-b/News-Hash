@@ -12,6 +12,7 @@
 - Der Daemon startet die WebUI und stellt `/metrics` für Prometheus bereit.
 - Das Dashboard bietet Quellenfilter, zehn Meldungen pro Seite, Detailansichten und gespeicherte Bilder.
 - Tägliche Hash-Manifeste werden mit OpenTimestamps als `.ots`-Proofs verankert.
+- Eine SQLite-Datei enthält die für ihre versionierten Codecverträge notwendigen Definitionen und kann ohne weitere Archiv- oder Metadatendateien validiert werden.
 
 ## Sollte
 

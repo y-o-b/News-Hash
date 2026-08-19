@@ -12,7 +12,7 @@
 - Die Quellen werden in `data/settings.toml` konfiguriert.
 - Ein optionaler Top-Level-Wert `heartbeat_url` in `data/settings.toml` steuert den Daemon-Heartbeat; ohne Wert wird kein Ping gesendet.
 - Pro Quelle kann ein `codec_name` gewählt werden.
-- Die versionierten Codecs `RSSv2`, `TAZv2` und `SCREENv2` legen je Codec eine normalisierte JSON-Datei unter `data/Codec/` ab. Diese enthält Codec, Schema und Hashfunktion. Der normalisierte Dokumenthash wird als `codec_hash` gespeichert und in das Hashmaterial aufgenommen; v0- und v1-Codecs bleiben ausschließlich für alte Records und die Validierung verfügbar.
+- Die versionierten Codecs `RSSv2`, `TAZv2` und `SCREENv2` erzeugen je Codec eine normalisierte Definition mit Codec, Schema und Hashfunktion. Sie wird unter `data/Codec/` abgelegt und zusätzlich in der SQLite-Tabelle `codec_metadata` gespeichert. Der normalisierte Dokumenthash wird als `codec_hash` gespeichert und in das Hashmaterial aufgenommen; v0- und v1-Codecs bleiben ausschließlich für alte Records und die Validierung verfügbar.
 - Die historischen v1-Metadatenhashes sind als Konstanten im Code hinterlegt; die alten Sammeldateien werden nicht mehr erzeugt.
 - `RSSv0` verarbeitet allgemeine JSON- und XML-RSS-Feeds; `TAZv0` lädt zusätzlich den vollständigen TAZ-Artikel über dessen Link.
 - `SCREENv0` folgt jedem Feed-Link mit Chromium und speichert einen vollständigen PNG-Seiten-Screenshot als Bild-Record.
@@ -29,6 +29,7 @@
 - `--daemon`: startet einen Endlosschleifen-Modus, der jede Quelle nach ihrem eigenen `poll_interval_seconds` erneut verarbeitet.
 - `/metrics`: liefert Prometheus-Metriken für Quellen, Datensätze, Bilder und Laufzeitfehler.
 - `newshash-validate` prüft die JSONL- und SQLite-Hash-Ketten; standardmäßig wird nur der letzte nichtleere Shard geprüft, `--all-shards` prüft den vollständigen Bestand.
+- `newshash-validate --sqlite <datei>` validiert einen SQLite-Shard ohne `settings.toml`, JSONL-Dateien oder externe Codec-Definitionsdateien.
 - `newshash-validate` prüft zusätzlich Manifeste; mit `--shard <nummer>` kann ein einzelner Shard gezielt geprüft werden.
 - Quellenfehler und die letzten Fehlermeldungen werden nur im Prozessspeicher gehalten, nach `stderr` geloggt und über Dashboard sowie `/metrics` bereitgestellt; Netzwerk- und Interpretationsfehler stoppen die übrigen Quellen nicht.
 - Bilder bekommen Dateinamen mit Veröffentlichungszeitpunkt und laufender Nummer.

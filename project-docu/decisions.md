@@ -1,103 +1,65 @@
 # Entscheidungen
 
-## Protokoll
+## Fachliche und technische Entscheidungen
 
-- Datum: 2026-07-29
-  Entscheidung: Es wird keine öffentliche Blockchain verwendet.
-  Begründung: Das Projekt braucht eine interne, unveränderliche Kette von Datensätzen mit einfacher Nachvollziehbarkeit.
+- Datum: 2026-07-29 bis 2026-08-19
+  Entscheidung: News-Hash verwendet eine lokale, append-only Hash-Kette und keine eigene oder direkt betriebene öffentliche Blockchain.
+  Begründung: Das Projekt benötigt nachvollziehbare historische Integrität ohne Mining, Konsensmechanismus oder Veröffentlichung der Nachrichteninhalte. Tägliche Hash-Manifeste werden zusätzlich über OpenTimestamps öffentlich verankert.
 
-- Datum: 2026-07-29
-  Entscheidung: Nachrichtenquelle ist der RSSBridge-JSON-Feed der Tagesschau.
-  Begründung: Die Daten sollen regelmäßig automatisch eingelesen werden.
+- Datum: 2026-07-29 bis 2026-08-19
+  Entscheidung: Jede Quelle wird parallel in JSONL und SQLite gespeichert. Beide Speicher führen unabhängige Hash-Ketten.
+  Begründung: JSONL ist ein einfaches, offenes Archivformat; SQLite ermöglicht effiziente Abfragen für WebUI und Werkzeuge. Unabhängige Ketten bleiben auch nach einem Abbruch zwischen den beiden Schreibvorgängen jeweils prüfbar.
 
-- Datum: 2026-07-29
-  Entscheidung: Die interne unveränderliche Kette wird als JSONL und in SQLite gespeichert.
-  Begründung: SQLite ist lokal, einfach zu betreiben und gut für append-only Daten mit Hash-Kette geeignet.
+- Datum: 2026-08-04 bis 2026-08-19
+  Entscheidung: SQLite speichert zusätzlich zu den Records Bild-BLOBs, Anchor-Artefakte und die vollständigen Definitionen der versionierten Codecverträge in `codec_metadata`.
+  Begründung: Bilder sollen ohne externe Dateien verfügbar bleiben. Manifeste und Proofs gehören zum Integritätsnachweis. Eine SQLite-Datei soll mit `newshash-validate --sqlite` ohne JSONL, `settings.toml` oder externe `data/Codec/`-Dateien validierbar sein.
 
-- Datum: 2026-07-29
-  Entscheidung: Abgeschlossene Änderungen werden jeweils in einem eigenen Commit festgehalten.
-  Begründung: Die Historie bleibt nachvollziehbar und einzelne Arbeitsschritte sind klar getrennt.
+- Datum: 2026-08-04 bis 2026-08-19
+  Entscheidung: Bild-BLOBs werden global pro SQLite-Shard über `image_hash` dedupliziert; die Record-Daten referenzieren sie über ihr `images`-Feld.
+  Begründung: Derselbe Bildinhalt wird unabhängig von der Quelle nur einmal gespeichert.
+
+- Datum: 2026-08-05 bis 2026-08-19
+  Entscheidung: SQLite-Shards werden bei Schemaabweichungen nicht destruktiv migriert. Die alte Tabelle wird nach `<tabelle>_legacy_<zeitstempel>` umbenannt und durch das aktuelle Schema ersetzt.
+  Begründung: Historische Daten dürfen nicht verloren gehen; das Vorgehen ist nachvollziehbar und vermeidet fehleranfällige Migrationen im Prototyp.
+
+- Datum: 2026-08-04 bis 2026-08-19
+  Entscheidung: Die Speicherung ist in nummerierte Shards mit einer Grenze von 1 GB geteilt. Dublettenprüfungen und die Dashboard-Vorschau verwenden nur den neuesten Shard; Zählungen, Details und vollständige Validierung können shardübergreifend arbeiten.
+  Begründung: Regelmäßige Läufe und die WebUI sollen auch bei großen Archiven performant bleiben.
+
+- Datum: 2026-08-11 bis 2026-08-19
+  Entscheidung: Quellenspezifische Verarbeitung erfolgt über versionierte Codecs. `RSSv2`, `TAZv2` und `SCREENv2` sind die aktuellen Codecs; `v0` und `v1` bleiben ausschließlich für historische Records und deren Validierung erhalten.
+  Begründung: Feed-Normalisierung, vollständige TAZ-Artikel und Browser-Screenshots benötigen unterschiedliche Verarbeitung, ohne die allgemeine RSS-Logik mit Hostnamen zu vermischen.
+
+- Datum: 2026-08-11 bis 2026-08-19
+  Entscheidung: Der Daemon startet die WebUI im selben Prozess und fragt jede konfigurierte Quelle nach ihrem eigenen `poll_interval_seconds` ab. Ein Heartbeat ist über `heartbeat_url` optional.
+  Begründung: Import, Statusanzeige, Quellenaktionen und kontrolliertes Beenden gehören zusammen; externe Betriebsüberwachung muss deaktivierbar bleiben.
+
+- Datum: 2026-08-11 bis 2026-08-19
+  Entscheidung: Pro Quelle und UTC-Tag wird ein Manifest mit JSONL- und SQLite-Hash erzeugt, per OpenTimestamps verankert und bei unverändertem Inhalt nicht erneut nach GitHub hochgeladen.
+  Begründung: Der öffentliche Nachweis soll den Bestand zu einem Zeitpunkt belegen, ohne Nachrichteninhalte zu veröffentlichen oder unnötige Synchronisierungs-Commits zu erzeugen.
+
+- Datum: 2026-08-11 bis 2026-08-19
+  Entscheidung: Laufzeit-Logs, Quellenfehler und der aktuelle Anchor-Status bleiben flüchtig; fachliche Nachrichten-, Bild- und Integritätsdaten werden persistent gespeichert und Fehler zusätzlich sofort nach `stderr` geschrieben.
+  Begründung: Betriebszustände gehören zum aktuellen Prozesslauf, während Archiv- und Nachweisdaten dauerhaft erhalten bleiben müssen.
+
+## Projektregeln
 
 - Datum: 2026-08-04
-  Entscheidung: HTTP-Aufrufe (Feed und Bilder) nutzen die externe Bibliothek `requests` statt reinem `urllib`.
-  Begründung: Einfachere und robustere Fehlerbehandlung bei HTTP-Anfragen im Prototyp.
-
-- Datum: 2026-08-04
-  Entscheidung: `record_images` speichert Bild-BLOBs global dedupliziert über `image_hash` als Primärschlüssel, ohne Bezug zu einer einzelnen `source_id`.
-  Begründung: Das `images`-Feld eines Records referenziert die zugehörigen Hashes bereits; ein Bild muss so pro Inhalt nur einmal gespeichert werden.
-
-- Datum: 2026-08-04
-  Entscheidung: Die CLI-Option `--interval` entfällt; `poll_interval_seconds` ist pro Quelle in `data/settings.toml` verpflichtend.
-  Begründung: Das Polling-Intervall ist eine Eigenschaft der Quelle und soll nicht durch einen globalen CLI-Default überschreibbar sein.
-
-- Datum: 2026-08-04
-  Entscheidung: `known_source_ids` prüft nur noch den jeweils letzten Shard statt aller Shards.
-  Begründung: Dubletten-Prüfung soll nicht bei jedem Lauf alle historischen Shards komplett einlesen müssen; neue Feed-Einträge tauchen ohnehin im aktuellen Shard auf.
-
-- Datum: 2026-08-04
-  Entscheidung: JSONL und SQLite führen jeweils ihre eigene, unabhängige `previous_hash`-Kette statt einer einmalig berechneten, gemeinsamen Kette.
-  Begründung: Die beiden Speicherformate sollen auch bei Abweichungen (z.B. nach einem Absturz zwischen den beiden Schreibvorgängen) unabhängig voneinander eine konsistente, für sich gültige Kette behalten.
-
-- Datum: 2026-08-05
-  Entscheidung: Beim Verbindungsaufbau zu einer SQLite-Shard-Datei wird das Schema von `records` und `record_images` geprüft; bei Abweichung wird die alte Tabelle nach `<tabelle>_legacy_<zeitstempel>` umbenannt statt migriert oder gelöscht.
-  Begründung: Alte Daten dürfen nicht verloren gehen, auch wenn sich das Schema zwischen Programmversionen ändert; eine automatische Migration wäre im Prototyp fehleranfällig, ein Umbenennen ist sicher und nachvollziehbar.
-
-- Datum: 2026-08-11
-  Entscheidung: Quellen können über eigene Codecs verarbeitet werden. `RSSv0` bleibt generisch, `TAZv0` lädt vollständige TAZ-Artikel und `SCREENv0` erstellt Browser-Screenshots.
-  Begründung: Quellenspezifische Verarbeitung soll nicht über Hostnamen in der allgemeinen RSS-Logik verteilt werden.
-
-- Datum: 2026-08-11
-  Entscheidung: Das Dashboard wird zusammen mit `--daemon` gestartet und bindet standardmäßig auf `0.0.0.0`.
-  Begründung: Import, Statusanzeige, Quellenaktionen und kontrolliertes Beenden sollen in einem Prozess zusammenarbeiten.
-
-- Datum: 2026-08-11
-  Entscheidung: Laufzeitfehler, Logs und Anchor-Status bleiben flüchtig und werden nicht persistent gespeichert.
-  Begründung: Fehler- und Betriebszustände beschreiben den aktuellen Prozesslauf; die fachlichen Nachrichten- und Hash-Daten bleiben davon getrennt.
-
-- Datum: 2026-08-11
-  Entscheidung: Pro Quelle und UTC-Tag wird ein Manifest mit JSONL- und SQLite-Hash über OpenTimestamps verankert.
-  Begründung: Eine öffentliche Bitcoin-basierte Zeitverankerung ermöglicht Integritätsnachweise, ohne Nachrichteninhalte off-chain zu veröffentlichen.
-
-- Datum: 2026-08-11
-  Entscheidung: Die Dashboard-Meldungsliste liest nur den neuesten SQLite-Shard, während Kennzahlen und Detailzugriffe shardübergreifend arbeiten.
-  Begründung: Die WebUI soll bei großen Archiven speicherschonend bleiben und aktuelle Meldungen schnell anzeigen.
+  Entscheidung: HTTP-Aufrufe verwenden `requests` statt einer eigenen `urllib`-Abstraktion.
+  Begründung: Im Prototyp bietet `requests` die einfachere und robustere Fehlerbehandlung.
 
 - Datum: 2026-08-13
-  Entscheidung: Bei jeder Code-Änderung wird das Patchlevel der App erhöht und in `app/pyproject.toml` sowie `app/src/newshash/__init__.py` synchron aktualisiert.
-  Begründung: Die ausgelieferte Anwendung soll jede Code-Änderung eindeutig über ihre Versionsnummer erkennen lassen.
-
-- Datum: 2026-08-13
-  Entscheidung: Die statische GitHub-Pages-Homepage liegt unter `docs/`; die verbindliche Projekt- und Produktdokumentation liegt unter `project-docu/`.
-  Begründung: GitHub Pages kann die Homepage direkt aus dem vorgesehenen `docs/`-Ordner veröffentlichen, ohne die Projektdokumentation mit dem Veröffentlichungsinhalt zu vermischen.
+  Entscheidung: Jede Code-Änderung erhöht das Patchlevel in `app/pyproject.toml`, `app/src/newshash/__init__.py` und der Lockdatei synchron.
+  Begründung: Jede ausgelieferte Anwendungsversion soll Codeänderungen eindeutig erkennen lassen.
 
 - Datum: 2026-08-13
   Entscheidung: Abgeschlossene Änderungen werden jeweils in einem eigenen Commit festgehalten.
-  Begründung: Die Änderungshistorie bleibt nachvollziehbar und einzelne Arbeitsschritte sind klar getrennt.
+  Begründung: Die Änderungshistorie bleibt nachvollziehbar.
 
-- Datum: 2026-08-13
-  Entscheidung: Reine Änderungen an der statischen Website unter `docs/` erhöhen das Patchlevel der App nicht.
-  Begründung: Die Website wird unabhängig von der ausführbaren Anwendung veröffentlicht und benötigt dafür keine neue App-Version.
+- Datum: 2026-08-13 bis 2026-08-14
+  Entscheidung: Die Homepage liegt unter `docs/`, die verbindliche Projekt- und Produktdokumentation unter `project-docu/`. GitHub-Actions verwenden vollständige Commit-SHAs.
+  Begründung: Veröffentlichungsinhalt, Projektdokumentation und CI-Abhängigkeiten sollen klar getrennt und reproduzierbar sein.
 
-- Datum: 2026-08-13
-  Entscheidung: Der GitHub-Upload von Anchor-Dateien vergleicht den bestehenden Dateiinhalt vor dem Upload und überspringt unveränderte Dateien.
-  Begründung: Wiederholte Synchronisierungsläufe sollen keine unnötigen oder leeren Git-Commits erzeugen.
-
-- Datum: 2026-08-13
-  Entscheidung: Die WebUI sucht die Endnutzer-Dokumentation in den vorhandenen Projektverzeichnissen statt einen festen Repository-Pfad vorauszusetzen.
-  Begründung: Die lokale Quellstruktur und das Docker-Image haben unterschiedliche Basispfade, müssen aber dieselbe Hilfe-Seite ausliefern.
-
-- Datum: 2026-08-13
-  Entscheidung: Die Heartbeat-Adresse wird optional über den Top-Level-Wert `heartbeat_url` in `data/settings.toml` konfiguriert; ohne Wert wird kein Heartbeat gesendet.
-  Begründung: Der externe Betriebsaufruf soll vollständig deaktivierbar und an die jeweilige Umgebung anpassbar sein.
-
-- Datum: 2026-08-14
-  Entscheidung: GitHub-Actions in `.github/workflows/` werden immer mit vollständigen Commit-SHAs statt beweglichen Versions-Tags referenziert.
-  Begründung: Die CI-Abhängigkeiten sollen unveränderlich und reproduzierbar bleiben.
-
-- Datum: 2026-08-14
-  Entscheidung: Neue dauerhafte Projektanweisungen werden in der passenden Datei unter `project-docu/` dokumentiert.
-  Begründung: Verbindliche Arbeits- und Architekturregeln sollen gemeinsam mit der übrigen Projektdokumentation auffindbar und nachvollziehbar sein.
-
-- Datum: 2026-08-14
-  Entscheidung: Änderungen am Design werden immer mit einem echten Browser-Screenshot geprüft.
-  Begründung: Die visuelle Darstellung soll nicht nur anhand des Quelltexts, sondern im tatsächlich gerenderten Browser überprüft werden.
+- Datum: 2026-08-13 bis 2026-08-14
+  Entscheidung: Reine Website-Änderungen erhöhen die App-Version nicht. Neue dauerhafte Projektanweisungen werden in `project-docu/` dokumentiert. Designänderungen werden mit einem echten Browser-Screenshot geprüft.
+  Begründung: Website und Anwendung werden unabhängig veröffentlicht; dauerhafte Regeln und visuelle Ergebnisse müssen nachvollziehbar dokumentiert beziehungsweise geprüft werden.
