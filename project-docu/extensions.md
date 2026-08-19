@@ -4,27 +4,31 @@ Dieses Dokument sammelt mögliche Erweiterungen für News-Hash. Die Punkte sind 
 
 ## 1. Unabhängiger Verifizierer
 
+**Status: weiterverfolgen**
+
 ### Ziel
 
-Ein kleines, eigenständiges Prüfwerkzeug soll SQLite-Dateien ohne die vollständige News-Hash-Anwendung verifizieren können.
+Ein kleines, eigenständiges Prüfwerkzeug soll SQLite-Dateien ohne die vollständige News-Hash-Anwendung verifizieren können. Die Umsetzung soll beispielsweise in Go erfolgen, damit ein einzelnes Programm ohne Laufzeit- oder Paketabhängigkeiten verteilt werden kann.
 
 ### Möglicher Umfang
 
 - Prüfung von Hashkette, Codec-Definitionen, Bild-BLOBs und Anchor-Artefakten
-- Veröffentlichung als einzelnes Python-Modul oder Kommandozeilenprogramm
+- Veröffentlichung als einzelnes Go-Kommandozeilenprogramm
 - Dokumentierte Prüfschritte für Dritte
 
 ### Offene Fragen
 
-- Soll der Verifizierer ausschließlich SQLite oder auch JSONL unterstützen?
+- Soll der Verifizierer ausschließlich SQLite unterstützen oder zusätzlich JSONL?
 - Soll er ohne Netzwerkzugriff arbeiten können?
 - Welche externen Bestandteile dürfen als vertrauenswürdig vorausgesetzt werden?
 
 ### Kommentar / Fragen
 
-<!-- Hier Kommentare, Rückfragen und Entscheidungen zu dieser Erweiterung eintragen. -->
+- Die Go-Implementierung soll zunächst SQLite-Dateien und die in GitHub veröffentlichten Manifeste prüfen können.
 
 ## 2. Vollständige Bildintegritätsprüfung
+
+**Status: optional ergänzen**
 
 ### Ziel
 
@@ -33,45 +37,50 @@ Der Validator soll nicht nur die Bildreferenzen im Record hashen, sondern auch p
 ### Möglicher Umfang
 
 - SHA-256-Prüfung jedes BLOBs gegen seinen Schlüssel in `record_images`
-- Erkennung fehlender, zusätzlicher oder nicht referenzierter BLOBs
+- Erkennung fehlender oder nicht referenzierter BLOBs
 - Optionaler Abgleich zwischen SQLite-BLOBs und Dateien unter `data/images/`
 
 ### Offene Fragen
 
-- Sollen zusätzliche, nicht referenzierte BLOBs als Fehler oder nur als Hinweis gelten?
-- Soll die Prüfung standardmäßig oder über eine Option aktiviert werden?
+- Sollen zusätzliche, nicht referenzierte BLOBs nur als Hinweis ausgegeben werden?
+- Die Prüfung soll über eine Option aktiviert werden; soll diese Option nur die BLOB-Prüfung oder auch den Datei-Abgleich einschalten?
 
 ### Kommentar / Fragen
 
-<!-- Hier Kommentare, Rückfragen und Entscheidungen zu dieser Erweiterung eintragen. -->
+- Zusätzliche BLOBs gelten nur als Hinweis. Die Prüfung wird optional aktiviert.
+
 
 ## 3. Unveränderliche Exportpakete
 
+**Status: neu bewerten**
+
 ### Ziel
 
-Ein Archivexport soll alle für eine Quelle oder einen Zeitraum notwendigen Daten in einem transportierbaren Paket bündeln.
+Für JSONL soll ein separates Archivpaket die zugehörigen Daten und Metadaten transportierbar bündeln. SQLite enthält die für seine Validierung notwendigen Definitionen und Anchor-Artefakte bereits selbst; ein zusätzliches SQLite-Archivformat ist deshalb nicht erforderlich. Das Kopieren einer SQLite-Datei bleibt als Backup oder Transport möglich.
 
 ### Möglicher Umfang
 
-- SQLite-Shards, Codec-Definitionen, Manifeste und Proofs
+- JSONL-Shards, Codec-Definitionen, Manifeste und Proofs
 - Prüfsummen und maschinenlesbare Exportbeschreibung
-- Import- oder Reparaturprüfung ohne laufenden Daemon
+- Prüfung des Pakets ohne laufenden Daemon
 
 ### Offene Fragen
 
-- Welches Format soll das Paket haben, zum Beispiel ZIP oder TAR?
-- Sollen Exporte verschlüsselt oder signiert werden?
+- Welches Format soll das JSONL-Paket haben, zum Beispiel ZIP oder TAR?
+- Sollen JSONL-Exporte verschlüsselt oder signiert werden?
 - Soll ein Export einzelne Quellen, Zeiträume oder nur vollständige Archive umfassen?
 
 ### Kommentar / Fragen
 
-<!-- Hier Kommentare, Rückfragen und Entscheidungen zu dieser Erweiterung eintragen. -->
+- Für JSONL und SQLite gelten getrennte Archivierungswege. Ein zusätzliches SQLite-Archivformat ist nicht notwendig, weil die SQLite-Datei bereits selbstständig validierbar ist.
 
 ## 4. Erweiterte Quellenadapter
 
+**Status: nach Beispieldaten weiterverfolgen**
+
 ### Ziel
 
-Weitere Nachrichtenquellen sollen ohne Änderungen an der allgemeinen Importlogik angebunden werden können.
+Weitere Nachrichtenquellen sollen ohne Änderungen an der allgemeinen Importlogik angebunden werden können. Der Daemon soll Änderungen oder ungültige Antworten einer Quelle als Fehler melden, ohne die Verarbeitung der übrigen Quellen zu stoppen.
 
 ### Möglicher Umfang
 
@@ -82,14 +91,16 @@ Weitere Nachrichtenquellen sollen ohne Änderungen an der allgemeinen Importlogi
 ### Offene Fragen
 
 - Soll eine Quelle mehrere Fallback-Adapter besitzen dürfen?
-- Wie werden Änderungen an einer externen Quelle erkannt und versioniert?
+- Wie werden Änderungen an einer externen Quelle erkannt und als Fehler versioniert?
 - Sollen Adapter als Python-Code oder als deklarative Konfiguration definiert werden?
 
 ### Kommentar / Fragen
 
-<!-- Hier Kommentare, Rückfragen und Entscheidungen zu dieser Erweiterung eintragen. -->
+- Für weitere Formate und APIs werden zunächst konkrete Beispielquellen und repräsentative Testdaten benötigt. Erst danach soll die Adapter-Schnittstelle festgelegt werden.
 
 ## 5. Wiederholungs- und Fehlerwarteschlange
+
+**Status: zurückgestellt**
 
 ### Ziel
 
@@ -102,17 +113,17 @@ Fehlgeschlagene Artikelabrufe sollen gezielt erneut verarbeitet werden können, 
 - Dashboard-Aktion für erneuten Versuch und endgültiges Verwerfen
 - Trennung zwischen vorübergehenden und dauerhaften Fehlern
 
-### Offene Fragen
+### Aktueller Stand
 
-- Welche Fehler dürfen automatisch wiederholt werden?
-- Wie lange sollen fehlgeschlagene Einträge aufbewahrt werden?
-- Soll ein erneuter Versuch die ursprüngliche Hashkette oder einen neuen Importlauf verwenden?
+Die Umsetzung wird zurückgestellt, bis mehr unterschiedliche Fehlerfälle bekannt sind. Für die bisher beobachteten Fehler gibt es bereits eine Fehlerbehandlung im Importpfad.
 
 ### Kommentar / Fragen
 
-<!-- Hier Kommentare, Rückfragen und Entscheidungen zu dieser Erweiterung eintragen. -->
+Die Erweiterung soll erst nach einer Auswertung weiterer Fehlermöglichkeiten geplant werden.
 
 ## 6. Suche und erweiterte Archivabfragen
+
+**Status: zurückgestellt**
 
 ### Ziel
 
@@ -125,86 +136,81 @@ Das Dashboard soll auch in älteren Shards nach Meldungen suchen und Ergebnisse 
 - Paginierte Suche über alle SQLite-Shards
 - Optionaler Export der Trefferliste
 
-### Offene Fragen
+### Aktueller Stand
 
-- Reicht SQLite FTS5 oder wird eine externe Suchkomponente benötigt?
-- Soll die Suche HTML-Inhalte oder zusätzlich extrahierten Klartext durchsuchen?
-- Wie sollen sehr große Suchergebnisse begrenzt werden?
+Die Umsetzung wird zurückgestellt, bis mehr Archivdaten gesammelt wurden und die tatsächlichen Suchanforderungen anhand konkreter Nutzung bewertet werden können.
 
 ### Kommentar / Fragen
 
-<!-- Hier Kommentare, Rückfragen und Entscheidungen zu dieser Erweiterung eintragen. -->
+Die Erweiterung soll später auf Grundlage realer Daten und Nutzungsszenarien neu bewertet werden.
 
 ## 7. Zugriffsschutz für die WebUI
 
+**Status: nicht im Scope der App**
+
 ### Ziel
 
-Der integrierte Webserver soll sicher in Netzen betrieben werden können, in denen die Daten nicht öffentlich zugänglich sein dürfen.
+Der Zugriffsschutz wird nicht innerhalb der App umgesetzt. Für einen sicheren Betrieb in geschützten Netzen soll die Dokumentation auf einen vorgeschalteten Reverse Proxy verweisen.
 
 ### Möglicher Umfang
 
-- Authentifizierung für Dashboard, Quellenaktionen und Shutdown
-- Rollen für Lesen, manuellen Abruf und Administration
-- Bind-Adresse standardmäßig auf lokale Schnittstellen beschränken
-- Optionaler Reverse-Proxy- oder Token-Betrieb
+- Betrieb hinter einem konfigurierten Reverse Proxy
+- Authentifizierung und TLS außerhalb der App
 
-### Offene Fragen
+### Dokumentationshinweis
 
-- Ist ein einfacher Zugriffstoken ausreichend oder werden Benutzerkonten benötigt?
-- Welche Endpunkte müssen auch ohne Anmeldung lesbar bleiben?
-- Soll TLS durch die Anwendung oder durch einen Reverse Proxy bereitgestellt werden?
+Die Betriebsdokumentation sollte erklären, dass der integrierte Webserver selbst keine Benutzerverwaltung bereitstellt und für öffentliche oder nicht vertrauenswürdige Netze hinter einem Reverse Proxy betrieben werden muss.
 
 ### Kommentar / Fragen
 
-<!-- Hier Kommentare, Rückfragen und Entscheidungen zu dieser Erweiterung eintragen. -->
+Nicht im Scope der App. Ein Hinweis auf den Reverse-Proxy-Betrieb gehört in die Betriebsdokumentation.
 
 ## 8. Persistentes Betriebs- und Fehlerprotokoll
 
+**Status: nicht geplant**
+
 ### Ziel
 
-Importfehler, Wiederholungen und Betriebsereignisse sollen auch nach einem Neustart nachvollziehbar bleiben.
+Ein persistentes Betriebs- und Fehlerprotokoll ist derzeit nicht notwendig. Fehler werden nach `stderr` geschrieben; in einem Docker-Betrieb übernimmt Docker die Protokollierung.
 
 ### Möglicher Umfang
 
-- Persistente Ereignistabelle mit Quelle, URL, Zeitpunkt, Fehlertyp und Status
-- Aufbewahrungs- und Löschregeln
-- Anzeige historischer Fehler im Dashboard
-- Export für Support und Diagnose
+- Weiterhin flüchtige Anzeige der Laufzeitfehler im Dashboard
+- Nutzung des Container- oder Prozess-Logs für dauerhafte Betriebsprotokolle
 
-### Offene Fragen
+### Aktueller Stand
 
-- Welche Daten dürfen dauerhaft gespeichert werden, insbesondere externe URLs?
-- Soll das Protokoll in SQLite oder in einem separaten Logsystem liegen?
-- Wie lange ist eine sinnvolle Aufbewahrungsfrist?
+Eine spätere Neubewertung ist nur erforderlich, wenn die externe Logverwaltung nicht ausreicht.
 
 ### Kommentar / Fragen
 
-<!-- Hier Kommentare, Rückfragen und Entscheidungen zu dieser Erweiterung eintragen. -->
+Nicht erforderlich: Fehler werden über `stderr` ausgegeben; im Docker-Betrieb kann Docker diese Ausgaben übernehmen.
 
 ## 9. Mehrere Anchor- und Veröffentlichungsziele
 
+**Status: mit Fokus auf Verifizierung zurückgestellt**
+
 ### Ziel
 
-Anchor-Manifeste sollen neben OpenTimestamps an weitere unabhängige Nachweis- oder Veröffentlichungsziele übergeben werden können.
+Weitere Anchor-Provider werden erst bewertet, wenn konkrete und geeignete Provider bekannt sind. Die Nachrichteninhalte bleiben aus rechtlichen Gründen lokal.
 
 ### Möglicher Umfang
 
-- Austauschbare Anchor-Provider
-- Unterstützung zusätzlicher Zeitstempel- oder Archivdienste
-- Unveränderliche Veröffentlichung der Manifeste in mehreren Repositories
-- Anzeige des Status je Provider
+- Erweiterung des Verifizierers, damit die auf GitHub veröffentlichten Manifeste zur Prüfung der gespeicherten Hashes verwendet werden können
+- Spätere Unterstützung weiterer Provider, falls konkrete Anforderungen entstehen
 
 ### Offene Fragen
 
-- Welche Provider sind langfristig vertrauenswürdig und erreichbar?
+- Welche weiteren Provider sind verfügbar und langfristig vertrauenswürdig?
 - Wie werden widersprüchliche Provider-Ergebnisse dargestellt?
-- Sollen Nachrichteninhalte weiterhin ausschließlich lokal bleiben?
 
 ### Kommentar / Fragen
 
-<!-- Hier Kommentare, Rückfragen und Entscheidungen zu dieser Erweiterung eintragen. -->
+Weitere Provider müssen zunächst konkret benannt werden. Vorrangig soll der Verifizierer GitHub-Manifeste für die Prüfung nutzen können. Nachrichteninhalte bleiben lokal.
 
 ## 10. Datenschutz und Löschkonzept
+
+**Status: weiter ausarbeiten**
 
 ### Ziel
 
@@ -217,12 +223,10 @@ Das Archiv soll nachvollziehbar mit personenbezogenen Daten, Korrekturen und ges
 - Kryptografisches Ausblenden einzelner Inhalte bei Erhalt der Kettenstruktur
 - Transparente Trennung zwischen Originalnachweis und öffentlich sichtbarer Darstellung
 
-### Offene Fragen
+### Nächster Ansatz
 
-- Welche Daten gelten als unveränderlich und welche dürfen nachträglich verborgen werden?
-- Wie lässt sich eine Löschung mit dem append-only-Ansatz vereinbaren?
-- Welche rechtlichen Anforderungen gelten für die betriebenen Quellen und Standorte?
+Ein neuer Eintrag könnte dokumentieren, dass der Inhalt eines älteren Eintrags entfernt oder verborgen wurde. Die ursprüngliche Hashkette bliebe dadurch nachvollziehbar, während der aktuelle Inhalt nicht mehr öffentlich angezeigt wird.
 
 ### Kommentar / Fragen
 
-<!-- Hier Kommentare, Rückfragen und Entscheidungen zu dieser Erweiterung eintragen. -->
+Die rechtliche und technische Ausgestaltung muss noch geklärt werden.
