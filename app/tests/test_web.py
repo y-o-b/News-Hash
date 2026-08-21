@@ -111,10 +111,11 @@ def test_render_detail_links_stored_images() -> None:
             "images": {"hash": {"path": "images/20260810T174000-0001.jpg"}},
         },
         "ZDFheute",
+        storage_name="zdf",
     )
 
     assert "Gespeicherte Meldung" in page
-    assert "/media/20260810T174000-0001.jpg" in page
+    assert "/media/zdf/images/20260810T174000-0001.jpg" in page
     assert "<p>Inhalt</p>" in page
     assert "hash-value" in page
     assert "pre-hash-value" in page

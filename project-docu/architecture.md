@@ -8,7 +8,7 @@
 - Interne Blockchain bedeutet eine append-only Kette von Datensätzen.
 - Jeder Datensatz referenziert den vorherigen, um Manipulationen erkennbar zu machen.
 - Es wird zunächst lokal und ohne externe Knoten gearbeitet.
-- Speicherung erfolgt gleichzeitig als JSONL und SQLite unter `data/`.
+- Speicherung erfolgt gleichzeitig als JSONL und SQLite unter `data/`. JSONL liegt je Quelle unter `data/<storage_name>/jsonl/`, zugehörige Dateien unter `data/<storage_name>/images/`; SQLite-Shards bleiben unter `data/`.
 - Die Quellen werden in `data/settings.toml` konfiguriert.
 - Ein optionaler Top-Level-Wert `heartbeat_url` in `data/settings.toml` steuert den Daemon-Heartbeat; ohne Wert wird kein Ping gesendet.
 - Pro Quelle kann ein `codec_name` gewählt werden.
@@ -20,7 +20,8 @@
 - Erfolgreich erzeugte Anchor-Dateien werden mit `GITHUB_TOKEN` und `GITHUB_REPOSITORY` aus `data/credentials.env` synchronisiert.
 - Bei der Manifestbildung werden SQLite-Shards nach `data/sqlite-backups/` mit gleichbleibenden Dateinamen überschrieben und Manifest sowie `.ots`-Proof zusätzlich in `anchor_artifacts` der SQLite-Datei gespeichert.
 - `--daemon` startet zusätzlich den eingebauten HTTP-Webserver; Standard-Bind-Adresse ist `0.0.0.0:8000`.
-- Bilder aus Feed-Einträgen werden für JSONL unter `data/images/` abgelegt und für SQLite zusätzlich als BLOB gespeichert.
+- Bilder aus Feed-Einträgen werden je Quelle unter `data/<storage_name>/images/` abgelegt und für SQLite zusätzlich als BLOB gespeichert.
+- Beim ersten Start werden vorhandene JSONL-Shards und referenzierte Bilder einmalig aus der alten Struktur in die Quellenordner verschoben. Ein Marker verhindert eine erneute Migration.
 
 ## Laufmodi
 

@@ -154,6 +154,12 @@ def _data_size(value: int) -> str:
     return "0 B"
 
 
+def _media_url(storage_name: str, relative_path: str) -> str:
+    """Erzeuge eine quellenbezogene URL für ein gespeichertes Bild."""
+
+    return f"/media/{quote(storage_name, safe='')}/{quote(relative_path, safe='/')}"
+
+
 def _query(params: dict[str, Any]) -> str:
     return html.escape(urlencode(params), quote=True)
 
@@ -321,8 +327,8 @@ def render_detail(
     """Erzeuge die Detailansicht eines gespeicherten Records."""
 
     images = "".join(
-        f'<a href="/media/{quote(str(metadata.get("path", "")).removeprefix("images/"), safe="/")}" target="_blank" rel="noreferrer">'
-        f'<img src="/media/{quote(str(metadata.get("path", "")).removeprefix("images/"), safe="/")}" alt="Bild zur Meldung"></a>'
+        f'<a href="{_media_url(storage_name, str(metadata.get("path", "")))}" target="_blank" rel="noreferrer">'
+        f'<img src="{_media_url(storage_name, str(metadata.get("path", "")))}" alt="Bild zur Meldung"></a>'
         for metadata in record.get("images", {}).values()
     )
     content_section = f'<article class="content">{record["content"]}</article>' if record.get("content") else ""
@@ -833,8 +839,15 @@ def run_web_server(
                 self._send_body(body, "text/html; charset=utf-8")
                 return
             if parsed_path.path.startswith("/media/"):
-                relative_path = unquote(parsed_path.path.removeprefix("/media/"))
-                root = (settings_manager.storage_root() / "images").resolve()
+                media_parts = parsed_path.path.removeprefix("/media/").split("/", 1)
+                if len(media_parts) != 2:
+                    self.send_error(HTTPStatus.NOT_FOUND)
+                    return
+                storage_name, relative_path = unquote(media_parts[0]), unquote(media_parts[1])
+                if not any(source.storage_name == storage_name for source in config.settings.sources):
+                    self.send_error(HTTPStatus.NOT_FOUND)
+                    return
+                root = (settings_manager.storage_root() / storage_name).resolve()
                 media_path = (root / relative_path).resolve()
                 if not media_path.is_relative_to(root) or not media_path.is_file():
                     self.send_error(HTTPStatus.NOT_FOUND)

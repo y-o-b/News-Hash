@@ -253,8 +253,7 @@ class RSSv0:
             except Exception:
                 continue
 
-            relative_path = str(Path(image_path).relative_to(storage_root))
-            images[image_hash] = {"url": image_url, "path": relative_path}
+            images[image_hash] = {"url": image_url, "path": f"images/{Path(image_path).name}"}
             image_bytes_by_hash[image_hash] = image_bytes
             next_index += 1
 
@@ -530,7 +529,7 @@ class SCREENv0(RSSv0):
         image_hash = hashlib.sha256(screenshot_bytes).hexdigest()
         prepared_item["images"][image_hash] = {
             "url": str(item["url"]),
-            "path": str(screenshot_path.relative_to(storage_root)),
+            "path": f"images/{screenshot_path.name}",
         }
         image_bytes_by_hash[image_hash] = screenshot_bytes
         return prepared_item, image_bytes_by_hash

@@ -122,6 +122,52 @@ def _shard_index(path: Path) -> int:
     return int(match.group(1)) if match else 0
 
 
+def migrate_legacy_jsonl_and_images(storage_root: Path, storage_names: list[str]) -> None:
+    """Verschiebe alte JSONL-Dateien und referenzierte Bilder einmalig in Quellenordner."""
+
+    marker = storage_root / ".storage-migration-v1"
+    if marker.exists():
+        return
+    legacy_image_root = storage_root / "images"
+    moved_images: dict[Path, Path] = {}
+    for storage_name in storage_names:
+        legacy_jsonl_paths = sorted(storage_root.glob(f"{storage_name}.*.jsonl"), key=_shard_index)
+        if not legacy_jsonl_paths:
+            continue
+        source_root = storage_root / storage_name
+        jsonl_root = source_root / "jsonl"
+        image_root = source_root / "images"
+        jsonl_root.mkdir(parents=True, exist_ok=True)
+        image_root.mkdir(parents=True, exist_ok=True)
+        referenced_images: set[str] = set()
+        for legacy_path in legacy_jsonl_paths:
+            for line in legacy_path.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                record = json.loads(line)
+                for metadata in record.get("images", {}).values():
+                    if isinstance(metadata, dict):
+                        relative_path = str(metadata.get("path", ""))
+                        if relative_path.startswith("images/"):
+                            referenced_images.add(Path(relative_path).name)
+            target = jsonl_root / legacy_path.name
+            if not target.exists():
+                shutil.move(str(legacy_path), target)
+        for image_name in referenced_images:
+            legacy_image = legacy_image_root / image_name
+            target = image_root / image_name
+            if target.exists():
+                continue
+            if legacy_image in moved_images:
+                shutil.copy2(moved_images[legacy_image], target)
+            elif not legacy_image.is_file():
+                continue
+            else:
+                shutil.move(str(legacy_image), target)
+                moved_images[legacy_image] = target
+    marker.write_text("JSONL and referenced images migrated to per-source folders.\n", encoding="utf-8")
+
+
 class JsonlStorage:
     """Speichert Records als JSON-Lines, aufgeteilt in nummerierte Shards ab 1 GB."""
 
@@ -132,10 +178,11 @@ class JsonlStorage:
         self.storage_name = storage_name
 
     def _shard_paths(self) -> list[Path]:
-        """Gib alle existierenden Shard-Dateien sortiert nach Index zurueck."""
+        """Gib alle Shards im JSONL-Ordner sortiert nach Index zurueck."""
 
-        if not self.storage_root.exists():
-            return []
+        jsonl_root = self.storage_root / self.storage_name / "jsonl"
+        if jsonl_root.exists():
+            return sorted(jsonl_root.glob(f"{self.storage_name}.*.jsonl"), key=_shard_index)
         return sorted(self.storage_root.glob(f"{self.storage_name}.*.jsonl"), key=_shard_index)
 
     @property
@@ -144,11 +191,11 @@ class JsonlStorage:
 
         shards = self._shard_paths()
         if not shards:
-            return self.storage_root / f"{self.storage_name}.0.jsonl"
+            return self.storage_root / self.storage_name / "jsonl" / f"{self.storage_name}.0.jsonl"
 
         latest = shards[-1]
         if latest.stat().st_size >= SHARD_SIZE_LIMIT_BYTES:
-            return self.storage_root / f"{self.storage_name}.{_shard_index(latest) + 1}.jsonl"
+            return self.storage_root / self.storage_name / "jsonl" / f"{self.storage_name}.{_shard_index(latest) + 1}.jsonl"
         return latest
 
     def known_source_ids(self) -> set[str]:
@@ -192,6 +239,7 @@ class JsonlStorage:
         self.storage_root.mkdir(parents=True, exist_ok=True)
         for record in records:
             target_path = self.path
+            target_path.parent.mkdir(parents=True, exist_ok=True)
             with target_path.open("a", encoding="utf-8") as handle:
                 handle.write(json.dumps(record, ensure_ascii=True, sort_keys=True))
                 handle.write("\n")
