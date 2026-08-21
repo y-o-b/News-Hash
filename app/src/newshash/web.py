@@ -313,10 +313,10 @@ def render_help(theme: str = "lite", language: str = "de") -> str:
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="/favicon.svg?v=1&amp;theme={theme}" type="image/svg+xml" sizes="any">
 <title>News-Hash</title><style>
-  :root {{ --bg:#f5f7fa; --panel:#fff; --line:#cbd2da; --text:#20252b; --muted:#68727d; --accent:#2463a5 }}
-  body.theme-dark {{ --bg:#000; --panel:#292826; --line:#f1eadc; --text:#f1eadc; --muted:#b9b1a2; --accent:#ffb000; color-scheme:dark }}
-  body.theme-comic {{ --bg:#4b8ed8; --panel:#fffdf5; --line:#171717; --text:#171717; --muted:#5a5145; --accent:#ef4b3f; color-scheme:light }}
-  body.theme-paper {{ --bg:#e5d5b8; --panel:#fff9eb; --line:#3a2a20; --text:#2b201b; --muted:#756153; --accent:#b83b32; color-scheme:light }}
+  :root {{ --bg:#f5f7fa; --panel:#fff; --line:#cbd2da; --text:#20252b; --muted:#5c6873; --accent:#2463a5; --blue:#2f6f9f }}
+  body.theme-dark {{ --bg:#000; --panel:#292826; --line:#f1eadc; --text:#f1eadc; --muted:#b9b1a2; --accent:#ffb000; --blue:#55c5d8; color-scheme:dark }}
+  body.theme-comic {{ --bg:#4b8ed8; --panel:#fffdf5; --line:#171717; --text:#171717; --muted:#5a5145; --accent:#c4322c; --blue:#1f64ad; color-scheme:light }}
+  body.theme-paper {{ --bg:#e5d5b8; --panel:#fff9eb; --line:#3a2a20; --text:#2b201b; --muted:#756153; --accent:#b83b32; --blue:#286a9e; color-scheme:light }}
   body.theme-news {{ --bg:#f1f2f0; --panel:#fff; --line:#151515; --text:#151515; --muted:#687078; --accent:#d71920; color-scheme:light }}
   * {{ box-sizing:border-box }} body {{ margin:0; background:var(--bg); color:var(--text); font:16px/1.6 system-ui,sans-serif }}
   main {{ max-width:900px; margin:auto; padding:40px 20px }} a {{ color:var(--accent) }}
@@ -564,10 +564,10 @@ def render_dashboard(data: dict[str, Any]) -> str:
   <title>News-Hash</title>
   <style>
     :root {{ color-scheme:light; --bg:#4b8ed8; --panel:#fffdf5; --line:#171717; --text:#171717; --muted:#5a5145;
-      --accent:#ef4b3f; --blue:#2c75d6; --yellow:#f7c936; }}
+      --accent:#c4322c; --blue:#1f64ad; --yellow:#f7c936; }}
     body.theme-dark {{ --bg:#000000; --panel:#292826; --line:#f1eadc; --text:#f1eadc; --muted:#b9b1a2;
       --accent:#ffb000; --blue:#55c5d8; color-scheme:dark }}
-    body.theme-lite {{ --bg:#f5f7fa; --panel:#ffffff; --line:#cbd2da; --text:#20252b; --muted:#68727d; --accent:#2463a5; --blue:#4d83b8 }}
+    body.theme-lite {{ --bg:#f5f7fa; --panel:#ffffff; --line:#cbd2da; --text:#20252b; --muted:#5c6873; --accent:#2463a5; --blue:#2f6f9f }}
     body.theme-paper {{ --bg:#e5d5b8; --panel:#fff9eb; --line:#3a2a20; --text:#2b201b; --muted:#756153; --accent:#b83b32; --blue:#286a9e }}
     body.theme-news {{ --bg:#f1f2f0; --panel:#fff; --line:#151515; --text:#151515; --muted:#687078; --accent:#d71920; --blue:#003b70 }}
     * {{ box-sizing:border-box }} body {{ margin:0; background:var(--bg);
