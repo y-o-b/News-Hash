@@ -536,9 +536,9 @@ def render_dashboard(data: dict[str, Any]) -> str:
     heading = f"Meldungen · {_text(selected_source)}" if selected_source else "Neueste Meldungen"
     log_entries = "".join(_runtime_log_markup(entry) for entry in reversed(data.get("runtime_logs", [])[-30:]))
     storage_box = (
-        '<div class="metric storage-box"><div><span class="kicker">Speicherplatz data</span>'
-        f'<strong>{_data_size(data.get("storage_used_bytes", 0))}</strong><span class="muted"> verbraucht</span></div>'
-        f'<div><strong>{_data_size(data.get("storage_available_bytes", 0))}</strong><span class="muted"> verfügbar</span></div></div>'
+        '<div class="metric storage-box"><span class="kicker">Speicherplatz data</span><div class="storage-values">'
+        f'<div><strong>{_data_size(data.get("storage_used_bytes", 0))}</strong><span class="muted">verbraucht</span></div>'
+        f'<div><strong>{_data_size(data.get("storage_available_bytes", 0))}</strong><span class="muted">verfügbar</span></div></div></div>'
     )
 
     return f"""<!doctype html>
@@ -577,8 +577,10 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .metric {{ background:var(--panel); border:4px solid var(--line); box-shadow:6px 6px 0 var(--line); padding:22px; transform:rotate(-1deg) }}
     .metric:nth-child(2) {{ transform:rotate(1deg); background:#d9edff }} .metric:nth-child(3) {{ background:#ffe0dd }}
      .metric strong {{ display:block; font:900 40px/1 Impact,"Arial Black",sans-serif; margin-top:8px }}
-     .storage-box {{ display:flex; flex-direction:column; justify-content:center; gap:10px }}
-     .storage-box strong {{ font-size:26px }}
+     .storage-box {{ display:flex; flex-direction:column; justify-content:center; gap:8px }}
+     .storage-values {{ display:flex; justify-content:space-between; gap:12px }}
+     .storage-values strong {{ font-size:22px; margin-top:0 }}
+     .storage-values .muted {{ display:block; font-size:11px }}
     body.theme-lite .metric, body.theme-lite .metric:nth-child(2), body.theme-lite .metric:nth-child(3) {{ background:#d9edff }}
     body.theme-dark .metric, body.theme-dark .metric:nth-child(2), body.theme-dark .metric:nth-child(3) {{ background:var(--panel) }}
     section {{ margin-top:38px }} h2 {{ font:600 25px Georgia,serif; margin:0 0 14px }}

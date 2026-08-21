@@ -33,6 +33,7 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert "12" in page
     assert "Speicherplatz data" in page
     assert "1,5 KB" in page
+    assert "storage-values" in page
     assert "SQLite: 1,5 KB" in page
     assert "2 Fehler" in page
     assert "Hash: hash" in page
