@@ -163,6 +163,7 @@ def test_sqlite_storage_dashboard_stats_and_latest_records(tmp_path) -> None:
         "latest_hash": second["hash"],
     }
     assert [record["source_id"] for record in storage.latest_records(1)] == ["example-2"]
+    assert storage.latest_count() == 2
 
 
 def test_sqlite_storage_deduplicates_identical_image_blob(tmp_path) -> None:

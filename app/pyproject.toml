@@ -1,6 +1,6 @@
 [project]
 name = "newshash"
-version = "0.1.66"
+version = "0.1.67"
 description = "Projektgrundstruktur für ein Python-uv-Projekt"
 readme = "README.md"
 requires-python = ">=3.14"

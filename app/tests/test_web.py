@@ -203,6 +203,7 @@ def test_dashboard_sorts_published_at_by_instant(tmp_path, monkeypatch) -> None:
         "dashboard_stats",
         lambda self: {"records": 2 if self.storage_name == "zdf" else 0, "images": 0, "latest_retrieved_at": "", "latest_hash": ""},
     )
+    monkeypatch.setattr(web.SqliteStorage, "latest_count", lambda self: 2 if self.storage_name == "zdf" else 0)
     monkeypatch.setattr(web.SqliteStorage, "latest_records", lambda self, limit: records if self.storage_name == "zdf" else [])
 
     config = AppConfig(

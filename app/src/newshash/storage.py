@@ -538,6 +538,15 @@ class SqliteStorage:
             for row in rows
         ]
 
+    def latest_count(self) -> int:
+        """Gib die Record-Anzahl des letzten Shards für die Dashboard-Pagination zurück."""
+
+        shards = self._shard_paths()
+        if not shards:
+            return 0
+        with self._connect(shards[-1]) as connection:
+            return connection.execute("SELECT COUNT(*) FROM records").fetchone()[0]
+
     def get_record(self, source_id: str) -> dict[str, Any] | None:
         """Lese einen einzelnen Record anhand seiner stabilen source_id."""
 

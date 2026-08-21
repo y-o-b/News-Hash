@@ -110,7 +110,7 @@ def collect_dashboard_data(
             )
         )
         if selected_source in {source.name, source.storage_name} or selected_source is None:
-            selected_records += stats["records"]
+            selected_records += storage.latest_count()
             for record in storage.latest_records(page * page_size):
                 latest_records.append({**record, "source_name": source.name, "storage_name": source.storage_name})
 
