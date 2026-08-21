@@ -40,7 +40,7 @@ def test_jsonl_storage_appends_and_reads_back(tmp_path) -> None:
 
     storage.append_records([record])
 
-    assert storage.path == tmp_path / "example" / "example.0.jsonl"
+    assert storage.path == tmp_path / "JSONL" / "example" / "example.0.jsonl"
     assert storage.count() == 1
     assert storage.known_source_ids() == {"example-1"}
     assert storage.latest_hash(GENESIS_HASH) == record["hash"]
@@ -65,8 +65,8 @@ def test_migrate_legacy_jsonl_and_referenced_images_to_source_folder(tmp_path) -
 
     assert not legacy_jsonl.exists()
     assert not legacy_image.exists()
-    assert (tmp_path / "example" / "example.0.jsonl").exists()
-    assert (tmp_path / "example" / "images" / "example.png").read_bytes() == b"image"
+    assert (tmp_path / "JSONL" / "example" / "example.0.jsonl").exists()
+    assert (tmp_path / "JSONL" / "example" / "images" / "example.png").read_bytes() == b"image"
     migrate_legacy_jsonl_and_images(tmp_path, ["example"])
 
 
@@ -89,8 +89,8 @@ def test_jsonl_storage_rolls_over_shard_when_size_limit_reached(tmp_path, monkey
     storage.append_records([make_record("example-1", GENESIS_HASH)])
     storage.append_records([make_record("example-2", "hash-example-1".ljust(64, "0"))])
 
-    assert (tmp_path / "example" / "example.0.jsonl").exists()
-    assert (tmp_path / "example" / "example.1.jsonl").exists()
+    assert (tmp_path / "JSONL" / "example" / "example.0.jsonl").exists()
+    assert (tmp_path / "JSONL" / "example" / "example.1.jsonl").exists()
     assert storage.count() == 2
 
 
@@ -101,8 +101,8 @@ def test_jsonl_storage_known_source_ids_only_considers_last_shard(tmp_path, monk
     storage.append_records([make_record("example-1", GENESIS_HASH)])
     storage.append_records([make_record("example-2", "hash-example-1".ljust(64, "0"))])
 
-    assert (tmp_path / "example" / "example.0.jsonl").exists()
-    assert (tmp_path / "example" / "example.1.jsonl").exists()
+    assert (tmp_path / "JSONL" / "example" / "example.0.jsonl").exists()
+    assert (tmp_path / "JSONL" / "example" / "example.1.jsonl").exists()
     assert storage.known_source_ids() == {"example-2"}
 
 
@@ -214,13 +214,14 @@ def test_sqlite_storage_known_source_ids_only_considers_last_shard(tmp_path, mon
     storage.append_records([make_record("example-1", GENESIS_HASH)], {})
     storage.append_records([make_record("example-2", "hash-example-1".ljust(64, "0"))], {})
 
-    assert (tmp_path / "example.0.sqlite3").exists()
-    assert (tmp_path / "example.1.sqlite3").exists()
+    assert (tmp_path / "SQLITE" / "example.0.sqlite3").exists()
+    assert (tmp_path / "SQLITE" / "example.1.sqlite3").exists()
     assert storage.known_source_ids() == {"example-2"}
 
 
 def test_sqlite_storage_renames_records_table_on_schema_mismatch(tmp_path) -> None:
-    shard_path = tmp_path / "example.0.sqlite3"
+    shard_path = tmp_path / "SQLITE" / "example.0.sqlite3"
+    shard_path.parent.mkdir(parents=True)
     with sqlite3.connect(shard_path) as connection:
         connection.execute(
             """
@@ -257,7 +258,8 @@ def test_sqlite_storage_renames_records_table_on_schema_mismatch(tmp_path) -> No
 
 
 def test_sqlite_storage_renames_record_images_table_on_schema_mismatch(tmp_path) -> None:
-    shard_path = tmp_path / "example.0.sqlite3"
+    shard_path = tmp_path / "SQLITE" / "example.0.sqlite3"
+    shard_path.parent.mkdir(parents=True)
     with sqlite3.connect(shard_path) as connection:
         connection.execute(
             """
@@ -288,7 +290,7 @@ def test_sqlite_storage_keeps_table_when_schema_matches(tmp_path) -> None:
     # Zweiter Zugriff mit identischem, bereits korrektem Schema darf nichts umbenennen.
     storage.count()
 
-    with sqlite3.connect(tmp_path / "example.0.sqlite3") as connection:
+    with sqlite3.connect(tmp_path / "SQLITE" / "example.0.sqlite3") as connection:
         table_names = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()}
 
     assert {"records", "record_images"} <= table_names

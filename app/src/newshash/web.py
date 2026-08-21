@@ -847,7 +847,7 @@ def run_web_server(
                 if not any(source.storage_name == storage_name for source in config.settings.sources):
                     self.send_error(HTTPStatus.NOT_FOUND)
                     return
-                root = (settings_manager.storage_root() / storage_name).resolve()
+                root = (settings_manager.storage_root() / "JSONL" / storage_name).resolve()
                 media_path = (root / relative_path).resolve()
                 if not media_path.is_relative_to(root) or not media_path.is_file():
                     self.send_error(HTTPStatus.NOT_FOUND)

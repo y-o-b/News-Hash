@@ -123,20 +123,28 @@ def _shard_index(path: Path) -> int:
 
 
 def migrate_legacy_jsonl_and_images(storage_root: Path, storage_names: list[str]) -> None:
-    """Verschiebe alte JSONL-Dateien und referenzierte Bilder einmalig in Quellenordner."""
+    """Verschiebe alte JSONL-, Bild- und SQLite-Dateien einmalig in die Formatordner."""
 
-    marker = storage_root / ".storage-migration-v2"
+    marker = storage_root / ".storage-migration-v3"
     if marker.exists():
         return
-    legacy_image_root = storage_root / "images"
+    jsonl_root = storage_root / "JSONL"
+    sqlite_root = storage_root / "SQLITE"
+    jsonl_root.mkdir(parents=True, exist_ok=True)
+    sqlite_root.mkdir(parents=True, exist_ok=True)
     moved_images: dict[Path, Path] = {}
     for storage_name in storage_names:
+        source_root = storage_root / storage_name
+        target_source_root = jsonl_root / storage_name
         legacy_jsonl_paths = sorted(storage_root.glob(f"{storage_name}.*.jsonl"), key=_shard_index)
         if not legacy_jsonl_paths:
-            legacy_jsonl_paths = sorted((storage_root / storage_name / "jsonl").glob(f"{storage_name}.*.jsonl"), key=_shard_index)
-        source_root = storage_root / storage_name
-        image_root = source_root / "images"
-        source_root.mkdir(parents=True, exist_ok=True)
+            legacy_jsonl_paths = sorted(source_root.glob(f"{storage_name}.*.jsonl"), key=_shard_index)
+        if not legacy_jsonl_paths:
+            legacy_jsonl_paths = sorted((source_root / "jsonl").glob(f"{storage_name}.*.jsonl"), key=_shard_index)
+        if not legacy_jsonl_paths and target_source_root.exists():
+            legacy_jsonl_paths = sorted(target_source_root.glob(f"{storage_name}.*.jsonl"), key=_shard_index)
+        image_root = target_source_root / "images"
+        target_source_root.mkdir(parents=True, exist_ok=True)
         image_root.mkdir(parents=True, exist_ok=True)
         referenced_images: set[str] = set()
         for legacy_path in legacy_jsonl_paths:
@@ -149,11 +157,14 @@ def migrate_legacy_jsonl_and_images(storage_root: Path, storage_names: list[str]
                         relative_path = str(metadata.get("path", ""))
                         if relative_path.startswith("images/"):
                             referenced_images.add(Path(relative_path).name)
-            target = source_root / legacy_path.name
+            target = target_source_root / legacy_path.name
             if legacy_path != target and not target.exists():
                 shutil.move(str(legacy_path), target)
+        legacy_image_root = source_root / "images"
         for image_name in referenced_images:
             legacy_image = legacy_image_root / image_name
+            if not legacy_image.is_file():
+                legacy_image = storage_root / "images" / image_name
             target = image_root / image_name
             if target.exists():
                 continue
@@ -164,7 +175,11 @@ def migrate_legacy_jsonl_and_images(storage_root: Path, storage_names: list[str]
             else:
                 shutil.move(str(legacy_image), target)
                 moved_images[legacy_image] = target
-    marker.write_text("JSONL and referenced images migrated to per-source folders.\n", encoding="utf-8")
+        for legacy_sqlite_path in sorted(storage_root.glob(f"{storage_name}.*.sqlite3"), key=_shard_index):
+            target = sqlite_root / legacy_sqlite_path.name
+            if not target.exists():
+                shutil.move(str(legacy_sqlite_path), target)
+    marker.write_text("JSONL, referenced images, and SQLite files migrated to format folders.\n", encoding="utf-8")
 
 
 class JsonlStorage:
@@ -179,12 +194,17 @@ class JsonlStorage:
     def _shard_paths(self) -> list[Path]:
         """Gib alle Shards im JSONL-Ordner sortiert nach Index zurueck."""
 
-        source_root = self.storage_root / self.storage_name
+        source_root = self.storage_root / "JSONL" / self.storage_name
         if source_root.exists():
             direct_paths = sorted(source_root.glob(f"{self.storage_name}.*.jsonl"), key=_shard_index)
             if direct_paths:
                 return direct_paths
-            nested_root = source_root / "jsonl"
+        legacy_source_root = self.storage_root / self.storage_name
+        if legacy_source_root.exists():
+            direct_paths = sorted(legacy_source_root.glob(f"{self.storage_name}.*.jsonl"), key=_shard_index)
+            if direct_paths:
+                return direct_paths
+            nested_root = legacy_source_root / "jsonl"
             if nested_root.exists():
                 return sorted(nested_root.glob(f"{self.storage_name}.*.jsonl"), key=_shard_index)
         return sorted(self.storage_root.glob(f"{self.storage_name}.*.jsonl"), key=_shard_index)
@@ -195,11 +215,11 @@ class JsonlStorage:
 
         shards = self._shard_paths()
         if not shards:
-            return self.storage_root / self.storage_name / f"{self.storage_name}.0.jsonl"
+            return self.storage_root / "JSONL" / self.storage_name / f"{self.storage_name}.0.jsonl"
 
         latest = shards[-1]
         if latest.stat().st_size >= SHARD_SIZE_LIMIT_BYTES:
-            return self.storage_root / self.storage_name / f"{self.storage_name}.{_shard_index(latest) + 1}.jsonl"
+            return self.storage_root / "JSONL" / self.storage_name / f"{self.storage_name}.{_shard_index(latest) + 1}.jsonl"
         return latest
 
     def known_source_ids(self) -> set[str]:
@@ -261,6 +281,9 @@ class SqliteStorage:
     def _shard_paths(self) -> list[Path]:
         """Gib alle existierenden Shard-Dateien sortiert nach Index zurueck."""
 
+        sqlite_root = self.storage_root / "SQLITE"
+        if sqlite_root.exists():
+            return sorted(sqlite_root.glob(f"{self.storage_name}.*.sqlite3"), key=_shard_index)
         if not self.storage_root.exists():
             return []
         return sorted(self.storage_root.glob(f"{self.storage_name}.*.sqlite3"), key=_shard_index)
@@ -271,11 +294,11 @@ class SqliteStorage:
 
         shards = self._shard_paths()
         if not shards:
-            return self.storage_root / f"{self.storage_name}.0.sqlite3"
+            return self.storage_root / "SQLITE" / f"{self.storage_name}.0.sqlite3"
 
         latest = shards[-1]
         if latest.stat().st_size >= SHARD_SIZE_LIMIT_BYTES:
-            return self.storage_root / f"{self.storage_name}.{_shard_index(latest) + 1}.sqlite3"
+            return self.storage_root / "SQLITE" / f"{self.storage_name}.{_shard_index(latest) + 1}.sqlite3"
         return latest
 
     def _existing_tables(self, connection: sqlite3.Connection) -> set[str]:

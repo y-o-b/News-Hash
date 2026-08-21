@@ -56,8 +56,8 @@ def test_ingest_source_writes_jsonl_and_sqlite(tmp_path, monkeypatch) -> None:
     assert result.total_sqlite == 1
     assert len(result.latest_hash_jsonl) == 64
     assert len(result.latest_hash_sqlite) == 64
-    assert result.jsonl_path == tmp_path / "example" / "example.0.jsonl"
-    assert result.sqlite_path == tmp_path / "example.0.sqlite3"
+    assert result.jsonl_path == tmp_path / "JSONL" / "example" / "example.0.jsonl"
+    assert result.sqlite_path == tmp_path / "SQLITE" / "example.0.sqlite3"
 
     line = result.jsonl_path.read_text(encoding="utf-8").strip()
     record = json.loads(line)

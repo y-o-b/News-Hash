@@ -79,7 +79,7 @@ def ingest_source(source: SourceConfig, settings_manager: SettingsManager) -> In
         ]
         feed["items"] = unknown_items[:1]
     retrieved_at = codec.utc_now()
-    image_root = storage_root / source.storage_name / "images"
+    image_root = storage_root / "JSONL" / source.storage_name / "images"
 
     jsonl_records: list[dict] = []
     sqlite_records: list[dict] = []

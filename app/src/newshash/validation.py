@@ -187,8 +187,8 @@ def _last_hash(path: Path, storage_format: str) -> str | None:
 
 
 def _find_shard_for_hash(storage_root: Path, storage_name: str, storage_format: str, wanted_hash: str) -> int | None:
-    suffix = "jsonl" if storage_format == "jsonl" else "sqlite3"
-    paths = sorted(storage_root.glob(f"{storage_name}.*.{suffix}"), key=_shard_index)
+    storage = JsonlStorage(storage_root, storage_name) if storage_format == "jsonl" else SqliteStorage(storage_root, storage_name)
+    paths = storage._shard_paths()
     for path in paths:
         try:
             if _last_hash(path, storage_format) == wanted_hash:
@@ -291,7 +291,8 @@ def validate_manifest(manifest_path: Path, storage_root: Path, storage_name: str
         return (f"manifest={manifest_path}: {type(error).__name__}: {error}",)
 
     for storage_format, shard_number, expected_hash in (("jsonl", jsonl_shard, jsonl_hash), ("sqlite", sqlite_shard, sqlite_hash)):
-        paths = sorted(storage_root.glob(f"{actual_storage_name}.*.{storage_format if storage_format == 'jsonl' else 'sqlite3'}"), key=_shard_index)
+        storage = JsonlStorage(storage_root, actual_storage_name) if storage_format == "jsonl" else SqliteStorage(storage_root, actual_storage_name)
+        paths = storage._shard_paths()
         target = next((path for path in paths if _shard_index(path) == shard_number), None)
         if target is None:
             errors.append(f"manifest={manifest_path}: {storage_format} shard={shard_number} not found")
