@@ -567,6 +567,16 @@ class SqliteStorage:
 
         return sum(path.stat().st_size for path in self._shard_paths())
 
+    def image_bytes(self, image_hash: str) -> bytes | None:
+        """Lese die Bilddaten anhand ihres Hashes aus den SQLite-Shards."""
+
+        for shard in self._shard_paths():
+            with self._connect(shard) as connection:
+                row = connection.execute("SELECT image_data FROM record_images WHERE image_hash = ?", (image_hash,)).fetchone()
+            if row is not None:
+                return bytes(row[0])
+        return None
+
     def get_record(self, source_id: str) -> dict[str, Any] | None:
         """Lese einen einzelnen Record anhand seiner stabilen source_id."""
 

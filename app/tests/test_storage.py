@@ -108,6 +108,8 @@ def test_sqlite_storage_appends_records_and_image_blobs(tmp_path) -> None:
     with sqlite3.connect(storage.path) as connection:
         row = connection.execute("SELECT image_data FROM record_images WHERE image_hash = ?", (image_hash,)).fetchone()
     assert row[0] == b"image-bytes"
+    assert storage.image_bytes(image_hash) == b"image-bytes"
+    assert storage.image_bytes("missing") is None
 
 
 def test_sqlite_storage_persists_codec_definition(tmp_path) -> None:

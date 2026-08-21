@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import html
-import mimetypes
 import shutil
 import threading
 from dataclasses import dataclass
@@ -162,9 +161,23 @@ def _data_size(value: int) -> str:
 
 
 def _media_url(storage_name: str, relative_path: str) -> str:
-    """Erzeuge eine quellenbezogene URL für ein gespeichertes Bild."""
+    """Erzeuge eine quellenbezogene URL für ein SQLite-Bild-BLOB."""
 
     return f"/media/{quote(storage_name, safe='')}/{quote(relative_path, safe='/')}"
+
+
+def _image_content_type(image_data: bytes) -> str:
+    """Erkenne den MIME-Typ eines gespeicherten Bild-BLOBs anhand seiner Signatur."""
+
+    if image_data.startswith(b"\x89PNG"):
+        return "image/png"
+    if image_data.startswith(b"\xff\xd8"):
+        return "image/jpeg"
+    if image_data.startswith(b"GIF8"):
+        return "image/gif"
+    if image_data.startswith(b"RIFF") and image_data[8:12] == b"WEBP":
+        return "image/webp"
+    return "application/octet-stream"
 
 
 def _query(params: dict[str, Any]) -> str:
@@ -334,9 +347,9 @@ def render_detail(
     """Erzeuge die Detailansicht eines gespeicherten Records."""
 
     images = "".join(
-        f'<a href="{_media_url(storage_name, str(metadata.get("path", "")))}" target="_blank" rel="noreferrer">'
-        f'<img src="{_media_url(storage_name, str(metadata.get("path", "")))}" alt="Bild zur Meldung"></a>'
-        for metadata in record.get("images", {}).values()
+        f'<a href="{_media_url(storage_name, image_hash)}" target="_blank" rel="noreferrer">'
+        f'<img src="{_media_url(storage_name, image_hash)}" alt="Bild zur Meldung"></a>'
+        for image_hash in record.get("images", {})
     )
     content_section = f'<article class="content">{record["content"]}</article>' if record.get("content") else ""
     previous_link = (
@@ -865,12 +878,11 @@ def run_web_server(
                 if not any(source.storage_name == storage_name for source in config.settings.sources):
                     self.send_error(HTTPStatus.NOT_FOUND)
                     return
-                root = (settings_manager.storage_root() / "JSONL" / storage_name).resolve()
-                media_path = (root / relative_path).resolve()
-                if not media_path.is_relative_to(root) or not media_path.is_file():
+                image_data = SqliteStorage(settings_manager.storage_root(), storage_name).image_bytes(relative_path)
+                if image_data is None:
                     self.send_error(HTTPStatus.NOT_FOUND)
                     return
-                self._send_body(media_path.read_bytes(), mimetypes.guess_type(media_path.name)[0] or "application/octet-stream")
+                self._send_body(image_data, _image_content_type(image_data))
                 return
             if parsed_path.path not in {"/", "/index.html"}:
                 self.send_error(HTTPStatus.NOT_FOUND)

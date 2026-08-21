@@ -10,7 +10,7 @@ Der Validator soll prüfen, ob jeder referenzierte Bild-Hash zu einem vorhandene
 
 - SHA-256-Prüfung jedes BLOBs gegen seinen Schlüssel in `record_images`
 - Erkennung fehlender oder nicht referenzierter BLOBs
-- Optionaler Abgleich zwischen SQLite-BLOBs und Dateien unter `data/images/`
+- Optionaler Abgleich zwischen SQLite-BLOBs und Dateien unter `data/JSONL/<storage_name>/images/`
 
 ## Offene Fragen
 

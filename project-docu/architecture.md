@@ -20,7 +20,7 @@
 - Erfolgreich erzeugte Anchor-Dateien werden mit `GITHUB_TOKEN` und `GITHUB_REPOSITORY` aus `data/credentials.env` synchronisiert.
 - Bei der Manifestbildung werden SQLite-Shards nach `data/sqlite-backups/` mit gleichbleibenden Dateinamen überschrieben und Manifest sowie `.ots`-Proof zusätzlich in `anchor_artifacts` der SQLite-Datei gespeichert.
 - `--daemon` startet zusätzlich den eingebauten HTTP-Webserver; Standard-Bind-Adresse ist `0.0.0.0:8000`.
-- Bilder aus Feed-Einträgen werden je Quelle unter `data/<storage_name>/images/` abgelegt und für SQLite zusätzlich als BLOB gespeichert.
+- Bilder aus Feed-Einträgen werden für SQLite als BLOB gespeichert. Die WebUI lädt Bilder ausschließlich aus `record_images` der SQLite-Shards.
 
 ## Laufmodi
 
