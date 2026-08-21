@@ -46,6 +46,7 @@ class SourceSummary:
     anchor_date: str = ""
     anchor_manifest_exists: bool = False
     anchor_proof_exists: bool = False
+    sqlite_size_bytes: int = 0
 
 
 def _timestamp(value: Any) -> datetime:
@@ -107,6 +108,7 @@ def collect_dashboard_data(
                 anchor_date=today.isoformat(),
                 anchor_manifest_exists=anchor.manifest_path(source, today).exists(),
                 anchor_proof_exists=anchor.proof_path(source, today).exists(),
+                sqlite_size_bytes=storage.size_bytes(),
             )
         )
         if selected_source in {source.name, source.storage_name} or selected_source is None:
@@ -138,6 +140,18 @@ def _text(value: Any, fallback: str = "-") -> str:
 
 def _number(value: int) -> str:
     return f"{value:,}".replace(",", ".")
+
+
+def _data_size(value: int) -> str:
+    """Formatiere eine Byte-Anzahl kompakt für die Quellenübersicht."""
+
+    size = float(value)
+    for unit in ("B", "KB", "MB", "GB", "TB"):
+        if size < 1024 or unit == "TB":
+            formatted = f"{size:.1f}".rstrip("0").rstrip(".").replace(".", ",")
+            return f"{formatted} {unit}"
+        size /= 1024
+    return "0 B"
 
 
 def _query(params: dict[str, Any]) -> str:
@@ -442,8 +456,9 @@ def render_dashboard(data: dict[str, Any]) -> str:
           <a class="source-count" href="?{_query({"source": source.storage_name, "page": 1, **theme_query})}">
             <strong>{_number(source.records)}</strong><span class="muted"> Meldungen</span>
           </a>
-          <div class="source-meta">{_number(source.images)} Bilder · {_number(source.errors)} Fehler<br>
-            zuletzt {_local_time(source.latest_retrieved_at)}<br>
+           <div class="source-meta">{_number(source.images)} Bilder · {_number(source.errors)} Fehler<br>
+             SQLite: {_data_size(source.sqlite_size_bytes)}<br>
+             zuletzt {_local_time(source.latest_retrieved_at)}<br>
             <span class="source-hash">Hash: {_text(source.latest_hash)}</span><br>
             <span class="anchor-status anchor-{source.anchor_status}" title="{_text(source.anchor_status)}">
               {_anchor_label(source.anchor_status)}

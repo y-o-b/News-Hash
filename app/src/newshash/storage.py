@@ -547,6 +547,11 @@ class SqliteStorage:
         with self._connect(shards[-1]) as connection:
             return connection.execute("SELECT COUNT(*) FROM records").fetchone()[0]
 
+    def size_bytes(self) -> int:
+        """Gib die Gesamtgröße aller SQLite-Shards in Bytes zurück."""
+
+        return sum(path.stat().st_size for path in self._shard_paths())
+
     def get_record(self, source_id: str) -> dict[str, Any] | None:
         """Lese einen einzelnen Record anhand seiner stabilen source_id."""
 

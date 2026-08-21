@@ -8,7 +8,7 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     page = render_dashboard(
         {
             "generated_at": "2026-08-10T20:00:00+00:00",
-            "sources": [SourceSummary("ZDFheute", "zdf", 157, 12, "2026-08-10T19:59:00+00:00", "hash", 2, "Timeout", True, "complete")],
+            "sources": [SourceSummary("ZDFheute", "zdf", 157, 12, "2026-08-10T19:59:00+00:00", "hash", 2, "Timeout", True, "complete", sqlite_size_bytes=1536)],
             "records": [
                 {
                     "source_name": "ZDFheute",
@@ -29,6 +29,7 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert 'href="/favicon.svg?v=1&amp;theme=lite"' in page
     assert "157" in page
     assert "12" in page
+    assert "SQLite: 1,5 KB" in page
     assert "2 Fehler" in page
     assert "Hash: hash" in page
     assert "Timeout" in page
