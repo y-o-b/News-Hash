@@ -32,6 +32,8 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert "2 Fehler" in page
     assert "Hash: hash" in page
     assert "Timeout" in page
+    assert "Fehler quittieren" in page
+    assert "/acknowledge-error" in page
     assert "anchor-complete" in page
     assert "Vollständig bestätigt" in page
     assert "Neue Meldung" in page

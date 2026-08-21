@@ -83,8 +83,8 @@ def collect_dashboard_data(
     summaries: list[SourceSummary] = []
     latest_records: list[dict[str, Any]] = []
     selected_records = 0
-    error_counts = settings_manager.source_error_counts()
-    error_messages = settings_manager.source_errors()
+    error_counts = settings_manager.unacknowledged_source_error_counts()
+    error_messages = settings_manager.unacknowledged_source_errors()
     anchor = OpenTimestampsAnchor(settings_manager.storage_root())
     anchor_statuses = settings_manager.anchor_statuses()
     today = datetime.now(UTC).date()
@@ -176,6 +176,23 @@ def _anchor_links(source: SourceSummary) -> str:
     if source.anchor_proof_exists:
         links.append(f'<a href="{_anchor_url(source.storage_name, source.anchor_date, "proof")}">.ots</a>')
     return f'<span class="anchor-files"> · {" · ".join(links)}</span>' if links else ""
+
+
+def _acknowledge_error_form(storage_name: str, theme_query: dict[str, Any]) -> str:
+    """Erzeuge die Aktion zum Quittieren der offenen Fehler einer Quelle."""
+
+    return (
+        f'<form method="post" action="/acknowledge-error?{_query({"source": storage_name, **theme_query})}">'
+        '<button class="acknowledge-button" type="submit">Fehler quittieren</button></form>'
+    )
+
+
+def _source_error_markup(source: SourceSummary, theme_query: dict[str, Any]) -> str:
+    """Erzeuge Fehlermeldung und Quittierungsaktion für eine Quelle."""
+
+    if not source.last_error:
+        return ""
+    return f'<div class="source-error">{_text(source.last_error)}</div>{_acknowledge_error_form(source.storage_name, theme_query)}'
 
 
 def _detail_url(record: dict[str, Any]) -> str:
@@ -429,7 +446,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
             <span class="anchor-status anchor-{source.anchor_status}" title="{_text(source.anchor_status)}">
               {_anchor_label(source.anchor_status)}
             </span>{_anchor_links(source)}</div>
-          {f'<div class="source-error">{_text(source.last_error)}</div>' if source.last_error else ""}
+           {_source_error_markup(source, theme_query)}
           <form method="post" action="/fetch?{_query({"source": source.storage_name, **theme_query})}">
             <button class="fetch-button" type="submit">Jetzt abrufen</button>
           </form>
@@ -541,10 +558,13 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .anchor-files {{ display:inline-block; white-space:nowrap }}
     .source-count {{ display:inline-block; color:inherit; text-decoration:none }}
     .source-count:hover strong {{ color:var(--accent) }}
-    .fetch-button {{ margin-top:16px; border:3px solid var(--line); background:var(--blue); color:white; box-shadow:3px 3px 0 var(--line);
-      cursor:pointer; padding:6px 10px; font:900 12px "Comic Sans MS",sans-serif }}
-    .fetch-button:hover {{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line) }}
-    .runtime-log {{ background:var(--panel); border:3px solid var(--line); box-shadow:4px 4px 0 var(--line); padding:14px 18px; margin-top:38px }}
+     .fetch-button {{ margin-top:16px; border:3px solid var(--line); background:var(--blue); color:white; box-shadow:3px 3px 0 var(--line);
+       cursor:pointer; padding:6px 10px; font:900 12px "Comic Sans MS",sans-serif }}
+     .fetch-button:hover {{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line) }}
+     .acknowledge-button {{ margin-top:8px; border:2px solid var(--line); background:var(--panel); color:var(--line); cursor:pointer; padding:4px 8px;
+       font:700 11px "Comic Sans MS",sans-serif }}
+     .acknowledge-button:hover {{ background:var(--paper); transform:translate(1px,1px) }}
+     .runtime-log {{ background:var(--panel); border:3px solid var(--line); box-shadow:4px 4px 0 var(--line); padding:14px 18px; margin-top:38px }}
     body.theme-comic .runtime-log {{ box-shadow:5px 5px 0 #f7c936 }}
     .runtime-log h2 {{ margin-top:0 }} .runtime-log ul {{ list-style:none; padding:0; margin:0; max-height:260px; overflow:auto }}
     .runtime-log li {{ border-bottom:1px solid var(--line); color:var(--muted); font:12px/1.5 ui-monospace,SFMono-Regular,monospace; padding:6px 0 }}
@@ -817,6 +837,22 @@ def run_web_server(
                     ingest_source(source, settings_manager)
                 except Exception:
                     pass
+                theme = query.get("theme", ["lite"])[0]
+                if theme not in THEMES:
+                    theme = "lite"
+                location = "/?" + urlencode({"source": source.storage_name, "page": 1, "theme": theme})
+                self.send_response(HTTPStatus.SEE_OTHER)
+                self.send_header("Location", location)
+                self.end_headers()
+                return
+            if parsed_path.path == "/acknowledge-error":
+                query = parse_qs(parsed_path.query)
+                storage_name = query.get("source", [""])[0]
+                source = next((item for item in config.settings.sources if item.storage_name == storage_name), None)
+                if source is None:
+                    self.send_error(HTTPStatus.NOT_FOUND)
+                    return
+                settings_manager.acknowledge_source_errors(source.name)
                 theme = query.get("theme", ["lite"])[0]
                 if theme not in THEMES:
                     theme = "lite"

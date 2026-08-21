@@ -52,6 +52,7 @@ class SettingsManager:
         self._runtime_logs: list[str] = []
         self._anchor_statuses: dict[str, str] = {}
         self._runtime_lock = threading.Lock()
+        self._source_error_acknowledged: dict[str, int] = {}
 
     def load_settings(self, settings_path: Path) -> Settings:
         """Lade und validiere die Quellenkonfiguration aus TOML."""
@@ -122,20 +123,56 @@ class SettingsManager:
     def source_error_counts(self) -> dict[str, int]:
         """Gib die seit dem Start gezählten Fehler je Quelle zurueck."""
 
-        return {name: len(errors) for name, errors in self._source_errors.items()}
+        with self._runtime_lock:
+            return {name: len(errors) for name, errors in self._source_errors.items()}
 
     def source_errors(self) -> dict[str, list[str]]:
         """Gib die flüchtig gespeicherten Fehlermeldungen je Quelle zurueck."""
 
-        return {name: list(errors) for name, errors in self._source_errors.items()}
+        with self._runtime_lock:
+            return {name: list(errors) for name, errors in self._source_errors.items()}
+
+    def unacknowledged_source_error_counts(self) -> dict[str, int]:
+        """Gib die noch nicht quittierten Fehler je Quelle zurueck."""
+
+        with self._runtime_lock:
+            return {
+                name: len(errors) - self._source_error_acknowledged.get(name, 0)
+                for name, errors in self._source_errors.items()
+                if len(errors) > self._source_error_acknowledged.get(name, 0)
+            }
+
+    def unacknowledged_source_errors(self) -> dict[str, list[str]]:
+        """Gib die noch nicht quittierten Fehlermeldungen je Quelle zurueck."""
+
+        with self._runtime_lock:
+            return {
+                name: list(errors[self._source_error_acknowledged.get(name, 0) :])
+                for name, errors in self._source_errors.items()
+                if len(errors) > self._source_error_acknowledged.get(name, 0)
+            }
 
     def record_source_error(self, source_name: str, message: str = "") -> int:
         """Erhöhe den flüchtigen Fehlerzähler einer Quelle um eins."""
 
-        errors = self._source_errors.setdefault(source_name, [])
-        errors.append(message)
-        del errors[:-10]
-        return len(errors)
+        with self._runtime_lock:
+            errors = self._source_errors.setdefault(source_name, [])
+            acknowledged = min(self._source_error_acknowledged.get(source_name, 0), len(errors))
+            errors.append(message)
+            removed = max(0, len(errors) - 10)
+            if removed:
+                del errors[:removed]
+            self._source_error_acknowledged[source_name] = max(0, acknowledged - removed)
+            return len(errors)
+
+    def acknowledge_source_errors(self, source_name: str) -> bool:
+        """Quittiere alle bis jetzt aufgelaufenen Fehler einer Quelle."""
+
+        with self._runtime_lock:
+            if source_name not in self._source_errors:
+                return False
+            self._source_error_acknowledged[source_name] = len(self._source_errors[source_name])
+            return True
 
     def log_runtime(self, message: str) -> None:
         """Speichere ein flüchtiges Laufzeitereignis für die WebUI."""
