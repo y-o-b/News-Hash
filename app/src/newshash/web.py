@@ -574,7 +574,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .theme-picker {{ display:inline-block; margin-left:14px; color:var(--text); font-weight:900 }}
     .theme-picker select {{ margin-left:6px; border:3px solid var(--line); background:var(--panel); color:var(--text);
       padding:4px; font:inherit; font-weight:700 }}
-     .metrics {{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:40px }}
+     .metrics {{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:40px }}
     .metric {{ background:var(--panel); border:4px solid var(--line); box-shadow:6px 6px 0 var(--line); padding:22px; transform:rotate(-1deg) }}
     .metric:nth-child(2) {{ transform:rotate(1deg); background:#d9edff }} .metric:nth-child(3) {{ background:#ffe0dd }}
      .metric strong {{ display:block; font:900 40px/1 Impact,"Arial Black",sans-serif; margin-top:8px }}
