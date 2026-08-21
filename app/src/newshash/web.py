@@ -536,9 +536,9 @@ def render_dashboard(data: dict[str, Any]) -> str:
     heading = f"Meldungen · {_text(selected_source)}" if selected_source else "Neueste Meldungen"
     log_entries = "".join(_runtime_log_markup(entry) for entry in reversed(data.get("runtime_logs", [])[-30:]))
     storage_box = (
-        '<section class="storage-box"><div><span class="kicker">Speicherplatz data</span>'
+        '<div class="metric storage-box"><div><span class="kicker">Speicherplatz data</span>'
         f'<strong>{_data_size(data.get("storage_used_bytes", 0))}</strong><span class="muted"> verbraucht</span></div>'
-        f'<div><strong>{_data_size(data.get("storage_available_bytes", 0))}</strong><span class="muted"> verfügbar</span></div></section>'
+        f'<div><strong>{_data_size(data.get("storage_available_bytes", 0))}</strong><span class="muted"> verfügbar</span></div></div>'
     )
 
     return f"""<!doctype html>
@@ -573,10 +573,12 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .theme-picker {{ display:inline-block; margin-left:14px; color:var(--text); font-weight:900 }}
     .theme-picker select {{ margin-left:6px; border:3px solid var(--line); background:var(--panel); color:var(--text);
       padding:4px; font:inherit; font-weight:700 }}
-    .metrics {{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:40px }}
+     .metrics {{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:40px }}
     .metric {{ background:var(--panel); border:4px solid var(--line); box-shadow:6px 6px 0 var(--line); padding:22px; transform:rotate(-1deg) }}
     .metric:nth-child(2) {{ transform:rotate(1deg); background:#d9edff }} .metric:nth-child(3) {{ background:#ffe0dd }}
-    .metric strong {{ display:block; font:900 40px/1 Impact,"Arial Black",sans-serif; margin-top:8px }}
+     .metric strong {{ display:block; font:900 40px/1 Impact,"Arial Black",sans-serif; margin-top:8px }}
+     .storage-box {{ display:flex; flex-direction:column; justify-content:center; gap:10px }}
+     .storage-box strong {{ font-size:26px }}
     body.theme-lite .metric, body.theme-lite .metric:nth-child(2), body.theme-lite .metric:nth-child(3) {{ background:#d9edff }}
     body.theme-dark .metric, body.theme-dark .metric:nth-child(2), body.theme-dark .metric:nth-child(3) {{ background:var(--panel) }}
     section {{ margin-top:38px }} h2 {{ font:600 25px Georgia,serif; margin:0 0 14px }}
@@ -592,7 +594,8 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .source-card:nth-child(4n) {{ box-shadow:5px 5px 0 #35b87f }}
     body.theme-comic .metric:nth-child(1) {{ box-shadow:6px 6px 0 var(--blue) }}
     body.theme-comic .metric:nth-child(2) {{ box-shadow:6px 6px 0 var(--accent) }}
-    body.theme-comic .metric:nth-child(3) {{ box-shadow:6px 6px 0 #7b61ff }}
+     body.theme-comic .metric:nth-child(3) {{ box-shadow:6px 6px 0 #7b61ff }}
+     body.theme-comic .metric:nth-child(4) {{ box-shadow:6px 6px 0 #35b87f }}
     body.theme-comic h1 {{ background:var(--panel); border:4px solid var(--line); box-shadow:6px 6px 0 var(--accent);
       display:flex; padding:10px 16px; text-shadow:none }}
     body.theme-comic .latest li:nth-child(4n+1) {{ box-shadow:4px 4px 0 var(--blue) }}
@@ -689,8 +692,8 @@ def render_dashboard(data: dict[str, Any]) -> str:
     <div class="metric"><span class="kicker">Quellen</span><strong>{len(data["sources"])}</strong></div>
     <div class="metric"><span class="kicker">Meldungen</span><strong>{_number(data["total_records"])}</strong></div>
     <div class="metric"><span class="kicker">Bilder</span><strong>{_number(data["total_images"])}</strong></div>
+    {storage_box}
   </div>
-  {storage_box}
   <section><h2>Quellen</h2><div class="sources">{source_cards}</div></section>
   <section id="neueste-meldungen"><div class="section-heading"><h2>{heading}</h2>
     <a href="?{_query({"page": 1, **theme_query})}">Filter zurücksetzen</a></div>
