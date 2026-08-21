@@ -217,13 +217,13 @@ def render_metrics(config: AppConfig, settings_manager: SettingsManager) -> str:
         "# TYPE newshash_records_total gauge",
         "# HELP newshash_images_total Number of stored images per source.",
         "# TYPE newshash_images_total gauge",
-        "# HELP newshash_source_errors_total Number of failed source fetches or feed parses.",
+        "# HELP newshash_source_errors_total Number of unacknowledged source errors.",
         "# TYPE newshash_source_errors_total counter",
     ]
     total_records = 0
     total_images = 0
     total_errors = 0
-    error_counts = settings_manager.source_error_counts()
+    error_counts = settings_manager.unacknowledged_source_error_counts()
     for source in config.settings.sources:
         stats = SqliteStorage(settings_manager.storage_root(), source.storage_name).dashboard_stats()
         label = _prometheus_label(source.name)
@@ -242,7 +242,7 @@ def render_metrics(config: AppConfig, settings_manager: SettingsManager) -> str:
             "# HELP newshash_images_all_total Total number of stored images.",
             "# TYPE newshash_images_all_total gauge",
             f"newshash_images_all_total {total_images}",
-            "# HELP newshash_source_errors_all_total Total number of source errors.",
+            "# HELP newshash_source_errors_all_total Total number of unacknowledged source errors.",
             "# TYPE newshash_source_errors_all_total counter",
             f"newshash_source_errors_all_total {total_errors}",
         ]

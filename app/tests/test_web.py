@@ -135,6 +135,25 @@ def test_render_metrics_contains_source_and_total_values(tmp_path, monkeypatch) 
     assert 'newshash_source_errors_total{source="ZDF"} 0' in metrics
 
 
+def test_render_metrics_hides_acknowledged_source_errors(tmp_path, monkeypatch) -> None:
+    from newshash import web
+
+    config = AppConfig(tmp_path / "settings.toml", Settings((SourceConfig("ZDF", "feed", "zdf", 300),)))
+    monkeypatch.setattr(
+        web.SqliteStorage,
+        "dashboard_stats",
+        lambda self: {"records": 0, "images": 0, "latest_retrieved_at": "", "latest_hash": ""},
+    )
+    manager = SettingsManager(data_dir=tmp_path)
+    manager.record_source_error("ZDF", "Timeout")
+    manager.acknowledge_source_errors("ZDF")
+
+    metrics = render_metrics(config, manager)
+
+    assert 'newshash_source_errors_total{source="ZDF"} 0' in metrics
+    assert "newshash_source_errors_all_total 0" in metrics
+
+
 def test_render_help_contains_faq() -> None:
     page = render_help("lite")
 
