@@ -528,6 +528,11 @@ def render_dashboard(data: dict[str, Any]) -> str:
 
     heading = f"Meldungen · {_text(selected_source)}" if selected_source else "Neueste Meldungen"
     log_entries = "".join(_runtime_log_markup(entry) for entry in reversed(data.get("runtime_logs", [])[-30:]))
+    storage_box = (
+        '<section class="storage-box"><div><span class="kicker">Speicherplatz data</span>'
+        f'<strong>{_data_size(data.get("storage_used_bytes", 0))}</strong><span class="muted"> verbraucht</span></div>'
+        f'<div><strong>{_data_size(data.get("storage_available_bytes", 0))}</strong><span class="muted"> verfügbar</span></div></section>'
+    )
 
     return f"""<!doctype html>
 <html lang="de">
@@ -678,6 +683,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
     <div class="metric"><span class="kicker">Meldungen</span><strong>{_number(data["total_records"])}</strong></div>
     <div class="metric"><span class="kicker">Bilder</span><strong>{_number(data["total_images"])}</strong></div>
   </div>
+  {storage_box}
   <section><h2>Quellen</h2><div class="sources">{source_cards}</div></section>
   <section id="neueste-meldungen"><div class="section-heading"><h2>{heading}</h2>
     <a href="?{_query({"page": 1, **theme_query})}">Filter zurücksetzen</a></div>

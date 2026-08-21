@@ -20,6 +20,8 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
             ],
             "total_records": 157,
             "total_images": 12,
+            "storage_used_bytes": 1536,
+            "storage_available_bytes": 4096,
             "runtime_logs": ["2026-08-11T17:00:00Z source=ZDF action=stored"],
         }
     )
@@ -29,6 +31,8 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert 'href="/favicon.svg?v=1&amp;theme=lite"' in page
     assert "157" in page
     assert "12" in page
+    assert "Speicherplatz data" in page
+    assert "1,5 KB" in page
     assert "SQLite: 1,5 KB" in page
     assert "2 Fehler" in page
     assert "Hash: hash" in page
