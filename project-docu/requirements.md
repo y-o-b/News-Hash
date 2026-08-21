@@ -4,7 +4,6 @@
 
 - Konfigurierte JSON- und XML-Feeds werden regelmäßig gelesen und normalisiert.
 - Jede Nachricht wird append-only als Datensatz in JSONL und SQLite gespeichert.
-- JSONL-Shards und die zugehörigen Bilddateien werden je Quelle in eigenen Ordnern abgelegt; vorhandene Daten werden beim ersten Start einmalig migriert.
 - Bereits gespeicherte Datensätze dürfen nicht verändert oder gelöscht werden.
 - Jede Speicherform führt eine überprüfbare Hash-Kette mit `previous_hash` und `hash`.
 - Bekannte `source_id`s werden vor teuren Verarbeitungsschritten übersprungen.

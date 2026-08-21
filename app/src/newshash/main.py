@@ -14,7 +14,7 @@ from newshash.anchoring import OpenTimestampsAnchor
 from newshash.codec import GENESIS_HASH, get_codec
 from newshash.github_sync import GitHubAnchorPublisher
 from newshash.settings import AppConfig, SettingsManager, SourceConfig
-from newshash.storage import JsonlStorage, SqliteStorage, migrate_legacy_jsonl_and_images
+from newshash.storage import JsonlStorage, SqliteStorage
 from newshash.web import run_web_server
 
 
@@ -251,8 +251,6 @@ def main(argv: list[str] | None = None) -> None:
 
     settings_manager = SettingsManager()
     config = settings_manager.resolve_config(args.settings)
-    if isinstance(config, AppConfig):
-        migrate_legacy_jsonl_and_images(settings_manager.storage_root(), [source.storage_name for source in config.settings.sources])
 
     if args.daemon:
         stop_event = threading.Event()

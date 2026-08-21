@@ -122,66 +122,6 @@ def _shard_index(path: Path) -> int:
     return int(match.group(1)) if match else 0
 
 
-def migrate_legacy_jsonl_and_images(storage_root: Path, storage_names: list[str]) -> None:
-    """Verschiebe alte JSONL-, Bild- und SQLite-Dateien einmalig in die Formatordner."""
-
-    marker = storage_root / ".storage-migration-v3"
-    if marker.exists():
-        return
-    jsonl_root = storage_root / "JSONL"
-    sqlite_root = storage_root / "SQLITE"
-    jsonl_root.mkdir(parents=True, exist_ok=True)
-    sqlite_root.mkdir(parents=True, exist_ok=True)
-    moved_images: dict[Path, Path] = {}
-    for storage_name in storage_names:
-        source_root = storage_root / storage_name
-        target_source_root = jsonl_root / storage_name
-        legacy_jsonl_paths = sorted(storage_root.glob(f"{storage_name}.*.jsonl"), key=_shard_index)
-        if not legacy_jsonl_paths:
-            legacy_jsonl_paths = sorted(source_root.glob(f"{storage_name}.*.jsonl"), key=_shard_index)
-        if not legacy_jsonl_paths:
-            legacy_jsonl_paths = sorted((source_root / "jsonl").glob(f"{storage_name}.*.jsonl"), key=_shard_index)
-        if not legacy_jsonl_paths and target_source_root.exists():
-            legacy_jsonl_paths = sorted(target_source_root.glob(f"{storage_name}.*.jsonl"), key=_shard_index)
-        image_root = target_source_root / "images"
-        target_source_root.mkdir(parents=True, exist_ok=True)
-        image_root.mkdir(parents=True, exist_ok=True)
-        referenced_images: set[str] = set()
-        for legacy_path in legacy_jsonl_paths:
-            for line in legacy_path.read_text(encoding="utf-8").splitlines():
-                if not line.strip():
-                    continue
-                record = json.loads(line)
-                for metadata in record.get("images", {}).values():
-                    if isinstance(metadata, dict):
-                        relative_path = str(metadata.get("path", ""))
-                        if relative_path.startswith("images/"):
-                            referenced_images.add(Path(relative_path).name)
-            target = target_source_root / legacy_path.name
-            if legacy_path != target and not target.exists():
-                shutil.move(str(legacy_path), target)
-        legacy_image_root = source_root / "images"
-        for image_name in referenced_images:
-            legacy_image = legacy_image_root / image_name
-            if not legacy_image.is_file():
-                legacy_image = storage_root / "images" / image_name
-            target = image_root / image_name
-            if target.exists():
-                continue
-            if legacy_image in moved_images:
-                shutil.copy2(moved_images[legacy_image], target)
-            elif not legacy_image.is_file():
-                continue
-            else:
-                shutil.move(str(legacy_image), target)
-                moved_images[legacy_image] = target
-        for legacy_sqlite_path in sorted(storage_root.glob(f"{storage_name}.*.sqlite3"), key=_shard_index):
-            target = sqlite_root / legacy_sqlite_path.name
-            if not target.exists():
-                shutil.move(str(legacy_sqlite_path), target)
-    marker.write_text("JSONL, referenced images, and SQLite files migrated to format folders.\n", encoding="utf-8")
-
-
 class JsonlStorage:
     """Speichert Records als JSON-Lines, aufgeteilt in nummerierte Shards ab 1 GB."""
 

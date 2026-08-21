@@ -11,7 +11,6 @@ from newshash.storage import (
     SHARD_SIZE_LIMIT_BYTES,
     JsonlStorage,
     SqliteStorage,
-    migrate_legacy_jsonl_and_images,
 )
 
 
@@ -52,22 +51,6 @@ def test_jsonl_storage_default_state_without_existing_shard(tmp_path) -> None:
     assert storage.count() == 0
     assert storage.known_source_ids() == set()
     assert storage.latest_hash(GENESIS_HASH) == GENESIS_HASH
-
-
-def test_migrate_legacy_jsonl_and_referenced_images_to_source_folder(tmp_path) -> None:
-    legacy_jsonl = tmp_path / "example.0.jsonl"
-    legacy_jsonl.write_text(json.dumps({"images": {"hash": {"path": "images/example.png"}}}) + "\n", encoding="utf-8")
-    legacy_image = tmp_path / "images" / "example.png"
-    legacy_image.parent.mkdir()
-    legacy_image.write_bytes(b"image")
-
-    migrate_legacy_jsonl_and_images(tmp_path, ["example"])
-
-    assert not legacy_jsonl.exists()
-    assert not legacy_image.exists()
-    assert (tmp_path / "JSONL" / "example" / "example.0.jsonl").exists()
-    assert (tmp_path / "JSONL" / "example" / "images" / "example.png").read_bytes() == b"image"
-    migrate_legacy_jsonl_and_images(tmp_path, ["example"])
 
 
 def test_jsonl_storage_preserves_unicode_line_separator_inside_json(tmp_path) -> None:

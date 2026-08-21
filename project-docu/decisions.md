@@ -18,10 +18,6 @@
   Entscheidung: Bild-BLOBs werden global pro SQLite-Shard über `image_hash` dedupliziert; die Record-Daten referenzieren sie über ihr `images`-Feld.
   Begründung: Derselbe Bildinhalt wird unabhängig von der Quelle nur einmal gespeichert.
 
-- Datum: 2026-08-21
-  Entscheidung: JSONL-Shards und zugehörige Bilddateien werden je Quelle unter `data/JSONL/<storage_name>/` beziehungsweise `data/JSONL/<storage_name>/images/` abgelegt. SQLite-Shards liegen unter `data/SQLITE/`. Beim ersten Start werden vorhandene Dateien einmalig in diese Struktur verschoben.
-  Begründung: Die Quelldaten bleiben übersichtlich zusammengefasst; die Migration erfolgt nicht destruktiv und die logischen Bildpfade in Records bleiben für die Hashprüfung unverändert.
-
 - Datum: 2026-08-05 bis 2026-08-19
   Entscheidung: SQLite-Shards werden bei Schemaabweichungen nicht destruktiv migriert. Die alte Tabelle wird nach `<tabelle>_legacy_<zeitstempel>` umbenannt und durch das aktuelle Schema ersetzt.
   Begründung: Historische Daten dürfen nicht verloren gehen; das Vorgehen ist nachvollziehbar und vermeidet fehleranfällige Migrationen im Prototyp.
