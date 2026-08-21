@@ -88,6 +88,8 @@ def test_render_dashboard_supports_source_filter_and_pagination() -> None:
     assert "Filter zurücksetzen" in page
     assert "Meldungen · zdf" in page
     assert "Seite 2 von 3" in page
+    assert 'id="neueste-meldungen"' in page
+    assert "#neueste-meldungen" in page
     assert "&lt;&lt; Erste" in page
     assert "Weiter &gt;" in page
     assert "Letzte &gt;&gt;" in page

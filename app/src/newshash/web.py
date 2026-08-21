@@ -469,19 +469,20 @@ def render_dashboard(data: dict[str, Any]) -> str:
         or '<li class="empty">Noch keine Meldungen importiert.</li>'
     )
     pagination = ""
+    pagination_anchor = "#neueste-meldungen"
     if total_pages > 1:
         pagination = '<nav class="pagination" aria-label="Seitennavigation">'
         if page > 1:
             first_query = {"source": selected_source, "page": 1, **theme_query} if selected_source else {"page": 1, **theme_query}
-            pagination += f'<a href="?{_query(first_query)}">&lt;&lt; Erste</a>'
+            pagination += f'<a href="?{_query(first_query)}{pagination_anchor}">&lt;&lt; Erste</a>'
             previous_query = {"source": selected_source, "page": page - 1, **theme_query} if selected_source else {"page": page - 1, **theme_query}
-            pagination += f'<a href="?{_query(previous_query)}">&lt; Zurück</a>'
+            pagination += f'<a href="?{_query(previous_query)}{pagination_anchor}">&lt; Zurück</a>'
         pagination += f"<span>Seite {page} von {total_pages}</span>"
         if page < total_pages:
             next_query = {"source": selected_source, "page": page + 1, **theme_query} if selected_source else {"page": page + 1, **theme_query}
-            pagination += f'<a href="?{_query(next_query)}">Weiter &gt;</a>'
+            pagination += f'<a href="?{_query(next_query)}{pagination_anchor}">Weiter &gt;</a>'
             last_query = {"source": selected_source, "page": total_pages, **theme_query} if selected_source else {"page": total_pages, **theme_query}
-            pagination += f'<a href="?{_query(last_query)}">Letzte &gt;&gt;</a>'
+            pagination += f'<a href="?{_query(last_query)}{pagination_anchor}">Letzte &gt;&gt;</a>'
         pagination += "</nav>"
 
     heading = f"Meldungen · {_text(selected_source)}" if selected_source else "Neueste Meldungen"
@@ -635,7 +636,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
     <div class="metric"><span class="kicker">Bilder</span><strong>{_number(data["total_images"])}</strong></div>
   </div>
   <section><h2>Quellen</h2><div class="sources">{source_cards}</div></section>
-  <section><div class="section-heading"><h2>{heading}</h2>
+  <section id="neueste-meldungen"><div class="section-heading"><h2>{heading}</h2>
     <a href="?{_query({"page": 1, **theme_query})}">Filter zurücksetzen</a></div>
     <ul class="latest">{record_rows}</ul>{pagination}</section>
   <section class="runtime-log"><h2>Laufzeit-Log</h2><ul>{log_entries or "<li>Noch keine Laufzeitereignisse.</li>"}</ul></section>
