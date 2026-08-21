@@ -19,6 +19,7 @@ from newshash.settings import AppConfig, SettingsManager
 from newshash.storage import SqliteStorage
 
 THEMES = {"comic", "dark", "lite", "paper", "news"}
+PAGE_SIZES = (10, 25, 50, 100)
 LOGO_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="News-Hash">
 <rect width="128" height="128" rx="24" fill="#4b8ed8"/>
 <path d="M25 91 43 29h18L43 91H25Zm42 0 18-62h18L85 91H67Z" fill="#171717"/>
@@ -433,6 +434,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
     total_pages = data.get("total_pages", 1)
     theme = data.get("theme", "lite")
     theme_query = {"theme": theme}
+    page_size_query = {"page_size": data.get("page_size", 10)}
     source_cards = "".join(
         f"""
         <div class="source-card" data-source="{_text(source.name)}">
@@ -473,17 +475,35 @@ def render_dashboard(data: dict[str, Any]) -> str:
     if total_pages > 1:
         pagination = '<nav class="pagination" aria-label="Seitennavigation">'
         if page > 1:
-            first_query = {"source": selected_source, "page": 1, **theme_query} if selected_source else {"page": 1, **theme_query}
+            first_query = (
+                {"source": selected_source, "page": 1, **page_size_query, **theme_query} if selected_source else {"page": 1, **page_size_query, **theme_query}
+            )
             pagination += f'<a href="?{_query(first_query)}{pagination_anchor}">&lt;&lt; Erste</a>'
-            previous_query = {"source": selected_source, "page": page - 1, **theme_query} if selected_source else {"page": page - 1, **theme_query}
+            previous_query = (
+                {"source": selected_source, "page": page - 1, **page_size_query, **theme_query}
+                if selected_source
+                else {"page": page - 1, **page_size_query, **theme_query}
+            )
             pagination += f'<a href="?{_query(previous_query)}{pagination_anchor}">&lt; Zurück</a>'
         pagination += f"<span>Seite {page} von {total_pages}</span>"
         if page < total_pages:
-            next_query = {"source": selected_source, "page": page + 1, **theme_query} if selected_source else {"page": page + 1, **theme_query}
+            next_query = (
+                {"source": selected_source, "page": page + 1, **page_size_query, **theme_query}
+                if selected_source
+                else {"page": page + 1, **page_size_query, **theme_query}
+            )
             pagination += f'<a href="?{_query(next_query)}{pagination_anchor}">Weiter &gt;</a>'
-            last_query = {"source": selected_source, "page": total_pages, **theme_query} if selected_source else {"page": total_pages, **theme_query}
+            last_query = (
+                {"source": selected_source, "page": total_pages, **page_size_query, **theme_query}
+                if selected_source
+                else {"page": total_pages, **page_size_query, **theme_query}
+            )
             pagination += f'<a href="?{_query(last_query)}{pagination_anchor}">Letzte &gt;&gt;</a>'
-        pagination += "</nav>"
+        pagination += (
+            '<label class="page-size">Meldungen: <select onchange="changePageSize(this.value)" aria-label="Meldungen pro Seite">'
+            + "".join(f'<option value="{size}"{" selected" if size == data.get("page_size", 10) else ""}>{size}</option>' for size in PAGE_SIZES)
+            + "</select></label></nav>"
+        )
 
     heading = f"Meldungen · {_text(selected_source)}" if selected_source else "Neueste Meldungen"
     log_entries = "".join(_runtime_log_markup(entry) for entry in reversed(data.get("runtime_logs", [])[-30:]))
@@ -576,7 +596,9 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .latest a:hover {{ color:var(--accent) }} time {{ color:var(--muted); white-space:nowrap; font-size:12px }}
     .record-hash {{ color:var(--muted); font:11px/1.3 ui-monospace,SFMono-Regular,monospace; margin-top:6px; overflow-wrap:anywhere }}
     .empty {{ color:var(--muted) }}
-    .pagination {{ display:flex; justify-content:center; align-items:center; gap:20px; margin-top:20px; color:var(--muted) }}
+     .pagination {{ display:flex; justify-content:center; align-items:center; gap:20px; margin-top:20px; color:var(--muted); flex-wrap:wrap }}
+     .page-size {{ display:inline-flex; align-items:center; gap:6px }}
+     .page-size select {{ border:2px solid var(--line); padding:4px; background:var(--panel); color:var(--text) }}
     .shutdown {{ margin-top:42px; border:3px solid var(--line); background:var(--accent); color:white; box-shadow:3px 3px 0 var(--line);
       cursor:pointer; padding:6px 10px; font:900 12px "Comic Sans MS",sans-serif }}
     .shutdown:hover {{ transform:translate(2px,2px); box-shadow:2px 2px 0 var(--line) }}
@@ -711,11 +733,18 @@ def render_dashboard(data: dict[str, Any]) -> str:
         }}).format(date);
       }}
     }});
-    async function shutdownDaemon() {{
+     async function shutdownDaemon() {{
       if (!confirm("Daemon wirklich beenden?")) return;
       await fetch("/shutdown", {{ method: "POST" }});
       document.querySelector(".shutdown").textContent = "Daemon wird beendet ...";
-    }}
+     }}
+     function changePageSize(value) {{
+       const params = new URLSearchParams(location.search);
+       params.set("page", "1");
+       params.set("page_size", value);
+       location.hash = "neueste-meldungen";
+       location.search = params;
+     }}
   </script>
 </main></body></html>"""
 
@@ -809,7 +838,13 @@ def run_web_server(
                 page = int(query.get("page", ["1"])[0])
             except ValueError:
                 page = 1
-            dashboard_data = collect_dashboard_data(config, settings_manager, selected_source, page)
+            try:
+                page_size = int(query.get("page_size", ["10"])[0])
+            except ValueError:
+                page_size = 10
+            if page_size not in PAGE_SIZES:
+                page_size = 10
+            dashboard_data = collect_dashboard_data(config, settings_manager, selected_source, page, page_size)
             dashboard_data["theme"] = theme
             body = render_dashboard(dashboard_data).encode("utf-8")
             self._send_body(body, "text/html; charset=utf-8")
