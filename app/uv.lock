@@ -164,7 +164,7 @@ wheels = [
 
 [[package]]
 name = "newshash"
-version = "0.1.69"
+version = "0.1.70"
 source = { editable = "." }
 dependencies = [
     { name = "markdown" },

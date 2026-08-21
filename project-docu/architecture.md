@@ -8,7 +8,7 @@
 - Interne Blockchain bedeutet eine append-only Kette von Datensätzen.
 - Jeder Datensatz referenziert den vorherigen, um Manipulationen erkennbar zu machen.
 - Es wird zunächst lokal und ohne externe Knoten gearbeitet.
-- Speicherung erfolgt gleichzeitig als JSONL und SQLite unter `data/`. JSONL liegt je Quelle unter `data/<storage_name>/jsonl/`, zugehörige Dateien unter `data/<storage_name>/images/`; SQLite-Shards bleiben unter `data/`.
+- Speicherung erfolgt gleichzeitig als JSONL und SQLite unter `data/`. JSONL liegt je Quelle unter `data/<storage_name>/`, zugehörige Dateien unter `data/<storage_name>/images/`; SQLite-Shards bleiben unter `data/`.
 - Die Quellen werden in `data/settings.toml` konfiguriert.
 - Ein optionaler Top-Level-Wert `heartbeat_url` in `data/settings.toml` steuert den Daemon-Heartbeat; ohne Wert wird kein Ping gesendet.
 - Pro Quelle kann ein `codec_name` gewählt werden.

@@ -40,7 +40,7 @@ def test_jsonl_storage_appends_and_reads_back(tmp_path) -> None:
 
     storage.append_records([record])
 
-    assert storage.path == tmp_path / "example" / "jsonl" / "example.0.jsonl"
+    assert storage.path == tmp_path / "example" / "example.0.jsonl"
     assert storage.count() == 1
     assert storage.known_source_ids() == {"example-1"}
     assert storage.latest_hash(GENESIS_HASH) == record["hash"]
@@ -65,7 +65,7 @@ def test_migrate_legacy_jsonl_and_referenced_images_to_source_folder(tmp_path) -
 
     assert not legacy_jsonl.exists()
     assert not legacy_image.exists()
-    assert (tmp_path / "example" / "jsonl" / "example.0.jsonl").exists()
+    assert (tmp_path / "example" / "example.0.jsonl").exists()
     assert (tmp_path / "example" / "images" / "example.png").read_bytes() == b"image"
     migrate_legacy_jsonl_and_images(tmp_path, ["example"])
 
@@ -89,8 +89,8 @@ def test_jsonl_storage_rolls_over_shard_when_size_limit_reached(tmp_path, monkey
     storage.append_records([make_record("example-1", GENESIS_HASH)])
     storage.append_records([make_record("example-2", "hash-example-1".ljust(64, "0"))])
 
-    assert (tmp_path / "example" / "jsonl" / "example.0.jsonl").exists()
-    assert (tmp_path / "example" / "jsonl" / "example.1.jsonl").exists()
+    assert (tmp_path / "example" / "example.0.jsonl").exists()
+    assert (tmp_path / "example" / "example.1.jsonl").exists()
     assert storage.count() == 2
 
 
@@ -101,8 +101,8 @@ def test_jsonl_storage_known_source_ids_only_considers_last_shard(tmp_path, monk
     storage.append_records([make_record("example-1", GENESIS_HASH)])
     storage.append_records([make_record("example-2", "hash-example-1".ljust(64, "0"))])
 
-    assert (tmp_path / "example" / "jsonl" / "example.0.jsonl").exists()
-    assert (tmp_path / "example" / "jsonl" / "example.1.jsonl").exists()
+    assert (tmp_path / "example" / "example.0.jsonl").exists()
+    assert (tmp_path / "example" / "example.1.jsonl").exists()
     assert storage.known_source_ids() == {"example-2"}
 
 

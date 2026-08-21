@@ -19,7 +19,7 @@
   Begründung: Derselbe Bildinhalt wird unabhängig von der Quelle nur einmal gespeichert.
 
 - Datum: 2026-08-21
-  Entscheidung: JSONL-Shards und zugehörige Bilddateien werden je Quelle unter `data/<storage_name>/jsonl/` beziehungsweise `data/<storage_name>/images/` abgelegt. Beim ersten Start werden vorhandene Dateien einmalig in diese Struktur verschoben.
+  Entscheidung: JSONL-Shards und zugehörige Bilddateien werden je Quelle unter `data/<storage_name>/` beziehungsweise `data/<storage_name>/images/` abgelegt. Beim ersten Start werden vorhandene Dateien einmalig in diese Struktur verschoben.
   Begründung: Die Quelldaten bleiben übersichtlich zusammengefasst; die Migration erfolgt nicht destruktiv und die logischen Bildpfade in Records bleiben für die Hashprüfung unverändert.
 
 - Datum: 2026-08-05 bis 2026-08-19

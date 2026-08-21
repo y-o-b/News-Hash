@@ -125,7 +125,7 @@ def _shard_index(path: Path) -> int:
 def migrate_legacy_jsonl_and_images(storage_root: Path, storage_names: list[str]) -> None:
     """Verschiebe alte JSONL-Dateien und referenzierte Bilder einmalig in Quellenordner."""
 
-    marker = storage_root / ".storage-migration-v1"
+    marker = storage_root / ".storage-migration-v2"
     if marker.exists():
         return
     legacy_image_root = storage_root / "images"
@@ -133,11 +133,10 @@ def migrate_legacy_jsonl_and_images(storage_root: Path, storage_names: list[str]
     for storage_name in storage_names:
         legacy_jsonl_paths = sorted(storage_root.glob(f"{storage_name}.*.jsonl"), key=_shard_index)
         if not legacy_jsonl_paths:
-            continue
+            legacy_jsonl_paths = sorted((storage_root / storage_name / "jsonl").glob(f"{storage_name}.*.jsonl"), key=_shard_index)
         source_root = storage_root / storage_name
-        jsonl_root = source_root / "jsonl"
         image_root = source_root / "images"
-        jsonl_root.mkdir(parents=True, exist_ok=True)
+        source_root.mkdir(parents=True, exist_ok=True)
         image_root.mkdir(parents=True, exist_ok=True)
         referenced_images: set[str] = set()
         for legacy_path in legacy_jsonl_paths:
@@ -150,8 +149,8 @@ def migrate_legacy_jsonl_and_images(storage_root: Path, storage_names: list[str]
                         relative_path = str(metadata.get("path", ""))
                         if relative_path.startswith("images/"):
                             referenced_images.add(Path(relative_path).name)
-            target = jsonl_root / legacy_path.name
-            if not target.exists():
+            target = source_root / legacy_path.name
+            if legacy_path != target and not target.exists():
                 shutil.move(str(legacy_path), target)
         for image_name in referenced_images:
             legacy_image = legacy_image_root / image_name
@@ -180,9 +179,14 @@ class JsonlStorage:
     def _shard_paths(self) -> list[Path]:
         """Gib alle Shards im JSONL-Ordner sortiert nach Index zurueck."""
 
-        jsonl_root = self.storage_root / self.storage_name / "jsonl"
-        if jsonl_root.exists():
-            return sorted(jsonl_root.glob(f"{self.storage_name}.*.jsonl"), key=_shard_index)
+        source_root = self.storage_root / self.storage_name
+        if source_root.exists():
+            direct_paths = sorted(source_root.glob(f"{self.storage_name}.*.jsonl"), key=_shard_index)
+            if direct_paths:
+                return direct_paths
+            nested_root = source_root / "jsonl"
+            if nested_root.exists():
+                return sorted(nested_root.glob(f"{self.storage_name}.*.jsonl"), key=_shard_index)
         return sorted(self.storage_root.glob(f"{self.storage_name}.*.jsonl"), key=_shard_index)
 
     @property
@@ -191,11 +195,11 @@ class JsonlStorage:
 
         shards = self._shard_paths()
         if not shards:
-            return self.storage_root / self.storage_name / "jsonl" / f"{self.storage_name}.0.jsonl"
+            return self.storage_root / self.storage_name / f"{self.storage_name}.0.jsonl"
 
         latest = shards[-1]
         if latest.stat().st_size >= SHARD_SIZE_LIMIT_BYTES:
-            return self.storage_root / self.storage_name / "jsonl" / f"{self.storage_name}.{_shard_index(latest) + 1}.jsonl"
+            return self.storage_root / self.storage_name / f"{self.storage_name}.{_shard_index(latest) + 1}.jsonl"
         return latest
 
     def known_source_ids(self) -> set[str]:
