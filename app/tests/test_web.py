@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from newshash.settings import AppConfig, Settings, SettingsManager, SourceConfig
-from newshash.web import SourceSummary, render_dashboard, render_detail, render_help, render_metrics
+from newshash.web import SourceSummary, collect_dashboard_data, render_dashboard, render_detail, render_help, render_metrics
 
 
 def test_render_dashboard_contains_metrics_and_latest_records() -> None:
@@ -163,6 +163,17 @@ def test_render_metrics_hides_acknowledged_source_errors(tmp_path, monkeypatch) 
 
     assert 'newshash_source_errors_total{source="ZDF"} 0' in metrics
     assert "newshash_source_errors_all_total 0" in metrics
+
+
+def test_collect_dashboard_data_measures_data_directory(tmp_path) -> None:
+    data_file = tmp_path / "sample.bin"
+    data_file.write_bytes(b"data")
+    config = AppConfig(tmp_path / "settings.toml", Settings((SourceConfig("ZDF", "feed", "zdf", 300),)))
+
+    data = collect_dashboard_data(config, SettingsManager(data_dir=tmp_path))
+
+    assert data["storage_used_bytes"] >= 4
+    assert data["storage_available_bytes"] > 0
 
 
 def test_render_help_contains_faq() -> None:

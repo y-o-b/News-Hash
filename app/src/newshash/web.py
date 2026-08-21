@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import html
 import mimetypes
+import shutil
 import threading
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -82,6 +83,10 @@ def collect_dashboard_data(
     """Lese Kennzahlen und die neuesten Meldungen aus den Quellen-Stores."""
 
     page = max(1, page)
+    storage_root = settings_manager.storage_root()
+    usage_root = storage_root if storage_root.exists() else storage_root.parent
+    storage_used_bytes = sum(path.stat().st_size for path in storage_root.rglob("*") if path.is_file()) if storage_root.exists() else 0
+    storage_available_bytes = shutil.disk_usage(usage_root).free
     summaries: list[SourceSummary] = []
     latest_records: list[dict[str, Any]] = []
     selected_records = 0
@@ -131,6 +136,8 @@ def collect_dashboard_data(
         "page": page,
         "page_size": page_size,
         "total_pages": max(1, (selected_records + page_size - 1) // page_size),
+        "storage_used_bytes": storage_used_bytes,
+        "storage_available_bytes": storage_available_bytes,
     }
 
 
