@@ -1,0 +1,9 @@
+{
+  "date": "2026-08-24",
+  "latest_hash_jsonl": "5e180b295b52838e25c40b16665a0954e700263cb2b9d569abc004ad90530c7f",
+  "latest_hash_sqlite": "a32fa20a5ccff238626ef0a3ed6b1de5a5e7c524b922bbf536b58f1a3b4b3169",
+  "latest_shard_jsonl": 0,
+  "latest_shard_sqlite": 0,
+  "source": "Tagesschau",
+  "storage_name": "tagesschau_alle_meldungen"
+}
