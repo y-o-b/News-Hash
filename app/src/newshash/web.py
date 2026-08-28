@@ -660,7 +660,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
     body.theme-comic .runtime-log {{ box-shadow:5px 5px 0 #f7c936 }}
     .runtime-log h2 {{ margin-top:0 }} .runtime-log ul {{ list-style:none; padding:0; margin:0; max-height:260px; overflow:auto }}
     .runtime-log li {{ border-bottom:1px solid var(--line); color:var(--muted); font:12px/1.5 ui-monospace,SFMono-Regular,monospace; padding:6px 0 }}
-    .latest {{ list-style:none; padding:0; margin:0; border-top:1px solid var(--line) }}
+     .latest {{ list-style:none; padding:0; margin:0 }}
      .latest li {{ display:flex; justify-content:space-between; gap:18px; padding:16px 18px; margin:10px 0; background:var(--panel);
        border:3px solid var(--line); box-shadow:4px 4px 0 var(--line) }}
      @media (min-width:900px) {{ .latest {{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }} .latest li {{ margin:0 }} }}

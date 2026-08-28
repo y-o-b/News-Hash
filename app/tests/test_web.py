@@ -58,6 +58,7 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert "anchor-complete" in page
     assert "Vollständig bestätigt" in page
     assert "Neue Meldung" in page
+    assert ".latest { list-style:none; padding:0; margin:0 }" in page
     assert "Hash: abc123" in page
     assert "Jetzt abrufen" in page
     assert "Quelle filtern" in page
