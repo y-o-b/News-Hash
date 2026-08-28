@@ -402,7 +402,7 @@ def render_detail(
   a {{ color:var(--blue) }}
   .eyebrow {{ color:var(--accent); text-transform:uppercase; letter-spacing:.14em; font-size:12px; font-weight:900; margin-top:42px }}
   h1 {{ color:var(--text); font:900 clamp(20px,3.6vw,36px)/1.05 Impact,"Arial Black",sans-serif;
-    letter-spacing:.01em; text-shadow:3px 3px 0 var(--accent); margin:10px 0 16px }}
+    letter-spacing:.01em; margin:10px 0 16px }}
   .meta-grid {{ color:var(--muted); display:grid; font-size:13px; font-weight:700; gap:8px 24px;
     grid-template-columns:1fr; margin-top:8px }}
   .meta-item {{ overflow-x:auto; white-space:nowrap }}
@@ -587,8 +587,8 @@ def render_dashboard(data: dict[str, Any]) -> str:
      main {{ width:100%; margin:auto; padding:clamp(24px,5vw,64px) 20px }}
     header {{ display:flex; justify-content:space-between; gap:20px; align-items:end; margin-bottom:42px }}
     .brand {{ align-items:center; display:flex }} .brand h1 {{ align-items:center; display:flex; gap:14px }} .brand-logo {{ height:48px; width:48px }}
-    h1 {{ color:var(--text); font:900 clamp(22px,4.2vw,43px)/.95 Impact,"Arial Black",sans-serif;
-      letter-spacing:.01em; text-shadow:4px 4px 0 var(--accent); margin:8px 0 }}
+     h1 {{ color:var(--text); font:900 clamp(22px,4.2vw,43px)/.95 Impact,"Arial Black",sans-serif;
+       letter-spacing:.01em; margin:8px 0 }}
     .kicker,.eyebrow {{ color:var(--accent); text-transform:uppercase; letter-spacing:.14em; font-size:11px; font-weight:900 }}
     .updated {{ color:var(--muted); font-size:13px; text-align:right }}
     .refresh-line {{ align-items:center; display:inline-flex; gap:6px }}
@@ -688,9 +688,6 @@ def render_dashboard(data: dict[str, Any]) -> str:
     body.theme-lite .shutdown, body.theme-lite .theme-picker select {{ border:1px solid var(--line); border-radius:5px; box-shadow:none }}
      body.theme-news .section-heading a, body.theme-news .pagination a, body.theme-news .fetch-button, body.theme-news .filter-button,
      body.theme-news .shutdown, body.theme-news .theme-picker select {{ border:1px solid var(--line); border-radius:5px; box-shadow:none }}
-     .dashboard .metric, .dashboard .source-card, .dashboard .latest li, .dashboard .runtime-log,
-     .dashboard .section-heading a, .dashboard .pagination a, .dashboard .filter-button,
-     .dashboard .fetch-button, .dashboard .acknowledge-button, .dashboard .shutdown {{ box-shadow:none }}
     body.theme-dark .shutdown {{ background:#ef4b3f; color:white }}
     body.theme-lite .shutdown {{ background:#ef4b3f; color:white }}
     body.theme-dark .refresh-countdown {{ background:conic-gradient(#000 0 calc(100% - var(--progress)),var(--accent) 0) }}
@@ -711,7 +708,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
       body {{ background:white; color:black; zoom:90% }} .source-card, .metric, .latest li {{ box-shadow:none; break-inside:avoid }} }}
   </style>
 </head>
-<body class="dashboard theme-{theme}"><main>
+<body class="theme-{theme}"><main>
   <header><div class="brand"><h1><img class="brand-logo" src="/logo.svg?theme={theme}" alt="News-Hash">News-Hash</h1></div>
     <div class="updated"><a class="help-link" href="/hilfe?theme={theme}">Hilfe &amp; FAQ</a><br><span class="refresh-line">Live-Übersicht
       <button class="refresh-countdown" id="refresh-countdown" type="button"
