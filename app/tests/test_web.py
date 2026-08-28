@@ -43,6 +43,8 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert 'src="/logo.svg?theme=lite"' in page
     assert 'href="/favicon.svg?v=1&amp;theme=lite"' in page
     assert "157" in page
+    assert 'class="dashboard theme-lite"' in page
+    assert ".dashboard .metric" in page
     assert "12" in page
     assert "grid-template-columns:repeat(3,1fr)" in page
     assert "min(100%,440px)" in page
