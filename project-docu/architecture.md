@@ -27,7 +27,7 @@
 - Jede Quelle wird als `data/<storage_name>.<N>.jsonl` und `data/<storage_name>.<N>.sqlite3` gespeichert, beginnend bei `0`.
 - Die Dashboard-Vorschau liest Meldungen ausschließlich aus dem neuesten SQLite-Shard; aggregierte Kennzahlen werden über alle Shards gebildet.
 - `--daemon`: startet einen Endlosschleifen-Modus, der jede Quelle nach ihrem eigenen `poll_interval_seconds` erneut verarbeitet.
-- `/metrics`: liefert Prometheus-Metriken für Quellen, Datensätze, Bilder und Laufzeitfehler.
+- `/metrics`: liefert Prometheus-Metriken für Quellen, Datensätze, Bilder sowie nicht quittierte Laufzeitfehler je Quelle und Fehlertyp.
 - `newshash-validate` prüft die JSONL- und SQLite-Hash-Ketten; standardmäßig wird nur der letzte nichtleere Shard geprüft, `--all-shards` prüft den vollständigen Bestand.
 - `newshash-validate --sqlite <datei>` validiert einen SQLite-Shard ohne `settings.toml`, JSONL-Dateien oder externe Codec-Definitionsdateien.
 - `newshash-validate` prüft zusätzlich Manifeste; mit `--shard <nummer>` kann ein einzelner Shard gezielt geprüft werden.

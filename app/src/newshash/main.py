@@ -69,7 +69,7 @@ def ingest_source(source: SourceConfig, settings_manager: SettingsManager) -> In
             raise ValueError("feed contains an invalid item")
     except Exception as exc:
         error = _error_text(exc)
-        settings_manager.record_source_error(source.name, error)
+        settings_manager.record_source_error(source.name, error, "fetch")
         settings_manager.log_runtime(f'source="{source.name}" action="fetch error" error="{error}"')
         raise
     settings_manager.log_runtime(f'source="{source.name}" action="fetch finished" items={len(feed["items"])}')
@@ -97,7 +97,7 @@ def ingest_source(source: SourceConfig, settings_manager: SettingsManager) -> In
             prepared_item, item_image_bytes = codec.prepare_item(item, retrieved_at, storage_root, image_root, storage_name=source.storage_name)
         except Exception as exc:
             error = f"{_error_text(exc)} url={item.get('url', '')}"
-            settings_manager.record_source_error(source.name, error)
+            settings_manager.record_source_error(source.name, error, "interpret")
             settings_manager.log_runtime(f'source="{source.name}" action="interpret error" error="{error}"')
             _log_source_error(source, "interpret error", error)
             continue

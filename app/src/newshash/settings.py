@@ -49,6 +49,7 @@ class SettingsManager:
         self.data_dir = data_dir
         self.default_settings_path = default_settings_path
         self._source_errors: dict[str, list[str]] = {}
+        self._source_error_types: dict[str, list[str]] = {}
         self._runtime_logs: list[str] = []
         self._anchor_statuses: dict[str, str] = {}
         self._runtime_lock = threading.Lock()
@@ -152,16 +153,31 @@ class SettingsManager:
                 if len(errors) > self._source_error_acknowledged.get(name, 0)
             }
 
-    def record_source_error(self, source_name: str, message: str = "") -> int:
+    def unacknowledged_source_error_type_counts(self) -> dict[tuple[str, str], int]:
+        """Gib die noch nicht quittierten Fehler nach Quelle und Typ zurück."""
+
+        with self._runtime_lock:
+            counts: dict[tuple[str, str], int] = {}
+            for source_name, error_types in self._source_error_types.items():
+                acknowledged = self._source_error_acknowledged.get(source_name, 0)
+                for error_type in error_types[acknowledged:]:
+                    key = source_name, error_type
+                    counts[key] = counts.get(key, 0) + 1
+            return counts
+
+    def record_source_error(self, source_name: str, message: str = "", error_type: str = "unknown") -> int:
         """Erhöhe den flüchtigen Fehlerzähler einer Quelle um eins."""
 
         with self._runtime_lock:
             errors = self._source_errors.setdefault(source_name, [])
+            error_types = self._source_error_types.setdefault(source_name, [])
             acknowledged = min(self._source_error_acknowledged.get(source_name, 0), len(errors))
             errors.append(message)
+            error_types.append(error_type)
             removed = max(0, len(errors) - 10)
             if removed:
                 del errors[:removed]
+                del error_types[:removed]
             self._source_error_acknowledged[source_name] = max(0, acknowledged - removed)
             return len(errors)
 

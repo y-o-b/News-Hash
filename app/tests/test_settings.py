@@ -183,19 +183,22 @@ def test_source_error_count_is_in_memory_only(tmp_path) -> None:
 
 def test_source_errors_can_be_acknowledged_without_resetting_total(tmp_path) -> None:
     manager = SettingsManager(data_dir=tmp_path)
-    manager.record_source_error("alpha", "Timeout")
-    manager.record_source_error("alpha", "Bad response")
+    manager.record_source_error("alpha", "Timeout", "fetch")
+    manager.record_source_error("alpha", "Bad response", "interpret")
 
     assert manager.unacknowledged_source_error_counts() == {"alpha": 2}
     assert manager.unacknowledged_source_errors() == {"alpha": ["Timeout", "Bad response"]}
+    assert manager.unacknowledged_source_error_type_counts() == {("alpha", "fetch"): 1, ("alpha", "interpret"): 1}
     assert manager.acknowledge_source_errors("alpha") is True
     assert manager.source_error_counts() == {"alpha": 2}
     assert manager.unacknowledged_source_error_counts() == {}
     assert manager.unacknowledged_source_errors() == {}
+    assert manager.unacknowledged_source_error_type_counts() == {}
     assert manager.acknowledge_source_errors("missing") is False
 
-    manager.record_source_error("alpha", "New error")
+    manager.record_source_error("alpha", "New error", "fetch")
     assert manager.unacknowledged_source_errors() == {"alpha": ["New error"]}
+    assert manager.unacknowledged_source_error_type_counts() == {("alpha", "fetch"): 1}
 
 
 def test_runtime_logs_are_in_memory_only(tmp_path) -> None:
