@@ -45,6 +45,7 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert "157" in page
     assert "12" in page
     assert "grid-template-columns:repeat(3,1fr)" in page
+    assert "min(100%,440px)" in page
     assert "SQLite: 1,5 KB" in page
     assert "2 Fehler" in page
     assert "Fehler nach Typ: fetch: 1, interpret: 1" in page

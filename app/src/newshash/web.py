@@ -581,7 +581,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
     body.theme-news {{ --bg:#f1f2f0; --panel:#fff; --line:#151515; --text:#151515; --muted:#687078; --accent:#d71920; --blue:#003b70 }}
     * {{ box-sizing:border-box }} body {{ margin:0; background:var(--bg);
       color:var(--text); font:15px/1.5 "Comic Sans MS","Trebuchet MS",sans-serif }}
-    main {{ max-width:1120px; margin:auto; padding:clamp(24px,5vw,64px) 20px }}
+     main {{ width:100%; margin:auto; padding:clamp(24px,5vw,64px) 20px }}
     header {{ display:flex; justify-content:space-between; gap:20px; align-items:end; margin-bottom:42px }}
     .brand {{ align-items:center; display:flex }} .brand h1 {{ align-items:center; display:flex; gap:14px }} .brand-logo {{ height:48px; width:48px }}
     h1 {{ color:var(--text); font:900 clamp(22px,4.2vw,43px)/.95 Impact,"Arial Black",sans-serif;
@@ -602,7 +602,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
     body.theme-lite .metric, body.theme-lite .metric:nth-child(2), body.theme-lite .metric:nth-child(3) {{ background:#d9edff }}
     body.theme-dark .metric, body.theme-dark .metric:nth-child(2), body.theme-dark .metric:nth-child(3) {{ background:var(--panel) }}
     section {{ margin-top:38px }} h2 {{ font:600 25px Georgia,serif; margin:0 0 14px }}
-    .sources {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px }}
+     .sources {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr)); gap:12px }}
     .section-heading {{ display:flex; justify-content:space-between; align-items:baseline; gap:16px }}
     .section-heading a, .pagination a {{ display:inline-block; color:var(--text); background:var(--panel); border:3px solid var(--line);
       box-shadow:3px 3px 0 var(--line); padding:5px 9px; font-size:13px; font-weight:900; text-decoration:none }}
