@@ -48,7 +48,7 @@ Die Theme-Auswahl befindet sich am unteren Rand neben `Daemon beenden`.
 - `DarkMode` verwendet eine dunkle, sachliche Farbpalette.
 - `Papier` orientiert sich an einer Zeitung mit Serifenschrift und redaktionellen Trennern.
 - `News` verwendet ein sachliches Nachrichten-Design mit roten Akzenten.
-- `Monet` verwendet eine impressionistische Farbpalette aus Wasserblau, Salbeigrün, Lavendel und warmem Papier.
+- `Mondrian` verwendet weiße Flächen, schwarze Linien sowie rote, blaue und gelbe Primärfarben.
 
 Die Auswahl bleibt beim Filtern, Blättern und Öffnen von Meldungen erhalten.
 
