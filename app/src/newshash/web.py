@@ -17,7 +17,7 @@ from newshash.anchoring import OpenTimestampsAnchor
 from newshash.settings import AppConfig, SettingsManager
 from newshash.storage import SqliteStorage
 
-THEMES = {"comic", "dark", "lite", "paper", "news", "freenet"}
+THEMES = {"comic", "dark", "lite", "paper", "news", "freenet", "t-online"}
 PAGE_SIZES = (10, 25, 50, 100)
 LOGO_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="News-Hash">
 <rect width="128" height="128" rx="24" fill="#4b8ed8"/>
@@ -333,6 +333,7 @@ def render_help(theme: str = "lite", language: str = "de") -> str:
   body.theme-paper {{ --bg:#e5d5b8; --panel:#fff9eb; --line:#3a2a20; --text:#2b201b; --muted:#756153; --accent:#b83b32; --blue:#286a9e; color-scheme:light }}
   body.theme-news {{ --bg:#f1f2f0; --panel:#fff; --line:#151515; --text:#151515; --muted:#687078; --accent:#d71920; color-scheme:light }}
   body.theme-freenet {{ --bg:#eef2f6; --panel:#fff; --line:#d4dce5; --text:#20354d; --muted:#657487; --accent:#e30613; --blue:#12518b; color-scheme:light }}
+  body.theme-t-online {{ --bg:#f3f5f7; --panel:#fff; --line:#d8dee5; --text:#172b40; --muted:#5e6d7c; --accent:#e20074; --blue:#006fba; color-scheme:light }}
   * {{ box-sizing:border-box }} body {{ margin:0; background:var(--bg); color:var(--text); font:16px/1.6 system-ui,sans-serif }}
   main {{ max-width:900px; margin:auto; padding:40px 20px }} a {{ color:var(--accent) }}
   .back {{ display:inline-block; margin-bottom:30px }} h1 {{ font:700 48px/1.1 Georgia,serif; margin:0 0 12px }}
@@ -439,6 +440,10 @@ def render_detail(
   body.theme-freenet .content, body.theme-freenet .record-navigation a,
   body.theme-freenet .record-theme {{ border-width:1px; border-radius:4px; box-shadow:none }}
   body.theme-freenet .gallery img {{ border-width:1px; border-radius:4px; box-shadow:none }}
+  body.theme-t-online .detail-header {{ border-top:4px solid var(--accent); padding-top:12px }}
+  body.theme-t-online .content, body.theme-t-online .record-navigation a,
+  body.theme-t-online .record-theme {{ border-width:1px; border-radius:8px; box-shadow:none }}
+  body.theme-t-online .gallery img {{ border-width:1px; border-radius:8px; box-shadow:none }}
   body.theme-paper {{ --bg:#e7e0d0; --panel:#fbf8ef; --line:#39332c; --text:#29251f; --muted:#746b5e; --accent:#9d3029; --blue:#4e5962 }}
   body.theme-news {{ --bg:#f1f2f0; --panel:#fff; --line:#151515; --text:#151515; --muted:#687078; --accent:#d71920; --blue:#003b70 }}
   body.theme-freenet {{ --bg:#eef2f6; --panel:#fff; --line:#d4dce5; --text:#20354d; --muted:#657487; --accent:#e30613; --blue:#12518b; color-scheme:light }}
@@ -590,6 +595,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
     body.theme-paper {{ --bg:#e5d5b8; --panel:#fff9eb; --line:#3a2a20; --text:#2b201b; --muted:#756153; --accent:#b83b32; --blue:#286a9e }}
     body.theme-news {{ --bg:#f1f2f0; --panel:#fff; --line:#151515; --text:#151515; --muted:#687078; --accent:#d71920; --blue:#003b70 }}
     body.theme-freenet {{ --bg:#eef2f6; --panel:#fff; --line:#d4dce5; --text:#20354d; --muted:#657487; --accent:#e30613; --blue:#12518b; color-scheme:light }}
+    body.theme-t-online {{ --bg:#f3f5f7; --panel:#fff; --line:#d8dee5; --text:#172b40; --muted:#5e6d7c; --accent:#e20074; --blue:#006fba; color-scheme:light }}
     * {{ box-sizing:border-box }} body {{ margin:0; background:var(--bg);
       color:var(--text); font:15px/1.5 "Comic Sans MS","Trebuchet MS",sans-serif }}
      main {{ width:100%; margin:auto; padding:clamp(24px,5vw,64px) 20px }}
@@ -676,22 +682,25 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .site-footer {{ color:var(--muted); font-size:12px; letter-spacing:.04em; margin-top:34px; text-align:center }}
     .site-footer .spark {{ color:var(--accent); font-size:16px; vertical-align:-1px }}
     .help-link {{ color:var(--accent); font-weight:900; text-decoration:none }}
-    body.theme-dark, body.theme-lite, body.theme-paper, body.theme-news, body.theme-freenet {{ font-family:system-ui,sans-serif }}
+    body.theme-dark, body.theme-lite, body.theme-paper, body.theme-news, body.theme-freenet, body.theme-t-online {{ font-family:system-ui,sans-serif }}
      body.theme-dark h1, body.theme-lite h1, body.theme-paper h1, body.theme-news h1,
-     body.theme-freenet h1 {{ font-family:Georgia,serif; text-shadow:none; letter-spacing:-.04em }}
+     body.theme-freenet h1, body.theme-t-online h1 {{ font-family:Georgia,serif; text-shadow:none; letter-spacing:-.04em }}
     body.theme-dark .metric, body.theme-lite .metric, body.theme-paper .metric,
     body.theme-dark .source-card, body.theme-lite .source-card, body.theme-paper .source-card, body.theme-news .source-card {{ border-width:1px;
       border-radius:8px; box-shadow:none; transform:none }}
      body.theme-freenet .metric, body.theme-freenet .source-card, body.theme-freenet .latest li,
      body.theme-freenet .runtime-log {{ border-width:1px; border-radius:4px; box-shadow:none; transform:none; background:var(--panel) }}
+     body.theme-t-online .metric, body.theme-t-online .source-card, body.theme-t-online .latest li,
+     body.theme-t-online .runtime-log {{ border-width:1px; border-radius:8px; box-shadow:none; transform:none; background:var(--panel) }}
     body.theme-paper .source-card:hover {{ transform:translateY(-2px) }}
     body.theme-dark .latest li, body.theme-lite .latest li, body.theme-paper .latest li,
     body.theme-news .latest li {{ border-width:1px; border-radius:8px; box-shadow:none }}
     body.theme-dark .shutdown, body.theme-lite .shutdown, body.theme-paper .shutdown, body.theme-news .shutdown {{ border-width:1px;
       border-radius:6px; box-shadow:none; font-family:system-ui,sans-serif }}
      body.theme-dark .fetch-button, body.theme-lite .fetch-button, body.theme-paper .fetch-button, body.theme-news .fetch-button,
-     body.theme-freenet .fetch-button, body.theme-dark .filter-button, body.theme-lite .filter-button,
-     body.theme-paper .filter-button, body.theme-news .filter-button, body.theme-freenet .filter-button {{ border-width:1px;
+      body.theme-freenet .fetch-button, body.theme-t-online .fetch-button, body.theme-dark .filter-button, body.theme-lite .filter-button,
+      body.theme-paper .filter-button, body.theme-news .filter-button, body.theme-freenet .filter-button,
+      body.theme-t-online .filter-button {{ border-width:1px;
       border-radius:5px; box-shadow:none; font-family:system-ui,sans-serif }}
      body.theme-dark .section-heading a, body.theme-dark .pagination a, body.theme-dark .fetch-button, body.theme-dark .filter-button,
     body.theme-dark .shutdown, body.theme-dark .theme-picker select,
@@ -700,7 +709,9 @@ def render_dashboard(data: dict[str, Any]) -> str:
      body.theme-news .section-heading a, body.theme-news .pagination a, body.theme-news .fetch-button, body.theme-news .filter-button,
      body.theme-news .shutdown, body.theme-news .theme-picker select {{ border:1px solid var(--line); border-radius:5px; box-shadow:none }}
      body.theme-freenet .section-heading a, body.theme-freenet .pagination a, body.theme-freenet .fetch-button, body.theme-freenet .filter-button,
-     body.theme-freenet .shutdown, body.theme-freenet .theme-picker select {{ border:1px solid var(--line); border-radius:4px; box-shadow:none }}
+      body.theme-freenet .shutdown, body.theme-freenet .theme-picker select {{ border:1px solid var(--line); border-radius:4px; box-shadow:none }}
+      body.theme-t-online .section-heading a, body.theme-t-online .pagination a, body.theme-t-online .fetch-button, body.theme-t-online .filter-button,
+      body.theme-t-online .shutdown, body.theme-t-online .theme-picker select {{ border:1px solid var(--line); border-radius:8px; box-shadow:none }}
     body.theme-dark .shutdown {{ background:#ef4b3f; color:white }}
     body.theme-lite .shutdown {{ background:#ef4b3f; color:white }}
     body.theme-dark .refresh-countdown {{ background:conic-gradient(#000 0 calc(100% - var(--progress)),var(--accent) 0) }}
@@ -745,6 +756,8 @@ def render_dashboard(data: dict[str, Any]) -> str:
       <option value="paper" {"selected" if theme == "paper" else ""}>Papier</option>
       <option value="news" {"selected" if theme == "news" else ""}>News</option>
       <option value="freenet" {"selected" if theme == "freenet" else ""}>Freenet</option>
+      <option value="t-online" {"selected" if theme == "t-online" else ""}>T-Online</option>
+      <option value="t-online" {"selected" if theme == "t-online" else ""}>T-Online</option>
       <option value="comic" {"selected" if theme == "comic" else ""}>Comic</option>
     </select></label></div>
   <footer class="site-footer"><span class="spark">✦</span> Mit KI gebaut, mit Liebe verfeinert, für neugierige Menschen <span class="spark">♥</span><br>

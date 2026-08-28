@@ -62,6 +62,8 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert "source-actions" in page
     assert 'value="freenet"' in page
     assert "theme-freenet" in page
+    assert 'value="t-online"' in page
+    assert "theme-t-online" in page
     assert "Laufzeit-Log" in page
     assert "action=stored" in page
     assert 'id="refresh-countdown"' in page
