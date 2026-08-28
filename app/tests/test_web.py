@@ -49,6 +49,7 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert "min(100%,440px)" in page
     assert "SQLite: 1,5 KB" in page
     assert "2 Fehler" in page
+    assert "body.theme-comic .updated" in page
     assert "Fehler nach Typ: fetch: 1, interpret: 1" in page
     assert "Hash: hash" in page
     assert "Timeout" in page

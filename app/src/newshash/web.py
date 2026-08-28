@@ -590,7 +590,8 @@ def render_dashboard(data: dict[str, Any]) -> str:
      h1 {{ color:var(--text); font:900 clamp(22px,4.2vw,43px)/.95 Impact,"Arial Black",sans-serif;
        letter-spacing:.01em; margin:8px 0 }}
     .kicker,.eyebrow {{ color:var(--accent); text-transform:uppercase; letter-spacing:.14em; font-size:11px; font-weight:900 }}
-    .updated {{ color:var(--muted); font-size:13px; text-align:right }}
+     .updated {{ color:var(--muted); font-size:13px; text-align:right }}
+     body.theme-comic .updated {{ background:var(--panel); border:4px solid var(--line); box-shadow:6px 6px 0 var(--accent); padding:12px 16px }}
     .refresh-line {{ align-items:center; display:inline-flex; gap:6px }}
     .refresh-countdown {{ --progress:100%; background:conic-gradient(var(--line) 0 calc(100% - var(--progress)),var(--accent) 0);
       border:0; border-radius:50%; cursor:pointer; height:24px; mask:radial-gradient(farthest-side,#0000 calc(100% - 5px),#000 calc(100% - 4px));
