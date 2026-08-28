@@ -504,10 +504,12 @@ def render_dashboard(data: dict[str, Any]) -> str:
               {_anchor_label(source.anchor_status)}
             </span>{_anchor_links(source)}</div>
            {_source_error_markup(source, theme_query)}
-           <a class="filter-button" href="?{_query({"source": source.storage_name, "page": 1, **theme_query})}#neueste-meldungen">Quelle filtern</a>
-           <form method="post" action="/fetch?{_query({"source": source.storage_name, **theme_query})}">
-            <button class="fetch-button" type="submit">Jetzt abrufen</button>
-          </form>
+           <div class="source-actions">
+             <a class="filter-button" href="?{_query({"source": source.storage_name, "page": 1, **theme_query})}#neueste-meldungen">Quelle filtern</a>
+             <form method="post" action="/fetch?{_query({"source": source.storage_name, **theme_query})}">
+               <button class="fetch-button" type="submit">Jetzt abrufen</button>
+             </form>
+           </div>
         </div>
         """
         for source in data["sources"]
@@ -636,12 +638,11 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .anchor-no_anchor, .anchor-no_ots {{ color:var(--muted) }}
     .anchor-files {{ display:inline-block; white-space:nowrap }}
      .source-count {{ display:inline-block; color:inherit }}
-     .filter-button {{ display:inline-block; margin-top:16px; border:3px solid var(--line); background:var(--panel); color:var(--text);
+     .source-actions {{ display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; align-items:center }}
+     .source-actions form {{ margin:0 }}
+     .filter-button, .fetch-button {{ display:inline-block; border:3px solid var(--line); background:var(--panel); color:var(--text);
        box-shadow:3px 3px 0 var(--line); cursor:pointer; padding:6px 10px; font:900 12px "Comic Sans MS",sans-serif; text-decoration:none }}
-     .filter-button:hover {{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line) }}
-     .fetch-button {{ margin-top:16px; border:3px solid var(--line); background:var(--blue); color:white; box-shadow:3px 3px 0 var(--line);
-       cursor:pointer; padding:6px 10px; font:900 12px "Comic Sans MS",sans-serif }}
-     .fetch-button:hover {{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line) }}
+     .filter-button:hover, .fetch-button:hover {{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line) }}
      .acknowledge-button {{ margin-top:8px; border:2px solid var(--line); background:var(--panel); color:var(--line); cursor:pointer; padding:4px 8px;
        font:700 11px "Comic Sans MS",sans-serif }}
      .acknowledge-button:hover {{ background:var(--paper); transform:translate(1px,1px) }}
