@@ -144,6 +144,8 @@ def test_render_detail_links_stored_images() -> None:
     assert "hash-value" in page
     assert "pre-hash-value" in page
     assert "#neueste-meldungen" in page
+    assert 'href="/?page=1&amp;theme=lite#neueste-meldungen"' in page
+    assert "source=" not in page
     assert 'Intl.DateTimeFormat("de-DE"' in page
 
 

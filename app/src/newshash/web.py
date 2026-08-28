@@ -384,7 +384,7 @@ def render_detail(
       <option value="comic" {"selected" if theme == "comic" else ""}>Comic</option>
     </select></label>"""
     navigation = f'<nav class="record-navigation">{previous_link}{theme_picker}{next_link}</nav>' if previous_record or next_record else ""
-    back_link = f'<a href="/?source={quote(source_name, safe="")}&amp;page=1&amp;theme={theme}#neueste-meldungen">Zurück zur Quelle</a>'
+    back_link = f'<a href="/?page=1&amp;theme={theme}#neueste-meldungen">Zurück zur Quelle</a>'
     top_navigation = f'<nav class="record-navigation top-navigation">{previous_link}{back_link}{next_link}</nav>'
     return f"""<!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
