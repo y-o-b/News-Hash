@@ -24,6 +24,7 @@
 - Für `SCREENv2` muss Chromium einmal installiert werden: `uv run playwright install chromium`
 - Screenshot-Unit-Tests ohne Netzwerk ausführen: `uv run pytest tests/test_codec.py -k screen`
 - Eine echte Browser-Prüfung erstellt einen PNG-Screenshot und validiert die PNG-Signatur sowie eine Dateigröße größer als 0.
+- Arbeits-Screenshots aus Browser-Prüfungen werden immer im projektinternen `tmp/`-Verzeichnis abgelegt; Anwendungsbilder bleiben unter `app/data/images/`.
 - Bei manueller Feed-Prüfung zuerst `SCREENv2` in `app/data/settings.toml` kontrollieren und danach `uv run newshash` in `app/` ausführen; die Screenshots liegen unter `app/data/images/` und werden in SQLite unter `images_json` referenziert.
 - Ein Screenshot-Test darf nicht von `networkidle` abhängen; Seiten mit dauerhaft aktiven Verbindungen sollen mit `domcontentloaded` und einer kurzen Render-Wartezeit geladen werden.
 - Vor dem Screenshot entfernt `SCREENv2` bekannte Cookie-/Consent-Banner; bei neuen Seiten sollte geprüft werden, ob deren Banner-Selektor ergänzt werden muss.

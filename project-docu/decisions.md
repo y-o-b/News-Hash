@@ -63,3 +63,7 @@
 - Datum: 2026-08-13 bis 2026-08-14
   Entscheidung: Reine Website-Änderungen erhöhen die App-Version nicht. Neue dauerhafte Projektanweisungen werden in `project-docu/` dokumentiert. Designänderungen werden mit einem echten Browser-Screenshot geprüft.
   Begründung: Website und Anwendung werden unabhängig veröffentlicht; dauerhafte Regeln und visuelle Ergebnisse müssen nachvollziehbar dokumentiert beziehungsweise geprüft werden.
+
+- Datum: 2026-08-28
+  Entscheidung: Arbeits-Screenshots aus Browser-Prüfungen werden im projektinternen `tmp/`-Verzeichnis abgelegt.
+  Begründung: Prüfartefakte bleiben am Projekt auffindbar und werden über `.gitignore` nicht versioniert; Anwendungsbilder unter `app/data/images/` sind davon getrennt.
