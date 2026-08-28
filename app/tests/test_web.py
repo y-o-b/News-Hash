@@ -8,7 +8,22 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     page = render_dashboard(
         {
             "generated_at": "2026-08-10T20:00:00+00:00",
-            "sources": [SourceSummary("ZDFheute", "zdf", 157, 12, "2026-08-10T19:59:00+00:00", "hash", 2, "Timeout", True, "complete", sqlite_size_bytes=1536)],
+            "sources": [
+                SourceSummary(
+                    "ZDFheute",
+                    "zdf",
+                    157,
+                    12,
+                    "2026-08-10T19:59:00+00:00",
+                    "hash",
+                    2,
+                    "Timeout",
+                    (("fetch", 1), ("interpret", 1)),
+                    True,
+                    "complete",
+                    sqlite_size_bytes=1536,
+                )
+            ],
             "records": [
                 {
                     "source_name": "ZDFheute",
@@ -32,6 +47,7 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert "grid-template-columns:repeat(3,1fr)" in page
     assert "SQLite: 1,5 KB" in page
     assert "2 Fehler" in page
+    assert "Fehler nach Typ: fetch: 1, interpret: 1" in page
     assert "Hash: hash" in page
     assert "Timeout" in page
     assert "Fehler quittieren" in page

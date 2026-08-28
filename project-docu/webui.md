@@ -21,7 +21,7 @@ Das Dashboard zeigt:
 - Anzahl der konfigurierten Quellen
 - Gesamtzahl der Meldungen
 - Gesamtzahl der gespeicherten Bilder
-- Quellenkarten mit Meldungs-, Bild- und Fehleranzahl
+- Quellenkarten mit Meldungs-, Bild- und Fehleranzahl nach Fehlertyp
 - Status des heutigen OpenTimestamps-Anchors
 - Die neuesten Meldungen
 - Den flüchtigen Laufzeit-Log
@@ -32,11 +32,12 @@ Die Meldungsliste verwendet den neuesten SQLite-Shard. Kennzahlen und Detailzugr
 
 - Der Link auf der Meldungsanzahl filtert die Liste auf diese Quelle.
 - `Filter zurücksetzen` zeigt wieder alle Quellen.
-- Die Liste hat zehn Meldungen pro Seite.
+- Die Liste zeigt standardmäßig zehn Meldungen pro Seite; auswählbar sind 10, 25, 50 oder 100 Meldungen.
 - `Erste`, `Zurück`, `Weiter` und `Letzte` navigieren durch die Seiten.
 - Ein Klick auf den Meldungstitel öffnet die gespeicherte Detailansicht.
 - In der Detailansicht werden Inhalt, Zeitstempel, Hash und lokal gespeicherte Bilder angezeigt.
 - `Jetzt abrufen` startet den Abruf einer einzelnen Quelle sofort.
+- `Fehler quittieren` blendet die offenen Fehler dieser Quelle aus und entfernt sie aus den aktuellen Fehler-Metriken.
 
 ## Themes
 
@@ -75,7 +76,7 @@ Prometheus kann die Metriken über `/metrics` abrufen:
 http://127.0.0.1:8000/metrics
 ```
 
-Der Endpoint liefert unter anderem Meldungs-, Bild- und Fehlerzähler je Quelle sowie Gesamtsummen.
+Der Endpoint liefert unter anderem Meldungs-, Bild- und Fehlerzähler je Quelle sowie Fehlerzähler nach Quelle und Fehlertyp.
 
 ## Beenden
 

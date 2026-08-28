@@ -40,6 +40,7 @@ class SourceSummary:
     latest_hash: str
     errors: int = 0
     last_error: str = ""
+    error_breakdown: tuple[tuple[str, int], ...] = ()
     anchored_today: bool = False
     anchor_status: str = "no_anchor"
     anchor_date: str = ""
@@ -86,6 +87,7 @@ def collect_dashboard_data(
     selected_records = 0
     error_counts = settings_manager.unacknowledged_source_error_counts()
     error_messages = settings_manager.unacknowledged_source_errors()
+    error_type_counts = settings_manager.unacknowledged_source_error_type_counts()
     anchor = OpenTimestampsAnchor(settings_manager.storage_root())
     anchor_statuses = settings_manager.anchor_statuses()
     today = datetime.now(UTC).date()
@@ -102,6 +104,9 @@ def collect_dashboard_data(
                 latest_hash=stats["latest_hash"],
                 errors=error_counts.get(source.name, 0),
                 last_error=(error_messages.get(source.name) or [""])[-1],
+                error_breakdown=tuple(
+                    sorted((error_type, count) for (error_source, error_type), count in error_type_counts.items() if error_source == source.name)
+                ),
                 anchored_today=anchor.proof_path(source).exists(),
                 anchor_status=anchor_statuses.get(source.name, "no_anchor"),
                 anchor_date=today.isoformat(),
@@ -227,6 +232,15 @@ def _source_error_markup(source: SourceSummary, theme_query: dict[str, Any]) -> 
     if not source.last_error:
         return ""
     return f'<div class="source-error">{_text(source.last_error)}</div>{_acknowledge_error_form(source.storage_name, theme_query)}'
+
+
+def _error_breakdown_markup(source: SourceSummary) -> str:
+    """Erzeuge die typisierte Fehleranzahl einer Quelle."""
+
+    if not source.error_breakdown:
+        return ""
+    details = ", ".join(f"{_text(error_type)}: {_number(count)}" for error_type, count in source.error_breakdown)
+    return f'<br><span class="source-error-breakdown">Fehler nach Typ: {details}</span>'
 
 
 def _detail_url(record: dict[str, Any]) -> str:
@@ -482,7 +496,7 @@ def render_dashboard(data: dict[str, Any]) -> str:
           <a class="source-count" href="?{_query({"source": source.storage_name, "page": 1, **theme_query})}">
             <strong>{_number(source.records)}</strong><span class="muted"> Meldungen</span>
           </a>
-           <div class="source-meta">{_number(source.images)} Bilder · {_number(source.errors)} Fehler<br>
+           <div class="source-meta">{_number(source.images)} Bilder · {_number(source.errors)} Fehler{_error_breakdown_markup(source)}<br>
              SQLite: {_data_size(source.sqlite_size_bytes)}<br>
              zuletzt {_local_time(source.latest_retrieved_at)}<br>
             <span class="source-hash">Hash: {_text(source.latest_hash)}</span><br>
@@ -613,7 +627,8 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .dot {{ width:12px; height:12px; background:var(--accent); border:2px solid var(--line); border-radius:50% }}
     .source-card strong {{ font:900 31px Impact,"Arial Black",sans-serif }}
     .muted,.source-meta {{ color:var(--muted) }} .source-meta {{ margin-top:16px; font-size:12px }}
-    .source-error {{ color:var(--accent); font-size:12px; font-weight:700; margin-top:10px; overflow-wrap:anywhere }}
+     .source-error {{ color:var(--accent); font-size:12px; font-weight:700; margin-top:10px; overflow-wrap:anywhere }}
+     .source-error-breakdown {{ color:var(--muted); font-size:11px }}
     .source-hash {{ display:inline-block; font:11px/1.3 ui-monospace,SFMono-Regular,monospace; overflow-wrap:anywhere }}
     .anchor-status {{ display:inline-flex; align-items:center; gap:4px; font-weight:900 }}
     .anchor-complete {{ color:#18834b }} .anchor-pending {{ color:#a56b00 }}
