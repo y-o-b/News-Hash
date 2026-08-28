@@ -332,8 +332,6 @@ def render_help(theme: str = "lite", language: str = "de") -> str:
   body.theme-comic {{ --bg:#4b8ed8; --panel:#fffdf5; --line:#171717; --text:#171717; --muted:#5a5145; --accent:#c4322c; --blue:#1f64ad; color-scheme:light }}
   body.theme-paper {{ --bg:#e5d5b8; --panel:#fff9eb; --line:#3a2a20; --text:#2b201b; --muted:#756153; --accent:#b83b32; --blue:#286a9e; color-scheme:light }}
   body.theme-news {{ --bg:#f1f2f0; --panel:#fff; --line:#151515; --text:#151515; --muted:#687078; --accent:#d71920; color-scheme:light }}
-  body.theme-mondrian {{ --bg:#f4f4f0; --panel:#ffffff; --line:#111111; --text:#111111; --muted:#3d3d3d;
-    --accent:#d71920; --blue:#1551a3; --yellow:#f2c500; color-scheme:light }}
   * {{ box-sizing:border-box }} body {{ margin:0; background:var(--bg); color:var(--text); font:16px/1.6 system-ui,sans-serif }}
   main {{ max-width:900px; margin:auto; padding:40px 20px }} a {{ color:var(--accent) }}
   .back {{ display:inline-block; margin-bottom:30px }} h1 {{ font:700 48px/1.1 Georgia,serif; margin:0 0 12px }}
@@ -383,7 +381,6 @@ def render_detail(
       <option value="dark" {"selected" if theme == "dark" else ""}>DarkMode</option>
       <option value="paper" {"selected" if theme == "paper" else ""}>Papier</option>
       <option value="news" {"selected" if theme == "news" else ""}>News</option>
-      <option value="mondrian" {"selected" if theme == "mondrian" else ""}>Mondrian</option>
       <option value="comic" {"selected" if theme == "comic" else ""}>Comic</option>
     </select></label>"""
     navigation = f'<nav class="record-navigation">{previous_link}{theme_picker}{next_link}</nav>' if previous_record or next_record else ""
@@ -425,9 +422,8 @@ def render_detail(
   .record-theme {{ align-items:center; display:flex; justify-content:center;
     min-width:0; padding:4px 8px }}
   .record-theme select {{ background:transparent; border:0; color:var(--text); font:inherit; font-weight:700; max-width:100% }}
-  body.theme-dark, body.theme-lite, body.theme-paper, body.theme-news, body.theme-mondrian {{ font-family:system-ui,sans-serif }}
+  body.theme-dark, body.theme-lite, body.theme-paper, body.theme-news {{ font-family:system-ui,sans-serif }}
   body.theme-dark h1, body.theme-lite h1, body.theme-paper h1, body.theme-news h1,
-  body.theme-mondrian h1 {{ font-family:Georgia,serif; text-shadow:none; letter-spacing:-.04em }}
   body.theme-comic h1 {{ text-shadow:none }}
   body.theme-dark .record-navigation a, body.theme-dark .record-theme,
   body.theme-lite .record-navigation a, body.theme-lite .record-theme,
@@ -437,14 +433,8 @@ def render_detail(
     border-width:1px; border-radius:8px; box-shadow:none }}
   body.theme-dark .gallery img, body.theme-lite .gallery img, body.theme-paper .gallery img,
   body.theme-news .gallery img {{ border-width:1px; border-radius:6px; box-shadow:none }}
-  body.theme-mondrian .content, body.theme-mondrian .record-navigation a, body.theme-mondrian .record-theme {{ border:4px solid var(--line);
-    border-radius:0; box-shadow:8px 8px 0 var(--line) }}
-  body.theme-mondrian .gallery img {{ border:4px solid var(--line); border-radius:0; box-shadow:6px 6px 0 var(--blue) }}
-  body.theme-mondrian h1 {{ font-weight:900; text-transform:uppercase; color:var(--text) }}
   body.theme-paper {{ --bg:#e7e0d0; --panel:#fbf8ef; --line:#39332c; --text:#29251f; --muted:#746b5e; --accent:#9d3029; --blue:#4e5962 }}
      body.theme-news {{ --bg:#f1f2f0; --panel:#fff; --line:#151515; --text:#151515; --muted:#687078; --accent:#d71920; --blue:#003b70 }}
-      body.theme-mondrian {{ --bg:#f4f4f0; --panel:#ffffff; --line:#111111; --text:#111111; --muted:#3d3d3d;
-        --accent:#d71920; --blue:#1551a3; --yellow:#f2c500; color-scheme:light }}
   body.theme-paper main {{ max-width:860px }}
   body.theme-paper h1 {{ font-weight:700; text-transform:uppercase; letter-spacing:.02em }}
   body.theme-paper .content {{ border-radius:0; padding:28px; background:var(--panel) }}
@@ -680,17 +670,11 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .site-footer {{ color:var(--muted); font-size:12px; letter-spacing:.04em; margin-top:34px; text-align:center }}
     .site-footer .spark {{ color:var(--accent); font-size:16px; vertical-align:-1px }}
     .help-link {{ color:var(--accent); font-weight:900; text-decoration:none }}
-     body.theme-dark, body.theme-lite, body.theme-paper, body.theme-news, body.theme-mondrian {{ font-family:system-ui,sans-serif }}
+     body.theme-dark, body.theme-lite, body.theme-paper, body.theme-news {{ font-family:system-ui,sans-serif }}
      body.theme-dark h1, body.theme-lite h1, body.theme-paper h1, body.theme-news h1,
     body.theme-dark .metric, body.theme-lite .metric, body.theme-paper .metric,
      body.theme-dark .source-card, body.theme-lite .source-card, body.theme-paper .source-card, body.theme-news .source-card {{ border-width:1px;
        border-radius:8px; box-shadow:none; transform:none }}
-     body.theme-mondrian .metric, body.theme-mondrian .source-card, body.theme-mondrian .latest li,
-     body.theme-mondrian .runtime-log {{ border:4px solid var(--line); border-radius:0; box-shadow:6px 6px 0 var(--line);
-       transform:none; background:var(--panel) }}
-     body.theme-mondrian .metric:nth-child(1) {{ background:#ffffff }}
-     body.theme-mondrian .metric:nth-child(2) {{ background:#dce8f7 }}
-     body.theme-mondrian .metric:nth-child(3) {{ background:#f8d9d5 }}
     body.theme-paper .source-card:hover {{ transform:translateY(-2px) }}
     body.theme-dark .latest li, body.theme-lite .latest li, body.theme-paper .latest li,
     body.theme-news .latest li {{ border-width:1px; border-radius:8px; box-shadow:none }}
@@ -749,7 +733,6 @@ def render_dashboard(data: dict[str, Any]) -> str:
       <option value="dark" {"selected" if theme == "dark" else ""}>DarkMode</option>
       <option value="paper" {"selected" if theme == "paper" else ""}>Papier</option>
       <option value="news" {"selected" if theme == "news" else ""}>News</option>
-       <option value="mondrian" {"selected" if theme == "mondrian" else ""}>Mondrian</option>
       <option value="comic" {"selected" if theme == "comic" else ""}>Comic</option>
     </select></label></div>
   <footer class="site-footer"><span class="spark">✦</span> Mit KI gebaut, mit Liebe verfeinert, für neugierige Menschen <span class="spark">♥</span><br>
