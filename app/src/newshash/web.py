@@ -332,7 +332,8 @@ def render_help(theme: str = "lite", language: str = "de") -> str:
   body.theme-comic {{ --bg:#4b8ed8; --panel:#fffdf5; --line:#171717; --text:#171717; --muted:#5a5145; --accent:#c4322c; --blue:#1f64ad; color-scheme:light }}
   body.theme-paper {{ --bg:#e5d5b8; --panel:#fff9eb; --line:#3a2a20; --text:#2b201b; --muted:#756153; --accent:#b83b32; --blue:#286a9e; color-scheme:light }}
   body.theme-news {{ --bg:#f1f2f0; --panel:#fff; --line:#151515; --text:#151515; --muted:#687078; --accent:#d71920; color-scheme:light }}
-  body.theme-freenet {{ --bg:#eef2f6; --panel:#fff; --line:#d4dce5; --text:#20354d; --muted:#657487; --accent:#e30613; --blue:#12518b; color-scheme:light }}
+  body.theme-freenet {{ --bg:#eef2f6; --panel:#fff; --line:#d4dce5; --text:#20354d; --muted:#657487;
+    --accent:#e30613; --blue:#12518b; --green:#16824b; color-scheme:light }}
   body.theme-t-online {{ --bg:#f3f5f7; --panel:#fff; --line:#d8dee5; --text:#172b40; --muted:#5e6d7c; --accent:#e20074; --blue:#006fba; color-scheme:light }}
   * {{ box-sizing:border-box }} body {{ margin:0; background:var(--bg); color:var(--text); font:16px/1.6 system-ui,sans-serif }}
   main {{ max-width:900px; margin:auto; padding:40px 20px }} a {{ color:var(--accent) }}
@@ -594,7 +595,8 @@ def render_dashboard(data: dict[str, Any]) -> str:
     body.theme-lite {{ --bg:#f5f7fa; --panel:#ffffff; --line:#cbd2da; --text:#20252b; --muted:#5c6873; --accent:#2463a5; --blue:#2f6f9f }}
     body.theme-paper {{ --bg:#e5d5b8; --panel:#fff9eb; --line:#3a2a20; --text:#2b201b; --muted:#756153; --accent:#b83b32; --blue:#286a9e }}
     body.theme-news {{ --bg:#f1f2f0; --panel:#fff; --line:#151515; --text:#151515; --muted:#687078; --accent:#d71920; --blue:#003b70 }}
-    body.theme-freenet {{ --bg:#eef2f6; --panel:#fff; --line:#d4dce5; --text:#20354d; --muted:#657487; --accent:#e30613; --blue:#12518b; color-scheme:light }}
+    body.theme-freenet {{ --bg:#eef2f6; --panel:#fff; --line:#d4dce5; --text:#20354d; --muted:#657487;
+      --accent:#e30613; --blue:#12518b; --green:#16824b; color-scheme:light }}
     body.theme-t-online {{ --bg:#f3f5f7; --panel:#fff; --line:#d8dee5; --text:#172b40; --muted:#5e6d7c; --accent:#e20074; --blue:#006fba; color-scheme:light }}
     * {{ box-sizing:border-box }} body {{ margin:0; background:var(--bg);
       color:var(--text); font:15px/1.5 "Comic Sans MS","Trebuchet MS",sans-serif }}
@@ -689,7 +691,11 @@ def render_dashboard(data: dict[str, Any]) -> str:
     body.theme-dark .source-card, body.theme-lite .source-card, body.theme-paper .source-card, body.theme-news .source-card {{ border-width:1px;
       border-radius:8px; box-shadow:none; transform:none }}
      body.theme-freenet .metric, body.theme-freenet .source-card, body.theme-freenet .latest li,
-     body.theme-freenet .runtime-log {{ border-width:1px; border-radius:4px; box-shadow:none; transform:none; background:var(--panel) }}
+    body.theme-freenet .runtime-log {{ border-width:1px; border-radius:4px; box-shadow:none; transform:none; background:var(--panel) }}
+    body.theme-freenet .metric:nth-child(2) {{ background:#e8f1fb }}
+    body.theme-freenet .metric:nth-child(3) {{ background:#e8f6ee }}
+    body.theme-freenet .filter-button {{ background:#e8f1fb; color:var(--blue) }}
+    body.theme-freenet .fetch-button {{ background:#e8f6ee; color:var(--green) }}
      body.theme-t-online .metric, body.theme-t-online .source-card, body.theme-t-online .latest li,
      body.theme-t-online .runtime-log {{ border-width:1px; border-radius:8px; box-shadow:none; transform:none; background:var(--panel) }}
     body.theme-paper .source-card:hover {{ transform:translateY(-2px) }}
