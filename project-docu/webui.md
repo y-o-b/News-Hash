@@ -30,7 +30,7 @@ Die Meldungsliste verwendet den neuesten SQLite-Shard. Kennzahlen und Detailzugr
 
 ## Navigation
 
-- Der Link auf der Meldungsanzahl filtert die Liste auf diese Quelle.
+- Der Button `Quelle filtern` filtert die Liste auf diese Quelle.
 - `Filter zurücksetzen` zeigt wieder alle Quellen.
 - Die Liste zeigt standardmäßig zehn Meldungen pro Seite; auswählbar sind 10, 25, 50 oder 100 Meldungen.
 - `Erste`, `Zurück`, `Weiter` und `Letzte` navigieren durch die Seiten.

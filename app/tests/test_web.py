@@ -58,6 +58,7 @@ def test_render_dashboard_contains_metrics_and_latest_records() -> None:
     assert "Neue Meldung" in page
     assert "Hash: abc123" in page
     assert "Jetzt abrufen" in page
+    assert "Quelle filtern" in page
     assert "Laufzeit-Log" in page
     assert "action=stored" in page
     assert 'id="refresh-countdown"' in page

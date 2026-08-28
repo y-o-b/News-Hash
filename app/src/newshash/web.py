@@ -493,9 +493,9 @@ def render_dashboard(data: dict[str, Any]) -> str:
         f"""
         <div class="source-card" data-source="{_text(source.name)}">
           <div class="source-top"><span>{_text(source.name)}</span></div>
-          <a class="source-count" href="?{_query({"source": source.storage_name, "page": 1, **theme_query})}">
-            <strong>{_number(source.records)}</strong><span class="muted"> Meldungen</span>
-          </a>
+           <div class="source-count">
+             <strong>{_number(source.records)}</strong><span class="muted"> Meldungen</span>
+           </div>
            <div class="source-meta">{_number(source.images)} Bilder · {_number(source.errors)} Fehler{_error_breakdown_markup(source)}<br>
              SQLite: {_data_size(source.sqlite_size_bytes)}<br>
              zuletzt {_local_time(source.latest_retrieved_at)}<br>
@@ -504,7 +504,8 @@ def render_dashboard(data: dict[str, Any]) -> str:
               {_anchor_label(source.anchor_status)}
             </span>{_anchor_links(source)}</div>
            {_source_error_markup(source, theme_query)}
-          <form method="post" action="/fetch?{_query({"source": source.storage_name, **theme_query})}">
+           <a class="filter-button" href="?{_query({"source": source.storage_name, "page": 1, **theme_query})}#neueste-meldungen">Quelle filtern</a>
+           <form method="post" action="/fetch?{_query({"source": source.storage_name, **theme_query})}">
             <button class="fetch-button" type="submit">Jetzt abrufen</button>
           </form>
         </div>
@@ -634,8 +635,10 @@ def render_dashboard(data: dict[str, Any]) -> str:
     .anchor-complete {{ color:#18834b }} .anchor-pending {{ color:#a56b00 }}
     .anchor-no_anchor, .anchor-no_ots {{ color:var(--muted) }}
     .anchor-files {{ display:inline-block; white-space:nowrap }}
-    .source-count {{ display:inline-block; color:inherit; text-decoration:none }}
-    .source-count:hover strong {{ color:var(--accent) }}
+     .source-count {{ display:inline-block; color:inherit }}
+     .filter-button {{ display:inline-block; margin-top:16px; border:3px solid var(--line); background:var(--panel); color:var(--text);
+       box-shadow:3px 3px 0 var(--line); cursor:pointer; padding:6px 10px; font:900 12px "Comic Sans MS",sans-serif; text-decoration:none }}
+     .filter-button:hover {{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line) }}
      .fetch-button {{ margin-top:16px; border:3px solid var(--line); background:var(--blue); color:white; box-shadow:3px 3px 0 var(--line);
        cursor:pointer; padding:6px 10px; font:900 12px "Comic Sans MS",sans-serif }}
      .fetch-button:hover {{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--line) }}
@@ -674,13 +677,14 @@ def render_dashboard(data: dict[str, Any]) -> str:
     body.theme-news .latest li {{ border-width:1px; border-radius:8px; box-shadow:none }}
     body.theme-dark .shutdown, body.theme-lite .shutdown, body.theme-paper .shutdown, body.theme-news .shutdown {{ border-width:1px;
       border-radius:6px; box-shadow:none; font-family:system-ui,sans-serif }}
-    body.theme-dark .fetch-button, body.theme-lite .fetch-button, body.theme-paper .fetch-button, body.theme-news .fetch-button {{ border-width:1px;
+     body.theme-dark .fetch-button, body.theme-lite .fetch-button, body.theme-paper .fetch-button, body.theme-news .fetch-button,
+     body.theme-dark .filter-button, body.theme-lite .filter-button, body.theme-paper .filter-button, body.theme-news .filter-button {{ border-width:1px;
       border-radius:5px; box-shadow:none; font-family:system-ui,sans-serif }}
-    body.theme-dark .section-heading a, body.theme-dark .pagination a, body.theme-dark .fetch-button,
+     body.theme-dark .section-heading a, body.theme-dark .pagination a, body.theme-dark .fetch-button, body.theme-dark .filter-button,
     body.theme-dark .shutdown, body.theme-dark .theme-picker select,
-    body.theme-lite .section-heading a, body.theme-lite .pagination a, body.theme-lite .fetch-button,
+     body.theme-lite .section-heading a, body.theme-lite .pagination a, body.theme-lite .fetch-button, body.theme-lite .filter-button,
     body.theme-lite .shutdown, body.theme-lite .theme-picker select {{ border:1px solid var(--line); border-radius:5px; box-shadow:none }}
-    body.theme-news .section-heading a, body.theme-news .pagination a, body.theme-news .fetch-button,
+     body.theme-news .section-heading a, body.theme-news .pagination a, body.theme-news .fetch-button, body.theme-news .filter-button,
     body.theme-news .shutdown, body.theme-news .theme-picker select {{ border:1px solid var(--line); border-radius:5px; box-shadow:none }}
     body.theme-dark .shutdown {{ background:#ef4b3f; color:white }}
     body.theme-lite .shutdown {{ background:#ef4b3f; color:white }}
