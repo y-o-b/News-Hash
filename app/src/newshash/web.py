@@ -398,7 +398,7 @@ def render_detail(
   body.theme-paper {{ --bg:#e5d5b8; --panel:#fff9eb; --line:#3a2a20; --text:#2b201b; --muted:#756153; --accent:#b83b32; --blue:#286a9e }}
   * {{ box-sizing:border-box }} body {{ margin:0; background:var(--bg);
     color:var(--text); font:16px/1.65 "Comic Sans MS","Trebuchet MS",sans-serif }}
-  main {{ max-width:820px; margin:auto; padding:clamp(24px,5vw,64px) 20px }}
+   main {{ max-width:1200px; margin:auto; padding:clamp(24px,5vw,64px) 20px }}
   a {{ color:var(--blue) }}
   .eyebrow {{ color:var(--accent); text-transform:uppercase; letter-spacing:.14em; font-size:12px; font-weight:900; margin-top:42px }}
   h1 {{ color:var(--text); font:900 clamp(20px,3.6vw,36px)/1.05 Impact,"Arial Black",sans-serif;

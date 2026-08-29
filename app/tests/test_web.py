@@ -140,6 +140,7 @@ def test_render_detail_links_stored_images() -> None:
 
     assert "Gespeicherte Meldung" in page
     assert "/media/zdf/hash" in page
+    assert "max-width:1200px" in page
     assert "<p>Inhalt</p>" in page
     assert "hash-value" in page
     assert "pre-hash-value" in page
