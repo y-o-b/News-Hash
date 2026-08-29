@@ -6,7 +6,7 @@ from pathlib import Path
 
 import requests
 
-from newshash.codec import GENESIS_HASH, RSSv0, RSSv1, RSSv2, SCREENv0
+from newshash.codec import GENESIS_HASH, SCREENSHOT_VIEWPORT_WIDTH, RSSv0, RSSv1, RSSv2, SCREENv0
 
 
 def make_item(item_id: str = "example-1", content_html: str = "<p>Text</p>") -> dict:
@@ -82,6 +82,10 @@ def test_screen_codec_stores_full_page_screenshot(tmp_path, monkeypatch) -> None
     image = next(iter(item["images"].values()))
     assert image["path"].endswith(".png")
     assert image_bytes
+
+
+def test_screen_codec_uses_1200_pixel_viewport() -> None:
+    assert SCREENSHOT_VIEWPORT_WIDTH == 1200
 
 
 def test_screen_codec_returns_feed_for_unknown_item_selection(monkeypatch) -> None:

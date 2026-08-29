@@ -15,7 +15,7 @@
 - Die versionierten Codecs `RSSv2`, `TAZv2` und `SCREENv2` erzeugen je Codec eine normalisierte Definition mit Codec, Schema und Hashfunktion. Sie wird unter `data/Codec/` abgelegt und zusätzlich in der SQLite-Tabelle `codec_metadata` gespeichert. Der normalisierte Dokumenthash wird als `codec_hash` gespeichert und in das Hashmaterial aufgenommen; v0- und v1-Codecs bleiben ausschließlich für alte Records und die Validierung verfügbar.
 - Die historischen v1-Metadatenhashes sind als Konstanten im Code hinterlegt; die alten Sammeldateien werden nicht mehr erzeugt.
 - `RSSv0` verarbeitet allgemeine JSON- und XML-RSS-Feeds; `TAZv0` lädt zusätzlich den vollständigen TAZ-Artikel über dessen Link.
-- `SCREENv0` folgt jedem Feed-Link mit Chromium und speichert einen vollständigen PNG-Seiten-Screenshot als Bild-Record.
+- `SCREENv0` folgt jedem Feed-Link mit Chromium und speichert einen vollständigen PNG-Seiten-Screenshot mit einer Viewport-Breite von 1200 Pixeln als Bild-Record.
 - Nach einem erfolgreichen Quellenlauf wird pro UTC-Tag ein Manifest mit den aktuellen JSONL- und SQLite-Hashes sowie den Nummern der zugehörigen letzten Shards erzeugt und als OpenTimestamps-Proof unter `data/anchors/` verankert.
 - Erfolgreich erzeugte Anchor-Dateien werden mit `GITHUB_TOKEN` und `GITHUB_REPOSITORY` aus `data/credentials.env` synchronisiert.
 - Bei der Manifestbildung werden SQLite-Shards nach `data/sqlite-backups/` mit gleichbleibenden Dateinamen überschrieben und Manifest sowie `.ots`-Proof zusätzlich in `anchor_artifacts` der SQLite-Datei gespeichert.

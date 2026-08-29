@@ -22,6 +22,7 @@ from newshash.metadata import metadata_hashes
 GENESIS_HASH = "0" * 64
 REQUEST_TIMEOUT_SECONDS = 30
 SCREENSHOT_TIMEOUT_SECONDS = 120
+SCREENSHOT_VIEWPORT_WIDTH = 1200
 USER_AGENT = "newshash/0.1"
 
 
@@ -463,7 +464,7 @@ class SCREENv0(RSSv0):
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch()
             try:
-                page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
+                page = browser.new_page(viewport={"width": SCREENSHOT_VIEWPORT_WIDTH, "height": 900}, device_scale_factor=1)
                 page.goto(url, wait_until="domcontentloaded", timeout=REQUEST_TIMEOUT_SECONDS * 1000)
                 page.wait_for_timeout(2000)
                 page.add_style_tag(content="*,:before,:after { animation: none !important; transition: none !important; }")
