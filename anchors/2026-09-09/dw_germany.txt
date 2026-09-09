@@ -1,0 +1,9 @@
+{
+  "date": "2026-09-09",
+  "latest_hash_jsonl": "504bb45332b2282a0192a4379c073a7e58d63fe0989fb65b38718d48a36b5f9a",
+  "latest_hash_sqlite": "504bb45332b2282a0192a4379c073a7e58d63fe0989fb65b38718d48a36b5f9a",
+  "latest_shard_jsonl": 0,
+  "latest_shard_sqlite": 0,
+  "source": "Deutsche Welle",
+  "storage_name": "dw_germany"
+}
