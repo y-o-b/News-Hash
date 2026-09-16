@@ -1,0 +1,9 @@
+{
+  "date": "2026-09-16",
+  "latest_hash_jsonl": "028663d9c1e01de61e630eb81205a4f161faf9d0d61c7527f0efc61188036836",
+  "latest_hash_sqlite": "fcc2622fcc19ac87ad7b8c4f592ca2d9e1f8fde70c7a1d0b328855fbf35753bb",
+  "latest_shard_jsonl": 0,
+  "latest_shard_sqlite": 1,
+  "source": "n-tv",
+  "storage_name": "ntv"
+}
