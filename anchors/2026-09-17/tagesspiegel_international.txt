@@ -1,0 +1,9 @@
+{
+  "date": "2026-09-17",
+  "latest_hash_jsonl": "67e1089a3eb1d850a5c5e1a58335887ab0fc7d775da93b56f06e72ccded5a31d",
+  "latest_hash_sqlite": "67e1089a3eb1d850a5c5e1a58335887ab0fc7d775da93b56f06e72ccded5a31d",
+  "latest_shard_jsonl": 0,
+  "latest_shard_sqlite": 0,
+  "source": "Tagesspiegel - international",
+  "storage_name": "tagesspiegel_international"
+}
