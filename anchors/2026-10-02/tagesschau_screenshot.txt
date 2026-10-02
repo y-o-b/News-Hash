@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-02",
+  "latest_hash_jsonl": "c5ce8732621f342f7d3b6f254ef6ead0e0fe2c08664882af9445968c819e0114",
+  "latest_hash_sqlite": "19ea8694c14c44affcb456efe85af9c3edb47dfc2a2761e258f2200cbade3094",
+  "latest_shard_jsonl": 0,
+  "latest_shard_sqlite": 2,
+  "source": "Tagesschau - Screenshot",
+  "storage_name": "tagesschau_screenshot"
+}
