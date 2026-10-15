@@ -14,6 +14,7 @@ from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse
 import markdown
 
 from newshash.anchoring import OpenTimestampsAnchor
+from newshash.runtime_metrics import render_memory_metrics
 from newshash.settings import AppConfig, SettingsManager
 from newshash.storage import SqliteStorage
 
@@ -49,6 +50,73 @@ class SourceSummary:
     sqlite_size_bytes: int = 0
 
 
+class DashboardStatsCache:
+    """Berechne und aktualisiere Dashboard-Kennzahlen außerhalb von HTTP-Requests."""
+
+    refresh_interval_seconds = 2
+
+    def __init__(self, config: AppConfig, settings_manager: SettingsManager) -> None:
+        self._sources = config.settings.sources
+        self._settings_manager = settings_manager
+        self._stats: dict[str, dict[str, Any]] = {}
+        self._fingerprints: dict[str, tuple[tuple[str, int, int], ...]] = {}
+        self._refresh_errors: dict[str, str] = {}
+        self._lock = threading.Lock()
+        self._stop_event = threading.Event()
+        self._thread = threading.Thread(target=self._refresh_loop, name="newshash-dashboard-stats", daemon=True)
+
+    def start(self) -> None:
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._stop_event.set()
+        self._thread.join(timeout=1)
+
+    def ready(self) -> bool:
+        with self._lock:
+            return all(source.storage_name in self._stats for source in self._sources)
+
+    def get(self, storage_name: str) -> dict[str, Any] | None:
+        with self._lock:
+            stats = self._stats.get(storage_name)
+            return dict(stats) if stats is not None else None
+
+    def _fingerprint(self, storage: SqliteStorage) -> tuple[tuple[str, int, int], ...]:
+        fingerprint = []
+        for path in storage._shard_paths():
+            stat = path.stat()
+            fingerprint.append((str(path), stat.st_mtime_ns, stat.st_size))
+        return tuple(fingerprint)
+
+    def _refresh_loop(self) -> None:
+        while not self._stop_event.is_set():
+            for source in self._sources:
+                if self._stop_event.is_set():
+                    break
+                storage = SqliteStorage(self._settings_manager.storage_root(), source.storage_name)
+                try:
+                    fingerprint = self._fingerprint(storage)
+                    with self._lock:
+                        if source.storage_name in self._stats and self._fingerprints.get(source.storage_name) == fingerprint:
+                            continue
+                    stats = storage.dashboard_stats()
+                    updated_fingerprint = self._fingerprint(storage)
+                    if fingerprint != updated_fingerprint:
+                        continue
+                except Exception as exc:
+                    error = f"{type(exc).__name__}: {exc}"
+                    if self._refresh_errors.get(source.storage_name) != error:
+                        self._settings_manager.log_runtime(f'dashboard stats refresh failed source="{source.name}" error="{error}"')
+                        self._refresh_errors[source.storage_name] = error
+                    continue
+
+                with self._lock:
+                    self._stats[source.storage_name] = stats
+                    self._fingerprints[source.storage_name] = updated_fingerprint
+                self._refresh_errors.pop(source.storage_name, None)
+            self._stop_event.wait(self.refresh_interval_seconds)
+
+
 def _timestamp(value: Any) -> datetime:
     """Parse ISO- oder RFC-Datumswerte als vergleichbaren UTC-Zeitpunkt."""
 
@@ -78,6 +146,7 @@ def collect_dashboard_data(
     selected_source: str | None = None,
     page: int = 1,
     page_size: int = 10,
+    stats_cache: DashboardStatsCache | None = None,
 ) -> dict[str, Any]:
     """Lese Kennzahlen und die neuesten Meldungen aus den Quellen-Stores."""
 
@@ -93,7 +162,9 @@ def collect_dashboard_data(
     today = datetime.now(UTC).date()
     for source in config.settings.sources:
         storage = SqliteStorage(settings_manager.storage_root(), source.storage_name)
-        stats = storage.dashboard_stats()
+        stats = stats_cache.get(source.storage_name) if stats_cache is not None else storage.dashboard_stats()
+        if stats is None:
+            stats = {"records": 0, "images": 0, "latest_retrieved_at": "", "latest_hash": ""}
         summaries.append(
             SourceSummary(
                 name=source.name,
@@ -254,7 +325,7 @@ def _prometheus_label(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 
 
-def render_metrics(config: AppConfig, settings_manager: SettingsManager) -> str:
+def render_metrics(config: AppConfig, settings_manager: SettingsManager, stats_cache: DashboardStatsCache | None = None) -> str:
     """Erzeuge Prometheus-Metriken aus aggregierten SQLite-Abfragen."""
 
     lines = [
@@ -269,6 +340,9 @@ def render_metrics(config: AppConfig, settings_manager: SettingsManager) -> str:
         "# TYPE newshash_source_errors_total counter",
         "# HELP newshash_source_error_type_total Unacknowledged source errors by source and type.",
         "# TYPE newshash_source_error_type_total counter",
+        "# HELP newshash_dashboard_stats_ready Whether stored dashboard statistics have been loaded.",
+        "# TYPE newshash_dashboard_stats_ready gauge",
+        f"newshash_dashboard_stats_ready {int(stats_cache.ready()) if stats_cache is not None else 1}",
     ]
     total_records = 0
     total_images = 0
@@ -276,7 +350,13 @@ def render_metrics(config: AppConfig, settings_manager: SettingsManager) -> str:
     error_counts = settings_manager.unacknowledged_source_error_counts()
     error_type_counts = settings_manager.unacknowledged_source_error_type_counts()
     for source in config.settings.sources:
-        stats = SqliteStorage(settings_manager.storage_root(), source.storage_name).dashboard_stats()
+        stats = (
+            stats_cache.get(source.storage_name)
+            if stats_cache is not None
+            else SqliteStorage(settings_manager.storage_root(), source.storage_name).dashboard_stats()
+        )
+        if stats is None:
+            stats = {"records": 0, "images": 0}
         label = _prometheus_label(source.name)
         lines.append(f'newshash_records_total{{source="{label}"}} {stats["records"]}')
         lines.append(f'newshash_images_total{{source="{label}"}} {stats["images"]}')
@@ -302,6 +382,7 @@ def render_metrics(config: AppConfig, settings_manager: SettingsManager) -> str:
             f"newshash_source_errors_all_total {total_errors}",
         ]
     )
+    lines.extend(render_memory_metrics())
     return "\n".join(lines) + "\n"
 
 
@@ -814,6 +895,27 @@ def render_dashboard(data: dict[str, Any]) -> str:
 </main></body></html>"""
 
 
+def render_dashboard_loading() -> str:
+    """Zeige eine leichte Platzhalterseite, bis die Kennzahlen bereitstehen."""
+
+    return """<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="2"><title>News-Hash wird geladen</title><style>
+* { box-sizing:border-box } body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px;
+  background:#4b8ed8; color:#171717; font:16px/1.5 system-ui,sans-serif }
+main { width:min(100%,520px); padding:32px; border:3px solid #171717; border-radius:18px; background:#fffdf5;
+  box-shadow:8px 8px 0 #171717; text-align:center }
+h1 { margin:0 0 12px; font-size:clamp(1.6rem,6vw,2.2rem) }
+p { margin:0; color:#5a5145 }
+.spinner { width:28px; height:28px; margin:24px auto 0; border:4px solid #d8d2c5; border-top-color:#c4322c;
+  border-radius:50%; animation:spin .8s linear infinite }
+@keyframes spin { to { transform:rotate(360deg) } }
+@media (prefers-reduced-motion:reduce) { .spinner { animation:none } }
+</style></head><body><main><h1>News-Hash wird geladen</h1>
+<p>Die Kennzahlen werden im Hintergrund vorbereitet. Das Dashboard erscheint automatisch, sobald sie bereit sind.</p>
+<div class="spinner" role="status" aria-label="Laden"></div></main></body></html>"""
+
+
 def run_web_server(
     config: AppConfig,
     settings_manager: SettingsManager,
@@ -823,6 +925,8 @@ def run_web_server(
 ) -> None:
     """Starte den kleinen HTTP-Server für das Dashboard."""
 
+    stats_cache = DashboardStatsCache(config, settings_manager)
+
     class DashboardHandler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             parsed_path = urlparse(self.path)
@@ -831,7 +935,7 @@ def run_web_server(
                 self._send_body(logo.encode("utf-8"), "image/svg+xml")
                 return
             if parsed_path.path == "/metrics":
-                body = render_metrics(config, settings_manager).encode("utf-8")
+                body = render_metrics(config, settings_manager, stats_cache).encode("utf-8")
                 self._send_body(body, "text/plain; version=0.0.4; charset=utf-8")
                 return
             if parsed_path.path == "/hilfe":
@@ -900,6 +1004,9 @@ def run_web_server(
             if parsed_path.path not in {"/", "/index.html"}:
                 self.send_error(HTTPStatus.NOT_FOUND)
                 return
+            if not stats_cache.ready():
+                self._send_body(render_dashboard_loading().encode("utf-8"), "text/html; charset=utf-8", cache_control="no-store")
+                return
             query = parse_qs(parsed_path.query)
             selected_source = query.get("source", [None])[0]
             theme = query.get("theme", ["lite"])[0]
@@ -915,17 +1022,25 @@ def run_web_server(
                 page_size = 10
             if page_size not in PAGE_SIZES:
                 page_size = 10
-            dashboard_data = collect_dashboard_data(config, settings_manager, selected_source, page, page_size)
+            dashboard_data = collect_dashboard_data(config, settings_manager, selected_source, page, page_size, stats_cache)
             dashboard_data["theme"] = theme
             body = render_dashboard(dashboard_data).encode("utf-8")
             self._send_body(body, "text/html; charset=utf-8")
 
-        def _send_body(self, body: bytes, content_type: str, content_disposition: str | None = None) -> None:
+        def _send_body(
+            self,
+            body: bytes,
+            content_type: str,
+            content_disposition: str | None = None,
+            cache_control: str | None = None,
+        ) -> None:
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
             if content_disposition:
                 self.send_header("Content-Disposition", content_disposition)
+            if cache_control:
+                self.send_header("Cache-Control", cache_control)
             self.end_headers()
             self.wfile.write(body)
 
@@ -984,10 +1099,12 @@ def run_web_server(
             return
 
     server = ThreadingHTTPServer((host, port), DashboardHandler)
+    stats_cache.start()
     print(f"web=listening http://{host}:{server.server_port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("web=stopped")
     finally:
+        stats_cache.stop()
         server.server_close()

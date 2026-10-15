@@ -21,6 +21,8 @@ Das Projekt verbindet damit drei Ebenen: ein lokales Archiv für die Inhalte, Ha
 
 ## Dashboard bedienen
 
+Direkt nach dem Start kann kurz eine Platzhalterseite erscheinen, während die Kennzahlen im Hintergrund geladen werden.
+
 - Klicke auf die Meldungsanzahl einer Quelle, um die Meldungen zu filtern.
 - Nutze `Filter zurücksetzen`, um wieder alle Quellen zu sehen.
 - Die Meldungsliste zeigt zehn Meldungen pro Seite.

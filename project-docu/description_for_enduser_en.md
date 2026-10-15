@@ -20,6 +20,8 @@ The project combines three layers: a local archive for content, hash chains for 
 
 ## Using the dashboard
 
+A placeholder page may appear briefly after startup while dashboard statistics are loaded in the background.
+
 - Click a source's message count to filter the message list.
 - Use `Filter zurücksetzen` to show all sources again.
 - The message list contains ten messages per page.

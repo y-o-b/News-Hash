@@ -13,6 +13,7 @@ from newshash import __version__
 from newshash.anchoring import OpenTimestampsAnchor
 from newshash.codec import GENESIS_HASH, get_codec
 from newshash.github_sync import GitHubAnchorPublisher
+from newshash.runtime_metrics import configure_memory_tracing
 from newshash.settings import AppConfig, SettingsManager, SourceConfig
 from newshash.storage import JsonlStorage, SqliteStorage
 from newshash.web import run_web_server
@@ -248,6 +249,8 @@ def main(argv: list[str] | None = None) -> None:
 
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.daemon:
+        configure_memory_tracing()
 
     settings_manager = SettingsManager()
     config = settings_manager.resolve_config(args.settings)

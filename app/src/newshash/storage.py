@@ -163,36 +163,44 @@ class JsonlStorage:
         return latest
 
     def known_source_ids(self) -> set[str]:
-        """Sammle die bereits gespeicherten source_id-Werte aus dem letzten Shard."""
+        """Sammle die bereits gespeicherten source_id-Werte aus allen Shards."""
 
-        shards = self._shard_paths()
-        if not shards:
-            return set()
-
-        latest = shards[-1]
-        return {json.loads(line)["source_id"] for line in latest.read_text(encoding="utf-8").split("\n") if line.strip()}
+        source_ids = set()
+        for shard in self._shard_paths():
+            with shard.open(encoding="utf-8") as handle:
+                source_ids.update(json.loads(line)["source_id"] for line in handle if line.strip())
+        return source_ids
 
     def latest_hash(self, genesis_hash: str) -> str:
         """Gib den Hash des zuletzt gespeicherten Records zurueck, sonst den Genesis-Hash."""
 
         for shard in reversed(self._shard_paths()):
-            lines = [line for line in shard.read_text(encoding="utf-8").split("\n") if line.strip()]
-            if lines:
-                return json.loads(lines[-1])["hash"]
+            latest_hash = None
+            with shard.open(encoding="utf-8") as handle:
+                for line in handle:
+                    if line.strip():
+                        latest_hash = json.loads(line)["hash"]
+            if latest_hash is not None:
+                return latest_hash
         return genesis_hash
 
     def latest_shard_index(self) -> int:
         """Gib die Shardnummer des letzten nichtleeren Shards zurueck."""
 
         for shard in reversed(self._shard_paths()):
-            if any(line.strip() for line in shard.read_text(encoding="utf-8").split("\n")):
-                return _shard_index(shard)
+            with shard.open(encoding="utf-8") as handle:
+                if any(line.strip() for line in handle):
+                    return _shard_index(shard)
         return 0
 
     def count(self) -> int:
         """Zaehle alle gespeicherten Records ueber alle Shards."""
 
-        return sum(1 for shard in self._shard_paths() for line in shard.read_text(encoding="utf-8").split("\n") if line.strip())
+        total = 0
+        for shard in self._shard_paths():
+            with shard.open(encoding="utf-8") as handle:
+                total += sum(1 for line in handle if line.strip())
+        return total
 
     def append_records(self, records: list[dict[str, Any]]) -> None:
         """Haenge Records als JSON-Zeilen an den aktuellen Shard an, mit Rollover bei 1 GB."""
@@ -309,15 +317,17 @@ class SqliteStorage:
                 connection.execute(f"ALTER TABLE {RECORDS_TABLE} ADD COLUMN {column} TEXT")
 
     def known_source_ids(self) -> set[str]:
-        """Sammle die bereits gespeicherten source_id-Werte aus dem letzten Shard."""
+        """Sammle die bereits gespeicherten source_id-Werte aus allen Shards."""
 
         shards = self._shard_paths()
         if not shards:
             return set()
 
-        with self._connect(shards[-1]) as connection:
-            rows = connection.execute("SELECT source_id FROM records").fetchall()
-        return {row[0] for row in rows}
+        source_ids: set[str] = set()
+        for shard in shards:
+            with self._connect(shard) as connection:
+                source_ids.update(row[0] for row in connection.execute("SELECT source_id FROM records WHERE source_id IS NOT NULL"))
+        return source_ids
 
     def latest_hash(self, genesis_hash: str) -> str:
         """Gib den Hash des zuletzt gespeicherten Records zurueck, sonst den Genesis-Hash."""
@@ -435,9 +445,18 @@ class SqliteStorage:
 
         backup_root.mkdir(parents=True, exist_ok=True)
         backups: list[Path] = []
-        for shard in self._shard_paths():
+        shards = self._shard_paths()
+        latest_shard = shards[-1] if shards else None
+        for shard in shards:
             target = backup_root / shard.name
-            shutil.copy2(shard, target)
+            source_stat = shard.stat()
+            target_exists = target.exists()
+            target_stat = target.stat() if target_exists else None
+            changed = not target_exists or target_stat.st_size != source_stat.st_size
+            if not changed and shard == latest_shard:
+                changed = target_stat.st_mtime_ns != source_stat.st_mtime_ns
+            if changed:
+                shutil.copy2(shard, target)
             backups.append(target)
         return backups
 

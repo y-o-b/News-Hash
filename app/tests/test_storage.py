@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import sqlite3
+from pathlib import Path
 
 from newshash.codec import GENESIS_HASH, RSSv2
 from newshash.storage import (
@@ -77,7 +80,7 @@ def test_jsonl_storage_rolls_over_shard_when_size_limit_reached(tmp_path, monkey
     assert storage.count() == 2
 
 
-def test_jsonl_storage_known_source_ids_only_considers_last_shard(tmp_path, monkeypatch) -> None:
+def test_jsonl_storage_known_source_ids_considers_all_shards(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr("newshash.storage.SHARD_SIZE_LIMIT_BYTES", 10)
     storage = JsonlStorage(tmp_path, "example")
 
@@ -86,7 +89,7 @@ def test_jsonl_storage_known_source_ids_only_considers_last_shard(tmp_path, monk
 
     assert (tmp_path / "JSONL" / "example" / "example.0.jsonl").exists()
     assert (tmp_path / "JSONL" / "example" / "example.1.jsonl").exists()
-    assert storage.known_source_ids() == {"example-2"}
+    assert storage.known_source_ids() == {"example-1", "example-2"}
 
 
 def test_sqlite_storage_appends_records_and_image_blobs(tmp_path) -> None:
@@ -192,7 +195,7 @@ def test_sqlite_storage_deduplicates_identical_image_blob(tmp_path) -> None:
     assert count == 1
 
 
-def test_sqlite_storage_known_source_ids_only_considers_last_shard(tmp_path, monkeypatch) -> None:
+def test_sqlite_storage_known_source_ids_considers_all_shards(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr("newshash.storage.SHARD_SIZE_LIMIT_BYTES", 10)
     storage = SqliteStorage(tmp_path, "example")
 
@@ -201,7 +204,58 @@ def test_sqlite_storage_known_source_ids_only_considers_last_shard(tmp_path, mon
 
     assert (tmp_path / "SQLITE" / "example.0.sqlite3").exists()
     assert (tmp_path / "SQLITE" / "example.1.sqlite3").exists()
-    assert storage.known_source_ids() == {"example-2"}
+    assert storage.known_source_ids() == {"example-1", "example-2"}
+
+
+def test_sqlite_storage_backup_skips_unchanged_shards_and_updates_changed_ones(tmp_path, monkeypatch) -> None:
+    storage = SqliteStorage(tmp_path, "example")
+    backup_root = tmp_path / "sqlite-backups"
+    original_copy2 = shutil.copy2
+    copied_shards = []
+
+    def track_copy(source, target):
+        copied_shards.append(Path(source).name)
+        return original_copy2(source, target)
+
+    monkeypatch.setattr("newshash.storage.shutil.copy2", track_copy)
+    first = make_record("example-1", GENESIS_HASH)
+    storage.append_records([first], {})
+
+    storage.backup_shards(backup_root)
+    storage.backup_shards(backup_root)
+    assert copied_shards == ["example.0.sqlite3"]
+
+    storage.append_records([make_record("example-2", first["hash"])], {})
+    storage.backup_shards(backup_root)
+    assert copied_shards == ["example.0.sqlite3", "example.0.sqlite3"]
+
+
+def test_sqlite_storage_backup_skips_unchanged_historical_shards(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("newshash.storage.SHARD_SIZE_LIMIT_BYTES", 10)
+    storage = SqliteStorage(tmp_path, "example")
+    backup_root = tmp_path / "sqlite-backups"
+    original_copy2 = shutil.copy2
+    copied_shards = []
+
+    def track_copy(source, target):
+        copied_shards.append(Path(source).name)
+        return original_copy2(source, target)
+
+    monkeypatch.setattr("newshash.storage.shutil.copy2", track_copy)
+    first = make_record("example-1", GENESIS_HASH)
+    second = make_record("example-2", first["hash"])
+    storage.append_records([first], {})
+    storage.append_records([second], {})
+    storage.backup_shards(backup_root)
+    assert copied_shards == ["example.0.sqlite3", "example.1.sqlite3"]
+
+    os.utime(storage._shard_paths()[0], ns=(1, 1))
+    storage.backup_shards(backup_root)
+    assert copied_shards == ["example.0.sqlite3", "example.1.sqlite3"]
+
+    storage.append_records([make_record("example-3", second["hash"])], {})
+    storage.backup_shards(backup_root)
+    assert copied_shards == ["example.0.sqlite3", "example.1.sqlite3", "example.2.sqlite3"]
 
 
 def test_sqlite_storage_renames_records_table_on_schema_mismatch(tmp_path) -> None:

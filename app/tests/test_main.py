@@ -325,6 +325,7 @@ def test_main_runs_web_server_alongside_daemon(monkeypatch) -> None:
     calls: list[str] = []
     web_started = threading.Event()
 
+    monkeypatch.setattr(main, "configure_memory_tracing", lambda: calls.append("memory tracing"))
     monkeypatch.setattr(main.SettingsManager, "resolve_config", lambda self, settings_path: "config")
     monkeypatch.setattr(main, "run_web_server", lambda *args: (calls.append("web"), web_started.set()))
     monkeypatch.setattr(main, "run_daemon", lambda *args, **kwargs: calls.append("daemon"))
@@ -332,4 +333,5 @@ def test_main_runs_web_server_alongside_daemon(monkeypatch) -> None:
     main.main(["--daemon", "--port", "5000"])
 
     assert web_started.wait(timeout=1)
-    assert calls == ["web", "daemon"] or calls == ["daemon", "web"]
+    assert calls[0] == "memory tracing"
+    assert set(calls[1:]) == {"web", "daemon"}

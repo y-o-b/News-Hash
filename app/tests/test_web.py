@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from newshash.settings import AppConfig, Settings, SettingsManager, SourceConfig
-from newshash.web import SourceSummary, render_dashboard, render_detail, render_help, render_metrics
+from newshash.web import DashboardStatsCache, SourceSummary, render_dashboard, render_dashboard_loading, render_detail, render_help, render_metrics
 
 
 def test_render_dashboard_contains_metrics_and_latest_records() -> None:
@@ -160,6 +160,7 @@ def test_render_metrics_contains_source_and_total_values(tmp_path, monkeypatch) 
         "dashboard_stats",
         lambda self: {"records": 12, "images": 3, "latest_retrieved_at": "", "latest_hash": ""},
     )
+    monkeypatch.setattr(web, "render_memory_metrics", lambda: ["newshash_process_resident_memory_bytes 1024"])
 
     metrics = render_metrics(config, SettingsManager(data_dir=tmp_path))
 
@@ -168,6 +169,7 @@ def test_render_metrics_contains_source_and_total_values(tmp_path, monkeypatch) 
     assert "newshash_records_all_total 12" in metrics
     assert "newshash_images_all_total 3" in metrics
     assert 'newshash_source_errors_total{source="ZDF"} 0' in metrics
+    assert "newshash_process_resident_memory_bytes 1024" in metrics
 
 
 def test_render_metrics_hides_acknowledged_source_errors(tmp_path, monkeypatch) -> None:
@@ -243,3 +245,92 @@ def test_dashboard_sorts_published_at_by_instant(tmp_path, monkeypatch) -> None:
     data = web.collect_dashboard_data(config, SettingsManager(data_dir=tmp_path))
 
     assert [record["title"] for record in data["records"]] == ["UTC", "Lokalzeit"]
+
+
+def test_dashboard_stats_cache_loads_in_background(tmp_path, monkeypatch) -> None:
+    import threading
+    import time
+
+    from newshash import web
+
+    config = AppConfig(tmp_path / "settings.toml", Settings((SourceConfig("Alpha", "feed", "alpha", 300),)))
+    manager = SettingsManager(data_dir=tmp_path)
+    calculation_started = threading.Event()
+    finish_calculation = threading.Event()
+
+    def calculate_stats(self):
+        calculation_started.set()
+        assert finish_calculation.wait(2)
+        return {"records": 12, "images": 3, "latest_retrieved_at": "now", "latest_hash": "hash"}
+
+    monkeypatch.setattr(web.SqliteStorage, "dashboard_stats", calculate_stats)
+    cache = DashboardStatsCache(config, manager)
+    cache.start()
+    try:
+        assert calculation_started.wait(2)
+        assert not cache.ready()
+        assert "wird geladen" in render_dashboard_loading()
+
+        finish_calculation.set()
+        deadline = time.monotonic() + 2
+        while not cache.ready() and time.monotonic() < deadline:
+            time.sleep(0.01)
+
+        assert cache.ready()
+        assert cache.get("alpha")["records"] == 12
+    finally:
+        finish_calculation.set()
+        cache.stop()
+
+
+def test_dashboard_stats_cache_refreshes_when_sqlite_file_changes(tmp_path, monkeypatch) -> None:
+    import time
+
+    from newshash import web
+
+    config = AppConfig(tmp_path / "settings.toml", Settings((SourceConfig("Alpha", "feed", "alpha", 300),)))
+    manager = SettingsManager(data_dir=tmp_path)
+    calls = 0
+
+    def calculate_stats(self):
+        nonlocal calls
+        calls += 1
+        return {"records": calls, "images": 0, "latest_retrieved_at": "", "latest_hash": ""}
+
+    monkeypatch.setattr(web.SqliteStorage, "dashboard_stats", calculate_stats)
+    cache = DashboardStatsCache(config, manager)
+    cache.start()
+    try:
+        deadline = time.monotonic() + 2
+        while not cache.ready() and time.monotonic() < deadline:
+            time.sleep(0.01)
+        assert cache.ready()
+        assert cache.get("alpha")["records"] == 1
+
+        sqlite_dir = tmp_path / "SQLITE"
+        sqlite_dir.mkdir()
+        (sqlite_dir / "alpha.0.sqlite3").write_bytes(b"changed")
+        deadline = time.monotonic() + cache.refresh_interval_seconds + 1
+        while calls < 2 and time.monotonic() < deadline:
+            time.sleep(0.01)
+
+        assert calls >= 2
+        assert cache.get("alpha")["records"] >= 2
+    finally:
+        cache.stop()
+
+
+def test_metrics_use_cached_stats_without_querying_storage(tmp_path, monkeypatch) -> None:
+    from newshash import web
+
+    config = AppConfig(tmp_path / "settings.toml", Settings((SourceConfig("Alpha", "feed", "alpha", 300),)))
+    manager = SettingsManager(data_dir=tmp_path)
+    cache = DashboardStatsCache(config, manager)
+    monkeypatch.setattr(web.SqliteStorage, "dashboard_stats", lambda self: (_ for _ in ()).throw(AssertionError("unexpected query")))
+    monkeypatch.setattr(cache, "get", lambda storage_name: {"records": 12, "images": 3})
+    monkeypatch.setattr(cache, "ready", lambda: True)
+
+    metrics = render_metrics(config, manager, cache)
+
+    assert 'newshash_records_total{source="Alpha"} 12' in metrics
+    assert "newshash_dashboard_stats_ready 1" in metrics

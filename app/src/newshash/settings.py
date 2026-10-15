@@ -11,6 +11,8 @@ from newshash.codec import CODEC_REGISTRY
 DEFAULT_SETTINGS_PATH = Path("data/settings.toml")
 DEFAULT_DATA_DIR = Path("data")
 DEFAULT_CODEC_NAME = "RSSv2"
+MAX_RUNTIME_LOG_ENTRIES = 100
+MAX_RUNTIME_MESSAGE_LENGTH = 2048
 
 
 @dataclass(frozen=True)
@@ -168,6 +170,7 @@ class SettingsManager:
     def record_source_error(self, source_name: str, message: str = "", error_type: str = "unknown") -> int:
         """Erhöhe den flüchtigen Fehlerzähler einer Quelle um eins."""
 
+        message = message[:MAX_RUNTIME_MESSAGE_LENGTH]
         with self._runtime_lock:
             errors = self._source_errors.setdefault(source_name, [])
             error_types = self._source_error_types.setdefault(source_name, [])
@@ -193,10 +196,10 @@ class SettingsManager:
     def log_runtime(self, message: str) -> None:
         """Speichere ein flüchtiges Laufzeitereignis für die WebUI."""
 
-        entry = f"{datetime.now(UTC).isoformat(timespec='seconds')} {message}"
+        entry = f"{datetime.now(UTC).isoformat(timespec='seconds')} {message[:MAX_RUNTIME_MESSAGE_LENGTH]}"
         with self._runtime_lock:
             self._runtime_logs.append(entry)
-            del self._runtime_logs[:-100]
+            del self._runtime_logs[:-MAX_RUNTIME_LOG_ENTRIES]
 
     def runtime_logs(self) -> list[str]:
         """Gib die letzten flüchtigen Laufzeitereignisse zurück."""

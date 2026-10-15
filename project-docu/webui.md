@@ -28,6 +28,8 @@ Das Dashboard zeigt:
 
 Die Meldungsliste verwendet den neuesten SQLite-Shard. Kennzahlen und Detailzugriffe bleiben shardübergreifend.
 
+Nach dem Start berechnet ein Hintergrundthread die Kennzahlen. Bis die erste Berechnung abgeschlossen ist, zeigt das Dashboard eine Platzhalterseite. Änderungen an SQLite-Shards lösen eine Aktualisierung des Kennzahlencaches aus; Dashboard und `/metrics` verwenden denselben Cache.
+
 ## Navigation
 
 - Der Button `Quelle filtern` filtert die Liste auf diese Quelle.
@@ -70,13 +72,15 @@ Der Laufzeit-Log zeigt die letzten 100 flüchtigen Ereignisse des aktuellen Proz
 
 ## Prometheus
 
-Prometheus kann die Metriken über `/metrics` abrufen:
+Prometheus kann die Metriken über `/metrics` abrufen. Während der initialen Kennzahlenberechnung meldet `newshash_dashboard_stats_ready` den Wert `0`; danach `1`.
 
 ```text
 http://127.0.0.1:8000/metrics
 ```
 
-Der Endpoint liefert unter anderem Meldungs-, Bild- und Fehlerzähler je Quelle sowie Fehlerzähler nach Quelle und Fehlertyp.
+Der Endpoint liefert unter anderem Meldungs-, Bild- und Fehlerzähler je Quelle sowie Fehlerzähler nach Quelle und Fehlertyp. `newshash_process_resident_memory_bytes` misst den Python-Prozess; `newshash_cgroup_memory_current_bytes` umfasst zusätzlich Chromium-Unterprozesse und den dem Container zugerechneten Dateicache. `newshash_cgroup_memory_anonymous_bytes` und `newshash_cgroup_memory_file_bytes` trennen anonymen Speicher und Dateicache. Dazu kommen Prozess-Peak, cgroup-Limit und -Ereignisse sowie Memory-Pressure. Nicht verfügbare Betriebssystemwerte werden ausgelassen.
+
+`NEWSHASH_TRACEMALLOC=1` aktiviert zusätzlich Python-Allokationstracing. Im Dockerbetrieb kann die Variable in `.env` gesetzt werden. Das Tracing kann zusätzlichen Speicherbedarf verursachen und sollte deshalb nur für gezielte Diagnoseläufe aktiviert werden. Die Werte `newshash_python_traced_memory_bytes` und `newshash_python_traced_memory_peak_bytes` erscheinen nur bei aktiviertem Tracing und erfassen keine nativen Chromium- oder SQLite-Allokationen.
 
 ## Beenden
 

@@ -207,3 +207,14 @@ def test_runtime_logs_are_in_memory_only(tmp_path) -> None:
 
     assert manager.runtime_logs()[-1].endswith('source="alpha" action="fetch start"')
     assert SettingsManager(data_dir=tmp_path).runtime_logs() == []
+
+
+def test_runtime_log_entries_and_source_errors_are_length_limited(tmp_path) -> None:
+    manager = SettingsManager(data_dir=tmp_path)
+    message = "x" * 10_000
+
+    manager.log_runtime(message)
+    manager.record_source_error("alpha", message)
+
+    assert len(manager.runtime_logs()[0]) <= 2100
+    assert len(manager.source_errors()["alpha"][0]) == 2048

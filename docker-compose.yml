@@ -24,7 +24,9 @@ services:
     container_name: ${NAME}
     hostname: ${NAME}
     image: $IMAGE
-    # restart: unless-stopped
+    restart: unless-stopped
+    environment:
+      NEWSHASH_TRACEMALLOC: ${NEWSHASH_TRACEMALLOC:-}
     volumes:
       -  ${MY_DATA}:/app/data
     networks:
