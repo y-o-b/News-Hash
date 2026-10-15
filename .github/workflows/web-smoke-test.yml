@@ -61,7 +61,7 @@ jobs:
           uv run python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(); page=b.new_page(viewport={"width":1440,"height":900}); page.goto("http://127.0.0.1:8000/?theme=comic", wait_until="domcontentloaded"); page.screenshot(path="/tmp/newshash-dashboard.png", full_page=True, type="png"); b.close(); p.stop()'
 
       - name: Upload dashboard screenshot
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: newshash-dashboard-screenshot
           path: /tmp/newshash-dashboard.png
