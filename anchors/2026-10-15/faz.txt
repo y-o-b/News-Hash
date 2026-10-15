@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-15",
+  "latest_hash_jsonl": "ae5d4718005e1954f7af93e9eb4d686ff30afc8b20ff3c8cfadafefe9442faac",
+  "latest_hash_sqlite": "d289599da9c7d51714f71413206e9c2136676f07aadcd35171cccd8333fd0499",
+  "latest_shard_jsonl": 0,
+  "latest_shard_sqlite": 14,
+  "source": "FAZ",
+  "storage_name": "faz"
+}
