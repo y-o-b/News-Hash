@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-23",
+  "latest_hash_jsonl": "e42b2c72219118079da77a4a5d41f2880ecc0565b1f8211f1f39d88139edf31b",
+  "latest_hash_sqlite": "a58fa2a1083a9e55c9707ef84c1ddca398bf0e089d627e6b0c1d88a850e6bddb",
+  "latest_shard_jsonl": 0,
+  "latest_shard_sqlite": 1,
+  "source": "Tagesschau - Schleswig-Holstein",
+  "storage_name": "tagesschau_sh"
+}
