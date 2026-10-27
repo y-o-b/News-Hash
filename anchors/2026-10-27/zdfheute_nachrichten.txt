@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-27",
+  "latest_hash_jsonl": "d2604e2028c2a2c607e4d1b542aaa7033e32a1f3be958babf8570be1f0ee5dd1",
+  "latest_hash_sqlite": "25054ac1329ee3baa3a7ef63c9f4e514d79e93bdb85297b44ccff95b387d897f",
+  "latest_shard_jsonl": 0,
+  "latest_shard_sqlite": 3,
+  "source": "ZDF - Heute",
+  "storage_name": "zdfheute_nachrichten"
+}
