@@ -1,4 +1,4 @@
-heartbeat_url = "https://hb.y-o-b.de/tsblock"
+heartbeat_url = "https://hb.y-o-b.de/heartbeat"
 
 [[sources]]
 name = "Tagesschau"
