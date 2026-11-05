@@ -1,0 +1,9 @@
+{
+  "date": "2026-11-05",
+  "latest_hash_jsonl": "45c6d78fb4fcd1807d5e2d1e54edd0cc9437f52f7365c8d5aa5fdfff5a628d23",
+  "latest_hash_sqlite": "45c6d78fb4fcd1807d5e2d1e54edd0cc9437f52f7365c8d5aa5fdfff5a628d23",
+  "latest_shard_jsonl": 0,
+  "latest_shard_sqlite": 0,
+  "source": "Deutscher Bundestag",
+  "storage_name": "deutscher_bundestag_aktuelle_themen"
+}
